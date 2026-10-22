@@ -6,13 +6,14 @@ import os
 from pathlib import Path
 
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 # Secrets (GEMINI_API_KEY) live in backend/.env, which is git-ignored.
 load_dotenv(Path(__file__).resolve().parent / ".env")
 
-from services import gemini_client  # noqa: E402  (needs the env loaded first)
+from services import gemini_client, scenarios  # noqa: E402  (needs the env loaded first)
+from services.scenarios import Scenario, ScenarioNotFoundError, ScenarioSummary  # noqa: E402
 
 API_VERSION = "0.1.0"
 
@@ -33,6 +34,24 @@ app.add_middleware(
 )
 
 
+def _scenario_or_404(scenario_id: str) -> Scenario:
+    try:
+        return scenarios.get_scenario(scenario_id)
+    except ScenarioNotFoundError:
+        raise HTTPException(status_code=404, detail=f"Scenario '{scenario_id}' not found") from None
+
+
+@app.get("/", include_in_schema=False)
+def root():
+    """Pointer for anyone opening the API in a browser."""
+    return {
+        "name": "ResQ Nexus API",
+        "version": API_VERSION,
+        "docs": "/docs",
+        "endpoints": ["/health", "/scenarios", "/scenarios/{id}"],
+    }
+
+
 @app.get("/health")
 def health():
     """Liveness check; also reports whether a Gemini key is configured."""
@@ -42,3 +61,15 @@ def health():
         "version": API_VERSION,
         "gemini_configured": gemini_client.is_configured(),
     }
+
+
+@app.get("/scenarios", response_model=list[ScenarioSummary])
+def list_scenarios():
+    """All available disaster scenarios (summary only)."""
+    return scenarios.list_scenarios()
+
+
+@app.get("/scenarios/{scenario_id}", response_model=Scenario)
+def get_scenario(scenario_id: str):
+    """Full scenario: metadata, available resources and every zone."""
+    return _scenario_or_404(scenario_id)
