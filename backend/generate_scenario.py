@@ -27,7 +27,7 @@ Examples (run from ``backend/``)::
     python generate_scenario.py --list-regions
     python generate_scenario.py --type earthquake --region kutch --seed 42
     python generate_scenario.py --type wildfire --region kumaon --zones 15 --stdout
-    python generate_scenario.py --type flood --center 19.81,85.83 --region-name "Puri, Odisha" --state Odisha
+    python generate_scenario.py --type flood --center 26.15,85.90 --region-name "Darbhanga, Bihar" --state Bihar
 """
 from __future__ import annotations
 
@@ -417,7 +417,7 @@ def _latlon_arg(text: str) -> tuple[float, float]:
     try:
         lat, lon = (float(v) for v in text.split(","))
     except ValueError as exc:
-        raise argparse.ArgumentTypeError("use LAT,LON, e.g. 19.81,85.83") from exc
+        raise argparse.ArgumentTypeError("use LAT,LON, e.g. 26.15,85.90") from exc
     if not (-90 <= lat <= 90 and -180 <= lon <= 180):
         raise argparse.ArgumentTypeError("latitude/longitude out of range")
     return lat, lon
@@ -431,9 +431,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--type", choices=DISASTER_TYPES, help="disaster type (default: the region's usual hazard)")
     where = parser.add_mutually_exclusive_group()
     where.add_argument("--region", help="preset region id with real localities (see --list-regions)")
-    where.add_argument("--center", type=_latlon_arg, metavar="LAT,LON", help="centre for synthetic zones")
+    where.add_argument("--center", type=_latlon_arg, metavar="LAT,LON",
+                       help="centre for synthetic zones (no coastline awareness: prefer inland points)")
     parser.add_argument("--radius-km", type=float, default=30.0, help="radius for --center (default 30)")
-    parser.add_argument("--region-name", help="display name for the region, e.g. 'Puri, Odisha'")
+    parser.add_argument("--region-name", help="display name for the region, e.g. 'Darbhanga, Bihar'")
     parser.add_argument("--state", help="Indian state (default: from the region preset)")
     parser.add_argument("--zones", type=_zone_count, help=f"number of zones, {MIN_ZONES}-{MAX_ZONES}")
     parser.add_argument("--seed", type=int, help="random seed for a reproducible scenario")

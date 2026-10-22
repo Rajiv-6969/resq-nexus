@@ -28,8 +28,8 @@ jobs:
         run: python -m pytest
       - name: Generator smoke test (custom centre, printed to stdout)
         run: >-
-          python generate_scenario.py --type flood --center 19.81,85.83
-          --region-name "Puri, Odisha" --state Odisha --seed 1 --stdout > /dev/null
+          python generate_scenario.py --type flood --center 26.15,85.90
+          --region-name "Darbhanga, Bihar" --state Bihar --seed 1 --stdout > /dev/null
 
   frontend:
     name: Frontend (lint + build)
