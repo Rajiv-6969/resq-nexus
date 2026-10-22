@@ -1,0 +1,6 @@
+# Runtime dependencies + test tools.
+# Install with:  python -m pip install -r requirements-dev.txt
+-r requirements.txt
+pytest==9.1.1
+# Transport for FastAPI's TestClient (Starlette 1.x deprecates plain httpx for it)
+httpx2==2.16.0

@@ -1,11 +1,20 @@
+# Secrets: real keys live only in .env files (see backend/.env.example)
+.env
+.env.*
+!.env.example
+
 # Python
 backend/venv/
-backend/__pycache__/
-backend/.env
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
 
 # Node
 frontend/node_modules/
 frontend/dist/
 
-# OS
+# OS / editors
 .DS_Store
+Thumbs.db
+.idea/

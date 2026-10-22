@@ -47,82 +47,13 @@ body {
   padding: 24px;
 }
 
-.field-label {
-  display: block;
-  font-size: 12px;
+.pipeline {
+  margin: 0 0 8px;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  color: var(--accent);
+}
+
+.muted {
+  margin: 0;
   color: var(--ink-soft);
-  margin-bottom: 6px;
-  margin-top: 16px;
-}
-
-.field-label:first-child {
-  margin-top: 0;
-}
-
-.select,
-.input,
-.textarea {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--bg);
-  color: var(--ink);
-  font-family: inherit;
-  font-size: 14px;
-}
-
-.textarea {
-  resize: vertical;
-}
-
-.select:focus,
-.input:focus,
-.textarea:focus {
-  outline: none;
-  border-color: var(--accent);
-}
-
-.generate-button {
-  width: 100%;
-  margin-top: 20px;
-  padding: 13px;
-  border: none;
-  border-radius: 8px;
-  background: var(--accent);
-  color: white;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.generate-button:hover:not(:disabled) {
-  background: var(--accent-hover);
-}
-
-.generate-button:disabled {
-  background: var(--border);
-  color: var(--ink-soft);
-  cursor: not-allowed;
-}
-
-.error-text {
-  color: #b3432c;
-  font-size: 14px;
-  margin-top: 12px;
-}
-
-.output-card {
-  margin-top: 24px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 24px;
-  white-space: pre-wrap;
-  line-height: 1.7;
-  font-size: 14.5px;
 }
