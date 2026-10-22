@@ -4,16 +4,18 @@ Pipeline: Assess -> Prioritise -> Allocate -> Explain.
 """
 import os
 from pathlib import Path
+from typing import Any, Literal
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
 # Secrets (GEMINI_API_KEY) live in backend/.env, which is git-ignored.
 load_dotenv(Path(__file__).resolve().parent / ".env")
 
-from services import gemini_client, scenarios  # noqa: E402  (needs the env loaded first)
-from services.scenarios import Scenario, ScenarioNotFoundError, ScenarioSummary  # noqa: E402
+from services import gemini_client, priority, scenarios  # noqa: E402  (needs the env loaded first)
+from services.scenarios import Scenario, ScenarioNotFoundError, ScenarioSummary, Zone  # noqa: E402
 
 API_VERSION = "0.1.0"
 
@@ -48,7 +50,7 @@ def root():
         "name": "ResQ Nexus API",
         "version": API_VERSION,
         "docs": "/docs",
-        "endpoints": ["/health", "/scenarios", "/scenarios/{id}"],
+        "endpoints": ["/health", "/scenarios", "/scenarios/{id}", "/scenarios/{id}/priority"],
     }
 
 
@@ -73,3 +75,37 @@ def list_scenarios():
 def get_scenario(scenario_id: str):
     """Full scenario: metadata, available resources and every zone."""
     return _scenario_or_404(scenario_id)
+
+
+class ScoredZone(Zone):
+    """A zone with its priority score, level, rank and score breakdown."""
+
+    priority_score: float
+    priority_level: Literal["Critical", "High", "Medium", "Low"]
+    rank: int
+    factors: dict[str, float]
+    contributions: dict[str, float]
+
+
+class PriorityResponse(BaseModel):
+    scenario_id: str
+    scenario_name: str
+    disaster_type: str
+    settings: dict[str, Any]
+    summary: dict[str, int]
+    zones: list[ScoredZone]
+
+
+@app.get("/scenarios/{scenario_id}/priority", response_model=PriorityResponse)
+def get_priority(scenario_id: str):
+    """Zones ranked by priority score (highest first) with Critical / High / Medium / Low levels."""
+    scenario = _scenario_or_404(scenario_id)
+    scored = priority.score_zones(zone.model_dump() for zone in scenario.zones)
+    return {
+        "scenario_id": scenario.id,
+        "scenario_name": scenario.name,
+        "disaster_type": scenario.disaster_type,
+        "settings": priority.PRIORITY_SETTINGS,
+        "summary": priority.level_counts(scored),
+        "zones": scored,
+    }
