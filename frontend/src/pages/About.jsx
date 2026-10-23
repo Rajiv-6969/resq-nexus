@@ -1,9 +1,11 @@
-import { motion } from "framer-motion";
 import { Link } from "react-router";
-import { ArrowRightIcon, CodeIcon, CpuIcon, InfoIcon, MapIcon, RouteIcon, SparkIcon } from "../components/icons";
-import { PIPELINE_ICONS } from "../components/iconMaps";
+import Figure from "../components/Figure";
+import { Reveal, Wipe } from "../components/Reveal";
 import { SHOW_ANALYTICS } from "../config";
 import { PIPELINE_STEPS } from "../constants";
+import { PHOTOS, PHOTO_LIST } from "../lib/photos";
+
+const pad2 = (n) => String(n).padStart(2, "0");
 
 const STEP_COPY = {
   assess: "Each scenario lists zones with damage severity (0–3), population, a vulnerability index and road accessibility, plus the stock available for the whole response.",
@@ -14,118 +16,121 @@ const STEP_COPY = {
 
 const ALGORITHMS = [
   {
-    name: "K-Means clustering",
+    name: "K-Means Clustering",
     library: "scikit-learn",
-    icon: MapIcon,
     text: "Partitions points into k clusters by repeatedly moving each centroid to the (optionally weighted) mean of its members.",
   },
   {
-    name: "Dijkstra's shortest path",
+    name: "Dijkstra's Shortest Path",
     library: "NetworkX",
-    icon: RouteIcon,
     text: "Finds the lowest-cost path from a source node to every other node of a graph with non-negative edge weights.",
   },
   {
     name: "Genetic Algorithm",
     library: "DEAP",
-    icon: CpuIcon,
     text: "Evolves a population of candidate solutions through selection, crossover and mutation, guided by a fitness function.",
   },
 ];
 
 const STACK = [
-  { group: "Frontend", items: ["React 19", "Vite", "React Router", "React-Leaflet + OpenStreetMap", "Framer Motion", "Recharts"] },
+  { group: "Frontend", items: ["React 19", "Vite", "React Router", "React-Leaflet + OpenStreetMap", "Framer Motion"] },
   { group: "Backend", items: ["Python 3.13", "FastAPI", "Pydantic", "NumPy", "scikit-learn", "NetworkX", "DEAP"] },
   { group: "AI", items: ["Google Gemini API (google-genai)", "Template fallback"] },
   { group: "Quality", items: ["pytest", "oxlint", "GitHub Actions CI"] },
 ];
 
-const rise = { initial: { opacity: 0, y: 18 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true, amount: 0.2 } };
-
 export default function About() {
   return (
     <div className="about">
-      <header className="page-head page-head--center">
-        <p className="kicker">About the project</p>
-        <h1 className="page-title">ResQ Nexus</h1>
-        <p className="page-lead">
-          An intelligent disaster response and resource allocation system: a web-based decision-support tool that helps a
-          response team decide where scarce relief should go, and explains why.
+      <section className="sec page-hero page-hero--paper" aria-labelledby="about-title">
+        <p className="sec-bar mono">
+          <span>(03) About</span>
+          <span>Project notes</span>
         </p>
-      </header>
+        <div className="page-hero-row">
+          <Wipe as="h1" id="about-title" className="page-title">
+            About
+          </Wipe>
+          <p className="page-sub">
+            ResQ Nexus is an intelligent disaster response and resource allocation system: a web-based decision-support tool that
+            helps a response team decide where scarce relief should go, and explains why.
+          </p>
+        </div>
+      </section>
 
-      <motion.section className="about-section" {...rise}>
-        <h2 className="display-title">The pipeline</h2>
-        <ol className="about-pipeline">
-          {PIPELINE_STEPS.map((step, i) => {
-            const Icon = PIPELINE_ICONS[step.key];
-            return (
-              <li key={step.key} className={`about-step about-step--${step.key}`}>
-                <span className="about-step-num">0{i + 1}</span>
-                <span className="about-step-icon">
-                  <Icon size={20} />
-                </span>
-                <div>
-                  <h3>{step.name}</h3>
-                  <p>{STEP_COPY[step.key]}</p>
-                </div>
-              </li>
-            );
-          })}
+      <Figure photo={PHOTOS["about-concrete-pillars"]} index="01" className="page-figure" eager />
+
+      <section className="sec sec--black about-block" aria-labelledby="pipeline-title">
+        <p className="sec-bar mono">
+          <span>01</span>
+          <span>How it works</span>
+        </p>
+        <Wipe id="pipeline-title" className="about-h2">
+          Four stages, one decision.
+        </Wipe>
+        <ol className="about-steps">
+          {PIPELINE_STEPS.map((step, i) => (
+            <Reveal as="li" key={step.key} className="about-step" delay={i * 0.05}>
+              <span className="about-step-num">{pad2(i + 1)}</span>
+              <h3>{step.name}</h3>
+              <p>{STEP_COPY[step.key]}</p>
+            </Reveal>
+          ))}
         </ol>
-      </motion.section>
+      </section>
 
-      <motion.section className="about-section" {...rise} aria-labelledby="algorithms-title">
-        <h2 id="algorithms-title" className="display-title">
+      <section className="sec sec--red about-block" aria-labelledby="algorithms-title">
+        <p className="sec-bar mono">
+          <span>02</span>
+          <span>Algorithms</span>
+        </p>
+        <Wipe id="algorithms-title" className="about-h2">
           Algorithms Used
-        </h2>
+        </Wipe>
         <ul className="algo-grid">
-          {ALGORITHMS.map(({ name, library, icon: Icon, text }) => (
-            <li key={name} className="algo-card glass">
-              <span className="algo-icon">
-                <Icon size={22} />
-              </span>
+          {ALGORITHMS.map(({ name, library, text }, i) => (
+            <Reveal as="li" key={name} className="algo-card" delay={i * 0.05}>
+              <span className="algo-num">{pad2(i + 1)}</span>
               <h3>{name}</h3>
               <span className="algo-lib">{library}</span>
               <p>{text}</p>
-            </li>
+            </Reveal>
           ))}
         </ul>
-      </motion.section>
+      </section>
 
-      <motion.section className="about-section about-split" {...rise}>
-        <div className="glass about-card">
-          <h2 className="panel-title">Priority score</h2>
-          <p className="formula">
-            priority = w1·severity + w2·population + w3·vulnerability + w4·(1 − accessibility) + equity
-          </p>
+      <section className="sec about-split" aria-label="Priority score and data">
+        <Reveal className="about-card">
+          <p className="sec-no">03 / Priority score</p>
+          <p className="formula">priority = w1·severity + w2·population + w3·vulnerability + w4·(1 − accessibility) + equity</p>
           <p>
-            Default weights 0.40 / 0.25 / 0.20 / 0.15, adjustable live from the Command Centre. Levels: Critical ≥ 0.70, High ≥
-            0.50, Medium ≥ 0.30, otherwise Low.
+            Default weights 0.40 / 0.25 / 0.20 / 0.15, adjustable live from the Command Centre. Levels: Critical ≥ 0.70, High ≥ 0.50,
+            Medium ≥ 0.30, otherwise Low.
           </p>
-        </div>
-        <div className="glass about-card">
-          <h2 className="panel-title">
-            <InfoIcon size={16} /> Data
-          </h2>
+        </Reveal>
+        <Reveal className="about-card" delay={0.05}>
+          <p className="sec-no">04 / Data</p>
+          <p className="about-card-lead">Synthetic scenarios, real places.</p>
           <p>
-            The three demo scenarios (Barpeta flood, Kachchh earthquake, Kumaon wildfire) are synthetic: zone names and coordinates
-            are real OpenStreetMap places, populations are rounded approximations, and damage, vulnerability, access and stock are
-            generated by <code>backend/generate_scenario.py</code>.
+            The three demo scenarios (Barpeta flood, Kachchh earthquake, Kumaon wildfire) are synthetic: zone names and coordinates are
+            real OpenStreetMap places, populations are rounded approximations, and damage, vulnerability, access and stock are generated
+            by <code>backend/generate_scenario.py</code>.
           </p>
-        </div>
-      </motion.section>
+        </Reveal>
+      </section>
 
-      <motion.section className="about-section" {...rise} aria-labelledby="stack-title">
-        <h2 id="stack-title" className="display-title">
+      <section className="sec sec--black about-block" aria-labelledby="stack-title">
+        <p className="sec-bar mono">
+          <span>05</span>
+          <span>Tech stack</span>
+        </p>
+        <h2 id="stack-title" className="visually-hidden">
           Tech stack
         </h2>
         <div className="stack-grid">
           {STACK.map(({ group, items }) => (
-            <div key={group} className="stack-group glass">
-              <h3>
-                {group === "AI" ? <SparkIcon size={15} /> : <CodeIcon size={15} />} {group}
-              </h3>
+            <div key={group} className="stack-group">
+              <h3>{group}</h3>
               <ul>
                 {items.map((item) => (
                   <li key={item}>{item}</li>
@@ -134,13 +139,41 @@ export default function About() {
             </div>
           ))}
         </div>
-      </motion.section>
+      </section>
 
-      <div className="about-cta">
-        <Link to="/command" className="btn btn-primary btn-lg">
-          Open the Command Centre <ArrowRightIcon size={15} />
+      <section className="sec about-credits" aria-labelledby="credits-title">
+        <p className="sec-bar mono">
+          <span>06</span>
+          <span id="credits-title">Photo credits</span>
+        </p>
+        <ol className="credits-list">
+          {PHOTO_LIST.map((p, i) => (
+            <li key={p.slug}>
+              <span className="credits-no">{pad2(i + 1)}</span>
+              <span className="credits-caption">{p.caption}</span>
+              <span>{p.author}</span>
+              <a href={p.page} target="_blank" rel="noreferrer">
+                {p.source}
+              </a>
+              {p.license_url ? (
+                <a href={p.license_url} target="_blank" rel="noreferrer">
+                  {p.license}
+                </a>
+              ) : (
+                <span>{p.license}</span>
+              )}
+            </li>
+          ))}
+        </ol>
+        <p className="credits-note">Every photograph was converted to high-contrast grayscale and cropped for this site.</p>
+      </section>
+
+      <section className="sec sec--red about-cta" aria-label="Open the Command Centre">
+        <p className="about-cta-title">Ready to allocate?</p>
+        <Link to="/command" className="btn btn--on-red btn--lg">
+          Launch Command Centre <span className="arrow">&rarr;</span>
         </Link>
-      </div>
+      </section>
     </div>
   );
 }

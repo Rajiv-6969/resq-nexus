@@ -3,7 +3,7 @@ export default function DamageGlyph({ type, severity, size = 72 }) {
   const water = [0, 14, 25, 37][severity];
   return (
     <svg width={size} height={size} viewBox="0 0 64 64" className={`glyph glyph--${type} glyph--s${severity}`} aria-hidden="true" focusable="false">
-      <rect x="0" y="0" width="64" height="64" rx="14" className="glyph-bg" />
+      <rect x="0" y="0" width="64" height="64" className="glyph-bg" />
       {type === "flood" && (
         <>
           <path d="M18 34 32 22l14 12v16H18z" className="glyph-house" />
