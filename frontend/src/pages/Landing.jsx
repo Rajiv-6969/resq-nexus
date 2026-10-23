@@ -1,28 +1,13 @@
-import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router";
 import AnimatedNumber from "../components/AnimatedNumber";
-import ParticleField from "../components/ParticleField";
-import { ArrowRightIcon, PlayIcon } from "../components/icons";
-import { DISASTER_ICONS, PIPELINE_ICONS } from "../components/iconMaps";
-import { DISASTER_META, PIPELINE_STEPS, formatNumber } from "../constants";
+import Figure from "../components/Figure";
+import { AsteriskMark } from "../components/icons";
+import { Reveal, Wipe } from "../components/Reveal";
+import { DISASTER_META, formatNumber } from "../constants";
+import { PHOTOS, SCENARIO_PHOTOS } from "../lib/photos";
 import { useAppData } from "../state/contexts";
 
-const STAGE_COPY = {
-  assess:
-    "Load a disaster scenario: damage severity, population, vulnerability and road access for every zone on the map.",
-  prioritise:
-    "Score each zone with transparent, adjustable weights, plus an equity boost so remote areas are not left behind.",
-  allocate:
-    "The Allocation Engine assigns rescue teams, medical kits, food, shelters and vehicles to every zone, with relief depots, routes and travel times.",
-  explain:
-    "Every zone gets a plain-language reason for its share, written by Google Gemini, with a built-in template fallback.",
-};
-
-const container = { hidden: {}, show: { transition: { staggerChildren: 0.09, delayChildren: 0.12 } } };
-const item = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.2, 0.7, 0.2, 1] } },
-};
+const pad2 = (n) => String(n).padStart(2, "0");
 
 export default function Landing() {
   const { scenarios, scenarioId, selectScenario, listState } = useAppData();
@@ -40,157 +25,180 @@ export default function Landing() {
 
   return (
     <div className="landing">
+      {/* 01: hero */}
       <section className="hero" aria-labelledby="hero-title">
-        <ParticleField className="hero-particles" />
-        <div className="hero-rings" aria-hidden="true">
-          <span />
-          <span />
-          <span />
-        </div>
-        <motion.div className="hero-inner" variants={container} initial="hidden" animate="show">
-          <motion.p className="eyebrow" variants={item}>
-            <span className="eyebrow-dot" aria-hidden="true" /> Disaster response decision support
-          </motion.p>
-          <motion.h1 id="hero-title" className="hero-logo" variants={item}>
-            ResQ Nexus
-          </motion.h1>
-          <motion.p className="hero-tagline" variants={item}>
-            Intelligent Disaster Response and Resource Allocation System
-          </motion.p>
-          <motion.ol className="hero-pipeline" variants={item} aria-label="Pipeline stages">
-            {PIPELINE_STEPS.map((step, i) => (
-              <li key={step.key}>
-                <span>{step.name}</span>
-                {i < PIPELINE_STEPS.length - 1 && <ArrowRightIcon size={14} />}
-              </li>
-            ))}
-          </motion.ol>
-          <motion.div className="hero-cta" variants={item}>
-            <Link to={launchTo} className="btn btn-primary btn-xl">
-              <PlayIcon size={16} /> Launch Command Centre
+        <p className="hero-meta mono">
+          <span>(01) Index</span>
+          <span>Disaster response decision support</span>
+          <span>India / {ready ? `${scenarios.length} demo scenarios` : "loading"}</span>
+          <span>20.59&deg; N 78.96&deg; E</span>
+        </p>
+
+        <Wipe as="h1" id="hero-title" className="hero-title">
+          ResQ Nexus
+        </Wipe>
+
+        <div className="hero-row">
+          <Reveal className="hero-copy">
+            <p className="hero-lede">
+              Intelligent Disaster Response and Resource Allocation System. It ranks every affected zone, shares out
+              scarce relief between them and explains each decision in plain language.
+            </p>
+            <Link to={launchTo} className="btn btn--solid btn--lg">
+              Launch Command Centre <span className="arrow">&rarr;</span>
             </Link>
-            <Link to="/about" className="btn btn-ghost btn-xl">
-              How it works
-            </Link>
-          </motion.div>
-          <motion.dl className="hero-stats" variants={item}>
+          </Reveal>
+
+          <div className="hero-numeral">
+            <span className="numeral" aria-hidden="true">
+              {ready ? pad2(scenarios.length) : "—"}
+            </span>
+            <span className="label">
+              Demo scenarios
+              <br />
+              Flood / Earthquake / Wildfire
+            </span>
+          </div>
+
+          <dl className="hero-stats">
             <div>
-              <dt>Scenarios</dt>
-              <dd>
-                <AnimatedNumber value={ready ? scenarios.length : null} />
-              </dd>
-            </div>
-            <div>
-              <dt>Zones mapped</dt>
+              <dt className="label">Zones mapped</dt>
               <dd>
                 <AnimatedNumber value={ready ? zones : null} />
               </dd>
             </div>
             <div>
-              <dt>People in scope</dt>
+              <dt className="label">People in scope</dt>
               <dd>
                 <AnimatedNumber value={ready ? people : null} />
               </dd>
             </div>
             <div>
-              <dt>Indian states</dt>
+              <dt className="label">Indian states</dt>
               <dd>
                 <AnimatedNumber value={ready ? states : null} />
               </dd>
             </div>
-          </motion.dl>
-          {listState.status === "error" && (
-            <motion.p className="hero-offline" variants={item} role="status">
-              The backend is offline, so live scenario figures are unavailable. Start the API and refresh.
-            </motion.p>
-          )}
-        </motion.div>
-        <div className="hero-fade" aria-hidden="true" />
+          </dl>
+
+          <div className="hero-mark" aria-hidden="true">
+            <AsteriskMark size={72} className="hero-asterisk" />
+          </div>
+        </div>
+
+        {listState.status === "error" && (
+          <p className="hero-offline mono" role="status">
+            Backend offline: live scenario figures are unavailable. Start the API and refresh.
+          </p>
+        )}
+
+        <Figure photo={PHOTOS["hero-chandigarh-assembly"]} index="01" className="hero-figure" eager />
       </section>
 
-      <section className="stages" aria-labelledby="stages-title">
-        <header className="section-head">
-          <p className="kicker">The pipeline</p>
-          <h2 id="stages-title" className="display-title">
-            From damage to decisions
-          </h2>
+      {/* 02: statement */}
+      <section className="sec sec--red statement" aria-labelledby="statement-title">
+        <p className="sec-bar mono">
+          <span>02</span>
+          <span>The problem</span>
+        </p>
+        <Wipe id="statement-title" className="statement-title">
+          Where should scarce relief go first?
+        </Wipe>
+        <Reveal className="statement-body">
+          <p>
+            After a disaster the stock is always smaller than the need. ResQ Nexus scores every zone on damage,
+            population, vulnerability and road access, then shares out rescue teams, medical kits, food packets,
+            shelters and vehicles, and says why each zone received what it did.
+          </p>
+        </Reveal>
+      </section>
+
+      {/* 03: the project (in place of the old pipeline diagram) */}
+      <section className="sec sec--black project" aria-labelledby="project-title">
+        <div className="project-text">
+          <p className="sec-bar mono">
+            <span>03</span>
+            <span>The project</span>
+          </p>
+          <Wipe id="project-title" className="project-title">
+            A command centre for relief decisions
+          </Wipe>
+          <Reveal className="project-body">
+            <p className="project-desc">
+              Pick a flood, earthquake or wildfire scenario, decide what matters most and run the Allocation Engine.
+              Every affected zone gets its share of each resource, a relief depot, a road route and a travel time,
+              with a plain-language explanation beside it.
+            </p>
+            <Link to={launchTo} className="btn btn--on-dark btn--lg">
+              Launch Command Centre <span className="arrow">&rarr;</span>
+            </Link>
+          </Reveal>
+        </div>
+        <Reveal className="project-figure">
+          <Figure photo={PHOTOS["relief-assam-floods"]} index="02" />
+        </Reveal>
+      </section>
+
+      {/* 04: scenarios */}
+      <section className="sec scenarios" aria-labelledby="scenarios-title">
+        <header className="scenarios-head">
+          <p className="sec-bar mono">
+            <span>04</span>
+            <span>Demo scenarios</span>
+          </p>
+          <Wipe id="scenarios-title" className="scenarios-title">
+            Three disasters. Real places.
+          </Wipe>
+          <p className="label scenarios-note">
+            Synthetic demo data. Zones are real OpenStreetMap places; damage, needs and stock are generated.
+          </p>
         </header>
-        <motion.ol
-          className="stage-grid"
-          variants={container}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, amount: 0.2 }}
-        >
-          {PIPELINE_STEPS.map((step, i) => {
-            const Icon = PIPELINE_ICONS[step.key];
+
+        <div className="scenario-grid">
+          {scenarios.map((s, i) => {
+            const photo = SCENARIO_PHOTOS[s.disaster_type];
             return (
-              <motion.li key={step.key} className={`stage-card stage-card--${step.key}`} variants={item}>
-                <div className="stage-card-top">
-                  <span className="stage-index">0{i + 1}</span>
-                  <span className="stage-icon">
-                    <Icon size={22} />
-                  </span>
+              <Reveal as="article" key={s.id} className="scenario-card" delay={i * 0.06}>
+                {photo && (
+                  <div className="scenario-img">
+                    <img src={photo.src} alt={photo.caption} loading="lazy" decoding="async" />
+                  </div>
+                )}
+                <div className="scenario-body">
+                  <p className="label">
+                    {pad2(i + 1)} / {DISASTER_META[s.disaster_type]?.label ?? s.disaster_type}
+                  </p>
+                  <h3>{s.name}</h3>
+                  <p className="scenario-region">
+                    {s.region}, {s.state}
+                  </p>
+                  <dl className="scenario-stats">
+                    <div>
+                      <dt className="label">Zones</dt>
+                      <dd className="num">{s.zone_count}</dd>
+                    </div>
+                    <div>
+                      <dt className="label">People</dt>
+                      <dd className="num">{formatNumber(s.total_population)}</dd>
+                    </div>
+                  </dl>
                 </div>
-                <h3>{step.name}</h3>
-                <p>{STAGE_COPY[step.key]}</p>
-                <span className="stage-signal" aria-hidden="true" />
-              </motion.li>
-            );
-          })}
-        </motion.ol>
-      </section>
-
-      <section className="teasers" aria-labelledby="teasers-title">
-        <header className="section-head">
-          <p className="kicker">Demo scenarios</p>
-          <h2 id="teasers-title" className="display-title">
-            Three disasters across India
-          </h2>
-        </header>
-        <motion.div
-          className="teaser-grid"
-          variants={container}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, amount: 0.2 }}
-        >
-          {scenarios.map((s) => {
-            const Icon = DISASTER_ICONS[s.disaster_type];
-            const meta = DISASTER_META[s.disaster_type];
-            return (
-              <motion.button
-                type="button"
-                key={s.id}
-                className={`teaser teaser--${s.disaster_type}`}
-                style={{ "--accent": meta?.color }}
-                variants={item}
-                whileHover={{ y: -6 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => openScenario(s.id)}
-              >
-                <span className="teaser-icon">{Icon && <Icon size={30} />}</span>
-                <span className="teaser-type">{meta?.label ?? s.disaster_type}</span>
-                <strong className="teaser-name">{s.name}</strong>
-                <span className="teaser-region">
-                  {s.region}, {s.state}
-                </span>
-                <span className="teaser-stats">
-                  <span>{s.zone_count} zones</span>
-                  <span>{formatNumber(s.total_population)} people</span>
-                </span>
-                <span className="teaser-open">
-                  Open in Command Centre <ArrowRightIcon size={14} />
-                </span>
-              </motion.button>
+                <button type="button" className="scenario-open" onClick={() => openScenario(s.id)}>
+                  Open in Command Centre <span className="arrow">&rarr;</span>
+                </button>
+                {photo && (
+                  <p className="scenario-credit mono">
+                    <a href={photo.page} target="_blank" rel="noreferrer">
+                      Photo: {photo.caption} / {photo.credit}
+                    </a>
+                  </p>
+                )}
+              </Reveal>
             );
           })}
           {!scenarios.length &&
-            [0, 1, 2].map((i) => <div key={i} className="teaser teaser--skeleton" aria-hidden="true" />)}
-        </motion.div>
-        <p className="landing-note">
-          Synthetic demo data: zones are real OpenStreetMap places; damage, needs and stock are generated.
-        </p>
+            [0, 1, 2].map((i) => <div key={i} className="scenario-card scenario-card--empty" aria-hidden="true" />)}
+        </div>
       </section>
     </div>
   );
