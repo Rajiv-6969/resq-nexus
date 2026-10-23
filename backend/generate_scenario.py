@@ -40,6 +40,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from services.demand import estimate_need
 from services.scenarios import DISASTER_TYPES, RESOURCE_TYPES, SCENARIO_DIR, Scenario
 
 REGIONS_FILE = Path(__file__).resolve().parent / "data" / "regions.json"
@@ -65,10 +66,7 @@ EXPOSURE = {
 ACCESS_LOSS = {"flood": 0.40, "earthquake": 0.30, "wildfire": 0.20}
 ZONE_PREFIX = {"flood": "FL", "earthquake": "EQ", "wildfire": "WF"}
 
-# Share of residents needing relief / displaced, indexed by damage_severity.
-AFFECTED_SHARE = (0.0, 0.10, 0.35, 0.75)
-DISPLACED_SHARE = (0.0, 0.02, 0.15, 0.50)
-# Rounding step for available stock.
+# Rounding step for available stock (the need itself comes from services/demand.py).
 RESOURCE_STEP = {"rescue_teams": 1, "medical_kits": 10, "food_packets": 100, "shelters": 1, "vehicles": 1}
 
 DATA_NOTE_REGION = (
@@ -231,19 +229,6 @@ def severity_from_intensity(x: float) -> int:
 
 
 # --------------------------------------------------------------------------- resources
-def estimate_need(zones: list[dict[str, Any]]) -> dict[str, int]:
-    """Rough relief need implied by the zones' damage and population."""
-    affected = sum(z["population"] * AFFECTED_SHARE[z["damage_severity"]] for z in zones)
-    displaced = sum(z["population"] * DISPLACED_SHARE[z["damage_severity"]] for z in zones)
-    return {
-        "rescue_teams": sum((0, 0, 1, 2)[z["damage_severity"]] for z in zones),
-        "medical_kits": math.ceil(affected / 25),  # one kit per ~25 affected people
-        "food_packets": math.ceil(affected),  # one-day ration per affected person
-        "shelters": math.ceil(displaced / 100),  # one unit per ~100 displaced people
-        "vehicles": sum((0, 1, 2, 3)[z["damage_severity"]] for z in zones),
-    }
-
-
 def available_resources(need: dict[str, int], scarcity: float) -> dict[str, int]:
     """Available stock = a fraction of the need, rounded down (relief is always short)."""
     stock = {}
