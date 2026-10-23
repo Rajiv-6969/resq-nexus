@@ -59,12 +59,8 @@ export const PIPELINE_STEPS = [
 ];
 
 const numberFormat = new Intl.NumberFormat("en-IN");
-const compactFormat = new Intl.NumberFormat("en-IN", { notation: "compact", maximumFractionDigits: 1 });
 export const formatNumber = (value) => numberFormat.format(Math.round(value));
-export const formatCompact = (value) => compactFormat.format(value);
 export const formatScore = (value) => value.toFixed(3);
-export const formatPct = (value, digits = 0) => (value == null ? "—" : `${value.toFixed(digits)}%`);
-export const formatMinutes = (value) => (value == null ? "—" : `${Math.round(value)} min`);
 
 export function accessLabel(accessibility) {
   if (accessibility < 0.3) return "Poor";

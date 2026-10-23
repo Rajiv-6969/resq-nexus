@@ -47,11 +47,6 @@ export const CheckIcon = (p) => (
     <path d="M5 12.5l4.5 4.5L19 7.5" />
   </Svg>
 );
-export const ChevronIcon = (p) => (
-  <Svg {...p}>
-    <path d="M9 6l6 6-6 6" />
-  </Svg>
-);
 export const ArrowRightIcon = (p) => (
   <Svg {...p}>
     <path d="M4 12h15M13 6l6 6-6 6" />
@@ -238,12 +233,6 @@ export const ShieldIcon = (p) => (
   <Svg {...p}>
     <path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6z" />
     <path d="M9 12l2 2 4-4" />
-  </Svg>
-);
-export const HomeIcon = (p) => (
-  <Svg {...p}>
-    <path d="M4 11l8-7 8 7v9H4z" />
-    <path d="M10 20v-5h4v5" />
   </Svg>
 );
 export const CodeIcon = (p) => (
