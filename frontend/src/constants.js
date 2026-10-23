@@ -15,8 +15,6 @@ export const CLUSTER_COLORS = ["#0A0A0A", "#E10600", "#8A8A85", "#FF6B1A", "#C9C
 export const clusterColor = (index) => CLUSTER_COLORS[index % CLUSTER_COLORS.length];
 
 export const SEVERITY_LABELS = ["None", "Minor", "Major", "Destroyed"];
-export const SEVERITY_COLORS = ["#5A5A57", "#C9C7C1", "#FF6B1A", "#E10600"];
-
 export const DISASTER_META = {
   flood: { label: "Flood", verb: "Flooding" },
   earthquake: { label: "Earthquake", verb: "Ground shaking" },

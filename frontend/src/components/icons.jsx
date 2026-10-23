@@ -36,11 +36,6 @@ export const CheckIcon = (p) => (
     <path d="M5 12.5l4.5 4.5L19 7.5" />
   </Svg>
 );
-export const ArrowRightIcon = (p) => (
-  <Svg {...p}>
-    <path d="M4 12h15M13 6l6 6-6 6" />
-  </Svg>
-);
 export const CloseIcon = (p) => (
   <Svg {...p}>
     <path d="M6 6l12 12M18 6L6 18" />
@@ -50,17 +45,6 @@ export const AlertIcon = (p) => (
   <Svg {...p}>
     <path d="M12 3l9.5 17h-19z" />
     <path d="M12 10v4.5M12 17.5v.01" />
-  </Svg>
-);
-export const InfoIcon = (p) => (
-  <Svg {...p}>
-    <circle cx="12" cy="12" r="9" />
-    <path d="M12 11v5M12 8v.01" />
-  </Svg>
-);
-export const PlayIcon = (p) => (
-  <Svg {...p}>
-    <path d="M7 4.5v15l12-7.5z" fill="currentColor" stroke="none" />
   </Svg>
 );
 export const RefreshIcon = (p) => (
@@ -101,84 +85,6 @@ export const TruckIcon = (p) => (
     <circle cx="17" cy="17.5" r="2" />
   </Svg>
 );
-export const WavesIcon = (p) => (
-  <Svg {...p}>
-    <path d="M2 8c2.5-2 4.5-2 7 0s4.5 2 7 0 4.5-2 6 0M2 13c2.5-2 4.5-2 7 0s4.5 2 7 0 4.5-2 6 0M2 18c2.5-2 4.5-2 7 0s4.5 2 7 0 4.5-2 6 0" />
-  </Svg>
-);
-export const QuakeIcon = (p) => (
-  <Svg {...p}>
-    <path d="M2 12h4l2.5-6 4 13 3-9 2 2H22" />
-  </Svg>
-);
-export const FlameIcon = (p) => (
-  <Svg {...p}>
-    <path d="M12 3c1 3.5 5 5.5 5 10.5a5 5 0 0 1-10 0c0-2.5 1.2-4 2.5-5.5.3 1.6 1 2.6 2 3 .3-3-.5-5.5.5-8z" />
-  </Svg>
-);
-export const SparkIcon = (p) => (
-  <Svg {...p}>
-    <path d="M12 3l1.8 5.4L19 10l-5.2 1.6L12 17l-1.8-5.4L5 10l5.2-1.6z" />
-    <path d="M19 16l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z" />
-  </Svg>
-);
-export const RadarIcon = (p) => (
-  <Svg {...p}>
-    <circle cx="12" cy="12" r="9" />
-    <circle cx="12" cy="12" r="5" />
-    <path d="M12 12l6.4-6.4M12 3v2M21 12h-2" />
-  </Svg>
-);
-export const GaugeIcon = (p) => (
-  <Svg {...p}>
-    <path d="M4.5 18a9 9 0 1 1 15 0" />
-    <path d="M12 13l4-5M12 13v.01" />
-  </Svg>
-);
-export const RouteIcon = (p) => (
-  <Svg {...p}>
-    <circle cx="6" cy="18" r="2.5" />
-    <circle cx="18" cy="6" r="2.5" />
-    <path d="M8.5 18H15a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h6.5" />
-  </Svg>
-);
-export const DepotIcon = (p) => (
-  <Svg {...p}>
-    <path d="M3 10l9-6 9 6v10H3z" />
-    <path d="M7 20v-6h10v6M7 17h10" />
-  </Svg>
-);
-export const MapIcon = (p) => (
-  <Svg {...p}>
-    <path d="M3 6.5l6-2.5 6 2.5 6-2.5v13.5l-6 2.5-6-2.5-6 2.5z" />
-    <path d="M9 4v13.5M15 6.5V20" />
-  </Svg>
-);
-export const ChartIcon = (p) => (
-  <Svg {...p}>
-    <path d="M4 20V4M4 20h16" />
-    <path d="M8 16v-5M12 16V8M16 16v-8M20 16v-3" />
-  </Svg>
-);
-export const LayersIcon = (p) => (
-  <Svg {...p}>
-    <path d="M12 3l9 5-9 5-9-5z" />
-    <path d="M3 13l9 5 9-5" />
-  </Svg>
-);
-export const SlidersIcon = (p) => (
-  <Svg {...p}>
-    <path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0" />
-    <circle cx="16" cy="6" r="2" />
-    <circle cx="10" cy="12" r="2" />
-    <circle cx="18" cy="18" r="2" />
-  </Svg>
-);
-export const ListIcon = (p) => (
-  <Svg {...p}>
-    <path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01" />
-  </Svg>
-);
 export const ClockIcon = (p) => (
   <Svg {...p}>
     <circle cx="12" cy="12" r="9" />
@@ -205,13 +111,6 @@ export const CpuIcon = (p) => (
     <path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3" />
   </Svg>
 );
-export const BrainIcon = (p) => (
-  <Svg {...p}>
-    <path d="M9 4a3 3 0 0 0-3 3v.2A3 3 0 0 0 4 10a3 3 0 0 0 1 2.2A3 3 0 0 0 6 17a3 3 0 0 0 3 3V4z" />
-    <path d="M15 4a3 3 0 0 1 3 3v.2a3 3 0 0 1 2 2.8 3 3 0 0 1-1 2.2A3 3 0 0 1 18 17a3 3 0 0 1-3 3V4z" />
-    <path d="M9 9H7.5M9 14H7M15 9h1.5M15 14h2" />
-  </Svg>
-);
 export const UsersIcon = (p) => (
   <Svg {...p}>
     <circle cx="9" cy="8" r="3.5" />
@@ -222,10 +121,5 @@ export const ShieldIcon = (p) => (
   <Svg {...p}>
     <path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6z" />
     <path d="M9 12l2 2 4-4" />
-  </Svg>
-);
-export const CodeIcon = (p) => (
-  <Svg {...p}>
-    <path d="M8 7l-5 5 5 5M16 7l5 5-5 5M14 4l-4 16" />
   </Svg>
 );
