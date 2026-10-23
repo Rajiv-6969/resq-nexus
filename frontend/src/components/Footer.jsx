@@ -23,7 +23,7 @@ export default function Footer() {
         </p>
         <p className="footer-col">
           <span className="label">03 / Map</span>
-          Map data and tiles &copy; OpenStreetMap contributors, shown in grayscale.
+          Map data and tiles &copy; OpenStreetMap contributors.
         </p>
         <p className="footer-col">
           <span className="label">04 / Photos</span>

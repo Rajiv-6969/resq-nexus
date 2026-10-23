@@ -368,7 +368,7 @@
   position: relative;
   min-height: 0;
   overflow: hidden;
-  background: var(--black);
+  background: var(--map-land);
 }
 .cc-side {
   display: flex;

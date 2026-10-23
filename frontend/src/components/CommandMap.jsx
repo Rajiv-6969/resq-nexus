@@ -11,11 +11,11 @@ const INDIA_VIEW = { center: [22.5, 80.5], zoom: 5 };
 const MIN_RADIUS = 6;
 const MAX_EXTRA_RADIUS = 17;
 const LAYER_LABELS = { routes: "Routes", clusters: "Depot areas", roads: "Road network", hazard: "Hazard" };
-const PAPER = "#EDEBE6";
+const BLACK = "#0A0A0A";
 const RED = "#E10600";
-const CONCRETE = "#8A8A85";
+const GRAPHITE = "#5A5A57";
 
-// OpenStreetMap tiles, turned into a dark grayscale map by one CSS filter on the tile layer (.tiles-gray).
+// Standard OpenStreetMap tiles in their original colours; the overlays carry the site's style.
 const TILE_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 const TILE_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 
@@ -131,9 +131,9 @@ function AnimatedRoute({ positions, delay, dim, highlight }) {
       positions={positions}
       interactive={false}
       pathOptions={{
-        color: highlight ? RED : PAPER,
-        weight: highlight ? 4 : 2,
-        opacity: dim ? 0.2 : 0.95,
+        color: highlight ? RED : BLACK,
+        weight: highlight ? 4 : 2.5,
+        opacity: dim ? 0.25 : 0.9,
         lineCap: "butt",
         lineJoin: "miter",
         className: "route-line",
@@ -283,7 +283,7 @@ export default function CommandMap({ scenarioId, zones, hazard, allocation, stal
   return (
     <div className={`map-pane${stale ? " is-stale" : ""}`}>
       <MapContainer className="map" center={INDIA_VIEW.center} zoom={INDIA_VIEW.zoom} scrollWheelZoom zoomControl={false} aria-label="Map of affected zones">
-        <TileLayer className="tiles-gray" attribution={TILE_ATTRIBUTION} url={TILE_URL} maxZoom={19} />
+        <TileLayer attribution={TILE_ATTRIBUTION} url={TILE_URL} maxZoom={19} />
         <ZoomControl position="bottomright" />
         <FitToZones zones={zones} scenarioId={scenarioId} />
         <PanToSelected zone={selectedZone} />
@@ -303,7 +303,7 @@ export default function CommandMap({ scenarioId, zones, hazard, allocation, stal
                 pane="hulls"
                 positions={h.points}
                 interactive={false}
-                pathOptions={{ color: CONCRETE, weight: 1, opacity: 0.9, dashArray: "4 6", lineJoin: "miter", fillColor: PAPER, fillOpacity: 0.04, className: "hull" }}
+                pathOptions={{ color: BLACK, weight: 1.2, opacity: 0.75, dashArray: "4 6", lineJoin: "miter", fillColor: BLACK, fillOpacity: 0.05, className: "hull" }}
               />
             ) : null,
           )}
@@ -317,7 +317,7 @@ export default function CommandMap({ scenarioId, zones, hazard, allocation, stal
                 pane="roads"
                 positions={[nodes[r.from], nodes[r.to]]}
                 interactive={false}
-                pathOptions={{ color: CONCRETE, weight: 1, opacity: 0.35, lineCap: "butt", className: "road" }}
+                pathOptions={{ color: GRAPHITE, weight: 1, opacity: 0.5, lineCap: "butt", className: "road" }}
               />
             ) : null,
           )}
@@ -356,7 +356,7 @@ export default function CommandMap({ scenarioId, zones, hazard, allocation, stal
               key={zone.id}
               center={[zone.latitude, zone.longitude]}
               radius={radius}
-              pathOptions={{ color: PAPER, weight: 1, fillColor: colors.fill, fillOpacity: 0.95, className: `zone-dot zone-dot--${zone.priority_level.toLowerCase()}` }}
+              pathOptions={{ color: BLACK, weight: 1.2, fillColor: colors.fill, fillOpacity: 0.95, className: `zone-dot zone-dot--${zone.priority_level.toLowerCase()}` }}
               eventHandlers={{
                 click: () => onSelectZone(zone.id),
                 keypress: (e) => {
@@ -392,7 +392,7 @@ export default function CommandMap({ scenarioId, zones, hazard, allocation, stal
             center={[selectedZone.latitude, selectedZone.longitude]}
             radius={radiusFor(selectedZone.population, maxPopulation) + 5}
             interactive={false}
-            pathOptions={{ color: PAPER, weight: 2.5, fill: false, className: "selected-ring" }}
+            pathOptions={{ color: BLACK, weight: 2.5, fill: false, className: "selected-ring" }}
           />
         )}
 

@@ -8,6 +8,7 @@
   --red: #e10600;
   --orange: #ff6b1a;
   --white: #ffffff;
+  --map-land: #f2efe9; /* OpenStreetMap land colour, shown while tiles load */
 
   /* Roles */
   --ink: var(--black);
