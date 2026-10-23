@@ -1,5 +1,4 @@
-// Inline SVG icons (stroke = currentColor) so the UI needs no icon library.
-import { useId } from "react";
+// Inline SVG icons (stroke = currentColor, square caps) so the UI needs no icon library.
 
 function Svg({ children, size = 18, strokeWidth = 2, ...rest }) {
   return (
@@ -10,8 +9,8 @@ function Svg({ children, size = 18, strokeWidth = 2, ...rest }) {
       fill="none"
       stroke="currentColor"
       strokeWidth={strokeWidth}
-      strokeLinecap="round"
-      strokeLinejoin="round"
+      strokeLinecap="square"
+      strokeLinejoin="miter"
       aria-hidden="true"
       focusable="false"
       {...rest}
@@ -21,23 +20,13 @@ function Svg({ children, size = 18, strokeWidth = 2, ...rest }) {
   );
 }
 
-export function LogoMark({ size = 34 }) {
-  const id = useId().replace(/:/g, "");
+// Brand mark: a six-point asterisk of three square-ended bars.
+export function AsteriskMark({ size = 18, className = "asterisk", ...rest }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 40 40" aria-hidden="true" focusable="false" className="logo-mark">
-      <defs>
-        <linearGradient id={`${id}-ring`} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#2EC4B6" />
-          <stop offset="1" stopColor="#9D4EDD" />
-        </linearGradient>
-        <radialGradient id={`${id}-core`} cx="50%" cy="40%" r="65%">
-          <stop offset="0" stopColor="#ff7a84" />
-          <stop offset="1" stopColor="#b3172b" />
-        </radialGradient>
-      </defs>
-      <path d="M20 2.5 35.2 11.25v17.5L20 37.5 4.8 28.75v-17.5z" fill="#0f1730" stroke={`url(#${id}-ring)`} strokeWidth="2" />
-      <path d="M20 8.6c-4.4 0-8 3.4-8 7.6 0 5.7 8 13.3 8 13.3s8-7.6 8-13.3c0-4.2-3.6-7.6-8-7.6z" fill={`url(#${id}-core)`} />
-      <path d="M18.6 12.4h2.8V15H24v2.8h-2.6v2.6h-2.8v-2.6H16V15h2.6z" fill="#fff" />
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" focusable="false" className={className} {...rest}>
+      <rect x="10.4" y="0.5" width="3.2" height="23" fill="currentColor" />
+      <rect x="10.4" y="0.5" width="3.2" height="23" fill="currentColor" transform="rotate(60 12 12)" />
+      <rect x="10.4" y="0.5" width="3.2" height="23" fill="currentColor" transform="rotate(120 12 12)" />
     </svg>
   );
 }

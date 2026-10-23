@@ -1,7 +1,8 @@
 import { lazy, Suspense, useEffect } from "react";
 import { AnimatePresence, MotionConfig } from "framer-motion";
 import { Navigate, Route, Routes, useLocation } from "react-router";
-import Backdrop from "./components/Backdrop";
+import Footer from "./components/Footer";
+import { AsteriskMark } from "./components/icons";
 import NavBar from "./components/NavBar";
 import PageTransition from "./components/PageTransition";
 import { SHOW_ANALYTICS } from "./config";
@@ -21,8 +22,8 @@ const About = lazy(loadAbout);
 function PageLoader() {
   return (
     <div className="page-loader" role="status">
-      <span className="spinner" aria-hidden="true" />
-      Loading…
+      <AsteriskMark size={22} className="asterisk loader" />
+      Loading
     </div>
   );
 }
@@ -44,7 +45,6 @@ export default function App() {
     <MotionConfig reducedMotion="user">
       <ToastProvider>
         <AppDataProvider>
-          <Backdrop />
           <div className="shell">
             <a className="skip-link" href="#main">
               Skip to content
@@ -62,6 +62,7 @@ export default function App() {
                 </Routes>
               </AnimatePresence>
             </Suspense>
+            <Footer />
           </div>
         </AppDataProvider>
       </ToastProvider>

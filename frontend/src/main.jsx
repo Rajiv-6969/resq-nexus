@@ -2,17 +2,15 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router";
 import "leaflet/dist/leaflet.css";
-// Self-hosted Google Fonts: blackletter logo/headings, display subheadings, readable body + numbers.
-import "@fontsource/pirata-one/400.css";
-import "@fontsource/cinzel/600.css";
-import "@fontsource/cinzel/700.css";
+// Self-hosted Google Fonts: heavy grotesque headings, editorial body, mono labels and data.
+import "@fontsource/inter-tight/700.css";
+import "@fontsource/inter-tight/800.css";
 import "@fontsource/inter/400.css";
 import "@fontsource/inter/500.css";
 import "@fontsource/inter/600.css";
-import "@fontsource/inter/700.css";
-import "@fontsource/rajdhani/500.css";
-import "@fontsource/rajdhani/600.css";
-import "@fontsource/rajdhani/700.css";
+import "@fontsource/ibm-plex-mono/400.css";
+import "@fontsource/ibm-plex-mono/500.css";
+import "@fontsource/ibm-plex-mono/600.css";
 import "./styles/tokens.css";
 import "./styles/base.css";
 import "./styles/landing.css";

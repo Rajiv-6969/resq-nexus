@@ -12,7 +12,7 @@ export default function ErrorBanner({ message, onRetry }) {
           <code>uvicorn main:app --reload</code>. It should answer at <code>{API_BASE_URL}/health</code>.
         </p>
       </div>
-      <button type="button" className="btn btn-ghost btn-sm" onClick={onRetry}>
+      <button type="button" className="btn btn--sm btn--on-red" onClick={onRetry}>
         <RefreshIcon size={13} /> Retry
       </button>
     </div>

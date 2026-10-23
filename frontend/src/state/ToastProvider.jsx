@@ -1,30 +1,27 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ToastContext } from "./contexts";
-import { AlertIcon, CheckIcon, CloseIcon, InfoIcon } from "../components/icons";
+import { CloseIcon } from "../components/icons";
 
-const ICONS = { success: CheckIcon, info: InfoIcon, warning: AlertIcon, error: AlertIcon };
+const HARD = [0.7, 0, 0.2, 1];
 
 function Toaster({ toasts, onDismiss }) {
   return (
     <div className="toaster" role="region" aria-label="Notifications">
       <AnimatePresence initial={false}>
         {toasts.map((toast) => {
-          const Icon = ICONS[toast.type] ?? InfoIcon;
           return (
             <motion.div
               key={toast.id}
               layout
               className={`toast toast--${toast.type}`}
               role={toast.type === "error" ? "alert" : "status"}
-              initial={{ opacity: 0, x: 48, scale: 0.96 }}
-              animate={{ opacity: 1, x: 0, scale: 1 }}
-              exit={{ opacity: 0, x: 48, transition: { duration: 0.2 } }}
-              transition={{ type: "spring", stiffness: 380, damping: 30 }}
+              initial={{ opacity: 0, x: 64 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 64, transition: { duration: 0.12, ease: HARD } }}
+              transition={{ duration: 0.22, ease: HARD }}
             >
-              <span className="toast-icon">
-                <Icon size={18} />
-              </span>
+              <span className="toast-mark" aria-hidden="true" />
               <div className="toast-body">
                 <strong>{toast.title}</strong>
                 {toast.message && <p>{toast.message}</p>}

@@ -1,16 +1,17 @@
-import { motion } from "framer-motion";
 import { Link, NavLink } from "react-router";
 import { SHOW_ANALYTICS } from "../config";
 import { SCENARIO_PAGES } from "../constants";
 import { useAppData } from "../state/contexts";
-import { ChartIcon, InfoIcon, LogoMark, MapIcon, RadarIcon, SparkIcon } from "./icons";
+import { AsteriskMark } from "./icons";
 
 const LINKS = [
-  { to: "/command", label: "Command Centre", icon: MapIcon },
-  { to: "/analytics", label: "Analytics", icon: ChartIcon },
-  { to: "/damage", label: "Damage Assessment", icon: RadarIcon },
-  { to: "/about", label: "About", icon: InfoIcon },
+  { to: "/command", label: "Command Centre" },
+  { to: "/analytics", label: "Analytics" },
+  { to: "/damage", label: "Damage Assessment" },
+  { to: "/about", label: "About" },
 ].filter((link) => SHOW_ANALYTICS || link.to !== "/analytics");
+
+const API_TEXT = { checking: "API …", online: "API online", offline: "API offline" };
 
 export default function NavBar() {
   const { scenarioId, health, geminiConfigured } = useAppData();
@@ -19,38 +20,26 @@ export default function NavBar() {
 
   return (
     <header className="nav">
-      <Link to="/" className="brand" aria-label="ResQ Nexus home">
-        <LogoMark size={34} />
-        <span className="brand-name">ResQ Nexus</span>
+      <Link to="/" className="wordmark" aria-label="ResQ Nexus home">
+        <AsteriskMark size={17} />
+        <span>ResQ Nexus</span>
       </Link>
 
       <nav className="nav-links" aria-label="Main">
-        {LINKS.map(({ to, label, icon: Icon }) => (
+        {LINKS.map(({ to, label }) => (
           <NavLink key={to} to={SCENARIO_PAGES.includes(to) ? `${to}${query}` : to} className="nav-link">
-            {({ isActive }) => (
-              <>
-                <Icon size={16} />
-                <span>{label}</span>
-                {isActive && <motion.span layoutId="nav-active" className="nav-active" transition={{ type: "spring", stiffness: 420, damping: 34 }} />}
-              </>
-            )}
+            {label}
           </NavLink>
         ))}
       </nav>
 
-      <div className="nav-status">
-        <span className={`status-pill status-pill--${apiState}`} title={`Backend API: ${apiState}`}>
-          <span className="status-dot" aria-hidden="true" />
-          API {apiState === "online" ? "online" : apiState === "offline" ? "offline" : "…"}
-        </span>
-        <span
-          className={`status-pill ${geminiConfigured ? "status-pill--ai" : "status-pill--muted"}`}
-          title={geminiConfigured ? "Explanations are written by Google Gemini" : "No GEMINI_API_KEY: template explanations"}
-        >
-          <SparkIcon size={13} />
-          {geminiConfigured ? "Gemini" : "Templates"}
-        </span>
-      </div>
+      <p
+        className="nav-status mono"
+        title={geminiConfigured ? "Explanations are written by Google Gemini" : "No GEMINI_API_KEY: template explanations"}
+      >
+        <span className={`status-sq is-${apiState}`} aria-hidden="true" />
+        {API_TEXT[apiState] ?? "API"} / {geminiConfigured ? "Gemini" : "Templates"}
+      </p>
     </header>
   );
 }

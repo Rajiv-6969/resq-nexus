@@ -3,8 +3,8 @@ import { animate, motion, useMotionValue, useReducedMotion, useTransform } from 
 
 const defaultFormat = (v) => Math.round(v).toLocaleString("en-IN");
 
-// A number that counts up to its value (and re-animates when the value changes).
-export default function AnimatedNumber({ value, format = defaultFormat, duration = 1.2, className = "num" }) {
+// A mono number that ticks up to its value at a steady rate (and re-counts when the value changes).
+export default function AnimatedNumber({ value, format = defaultFormat, duration = 0.9, className = "num" }) {
   const reduce = useReducedMotion();
   const motionValue = useMotionValue(0);
   const formatRef = useRef(format);
@@ -20,7 +20,7 @@ export default function AnimatedNumber({ value, format = defaultFormat, duration
       motionValue.set(value);
       return undefined;
     }
-    const controls = animate(motionValue, value, { duration, ease: [0.16, 1, 0.3, 1] });
+    const controls = animate(motionValue, value, { duration, ease: "linear" });
     return () => controls.stop();
   }, [value, missing, duration, reduce, motionValue]);
 

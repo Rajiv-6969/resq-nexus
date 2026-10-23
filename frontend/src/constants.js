@@ -2,34 +2,34 @@
 
 export const PRIORITY_LEVELS = ["Critical", "High", "Medium", "Low"];
 
-// Priority colours (red / orange / yellow / green) tuned for the dark theme.
+// Priority colours: signal red, orange, light concrete, dark concrete.
 export const LEVEL_COLORS = {
-  Critical: { fill: "#E63946", stroke: "#ff9aa2", glow: "rgba(230, 57, 70, 0.55)" },
-  High: { fill: "#F4A261", stroke: "#ffd2ad", glow: "rgba(244, 162, 97, 0.45)" },
-  Medium: { fill: "#E9C46A", stroke: "#f7e3ae", glow: "rgba(233, 196, 106, 0.4)" },
-  Low: { fill: "#52B788", stroke: "#a4e3c2", glow: "rgba(82, 183, 136, 0.4)" },
+  Critical: { fill: "#E10600", text: "#FFFFFF" },
+  High: { fill: "#FF6B1A", text: "#0A0A0A" },
+  Medium: { fill: "#C9C7C1", text: "#0A0A0A" },
+  Low: { fill: "#5A5A57", text: "#EDEBE6" },
 };
 
-// Depot / cluster colours: kept apart from the priority colours on purpose.
-export const CLUSTER_COLORS = ["#4CC9F0", "#B388FF", "#FF7EB6", "#7AE7C7", "#FFD6A5"];
+// Depot series colours (charts only; the map labels depots A, B, C ...).
+export const CLUSTER_COLORS = ["#0A0A0A", "#E10600", "#8A8A85", "#FF6B1A", "#C9C7C1"];
 export const clusterColor = (index) => CLUSTER_COLORS[index % CLUSTER_COLORS.length];
 
 export const SEVERITY_LABELS = ["None", "Minor", "Major", "Destroyed"];
-export const SEVERITY_COLORS = ["#52B788", "#E9C46A", "#F4A261", "#E63946"];
+export const SEVERITY_COLORS = ["#5A5A57", "#C9C7C1", "#FF6B1A", "#E10600"];
 
 export const DISASTER_META = {
-  flood: { label: "Flood", color: "#4CC9F0", verb: "Flooding" },
-  earthquake: { label: "Earthquake", color: "#F4A261", verb: "Ground shaking" },
-  wildfire: { label: "Wildfire", color: "#FF6B35", verb: "Fire spread" },
+  flood: { label: "Flood", verb: "Flooding" },
+  earthquake: { label: "Earthquake", verb: "Ground shaking" },
+  wildfire: { label: "Wildfire", verb: "Fire spread" },
 };
 export const disasterLabel = (type) => DISASTER_META[type]?.label ?? type;
 
 export const RESOURCES = [
-  { key: "rescue_teams", label: "Rescue teams", short: "Rescue", hint: "search & rescue teams", color: "#E63946" },
-  { key: "medical_kits", label: "Medical kits", short: "Medical", hint: "first-aid / medical kits", color: "#FF7EB6" },
-  { key: "food_packets", label: "Food packets", short: "Food", hint: "one-day ration packets", color: "#FFD166" },
-  { key: "shelters", label: "Shelters", short: "Shelter", hint: "units, ~100 people each", color: "#2EC4B6" },
-  { key: "vehicles", label: "Vehicles", short: "Vehicles", hint: "trucks, boats, ambulances", color: "#B388FF" },
+  { key: "rescue_teams", label: "Rescue teams", short: "Rescue", hint: "search & rescue teams", color: "#E10600" },
+  { key: "medical_kits", label: "Medical kits", short: "Medical", hint: "first-aid / medical kits", color: "#0A0A0A" },
+  { key: "food_packets", label: "Food packets", short: "Food", hint: "one-day ration packets", color: "#8A8A85" },
+  { key: "shelters", label: "Shelters", short: "Shelter", hint: "units, ~100 people each", color: "#C9C7C1" },
+  { key: "vehicles", label: "Vehicles", short: "Vehicles", hint: "trucks, boats, ambulances", color: "#FF6B1A" },
 ];
 
 // Score breakdown rows: contribution key -> label and the weight it uses.
