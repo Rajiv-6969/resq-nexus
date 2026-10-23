@@ -21,10 +21,10 @@ It follows a four-stage pipeline: **Assess → Prioritise → Allocate → Expla
   **Launch Command Centre** button, and a card for each demo scenario.
 - **Command Centre** (main dashboard):
   - scenario selector (flood / earthquake / wildfire)
-  - a large dark grayscale map: zones coloured by priority and sized by population, blinking
-    corner brackets on Critical zones, the hazard (earthquake epicentre, fire ignition areas),
-    square relief depots, depot areas, the road network, and solid route lines that draw in from
-    each depot to its zones
+  - a large OpenStreetMap map in its original colours: zones coloured by priority and sized by
+    population, blinking corner brackets on Critical zones, the hazard (earthquake epicentre, fire
+    ignition areas), square relief depots, depot areas, the road network, and solid route lines
+    that draw in from each depot to its zones
   - priority weight sliders that re-score and recolour the zones live
   - **Run allocation** switches the pipeline stepper step by step while the engine runs; changing
     the weights afterwards marks the plan as out of date until it is re-run
@@ -66,9 +66,10 @@ visible grid.
   large standalone numerals and an asterisk brand mark repeat across the pages.
 - **Photographs:** high-contrast grayscale photographs of concrete buildings, flood, earthquake
   and wildfire damage, stored in `frontend/src/assets/photos/` (see [Credits](#credits)).
-- **Map:** standard OpenStreetMap tiles turned into a dark grayscale map by one CSS filter (no API
-  key needed). Priority colours: Critical `#E10600`, High `#FF6B1A`, Medium `#C9C7C1`, Low
-  `#5A5A57`. Depots are square markers and routes are solid lines.
+- **Map:** standard OpenStreetMap tiles in their original colours, so towns, roads, rivers and
+  terrain stay easy to read (no API key needed). The overlays follow the site's style: priority
+  colours Critical `#E10600`, High `#FF6B1A`, Medium `#C9C7C1`, Low `#5A5A57` with black outlines,
+  square depot markers and solid black routes.
 - **Motion:** hard slide-ins, quick reveals on scroll, headings that wipe in, instant hover
   inversions, counting mono numbers and routes that draw in on the map. Nothing bounces or floats,
   and "reduce motion" turns the animations off.
@@ -541,7 +542,7 @@ stage has real trade-offs to make.
 
 - Map data © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright) (ODbL). Map
   tiles come from `tile.openstreetmap.org`, which suits light demo use under the OSM tile usage
-  policy; the site shows them in grayscale.
+  policy.
 - Fonts: Inter Tight, Inter and IBM Plex Mono (SIL Open Font License), self-hosted via Fontsource.
 - Built on the Script Desk template (React/Vite + FastAPI + Google Gemini).
 
