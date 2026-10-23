@@ -10,8 +10,12 @@ import ToastProvider from "./state/ToastProvider";
 
 const loadCommandCentre = () => import("./pages/CommandCentre");
 const loadAnalytics = () => import("./pages/Analytics");
+const loadDamage = () => import("./pages/DamageAssessment");
+const loadAbout = () => import("./pages/About");
 const CommandCentre = lazy(loadCommandCentre);
 const Analytics = lazy(loadAnalytics);
+const DamageAssessment = lazy(loadDamage);
+const About = lazy(loadAbout);
 
 function PageLoader() {
   return (
@@ -30,7 +34,7 @@ export default function App() {
   // Fetch the other pages in the background so navigating never waits on a download.
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      [loadCommandCentre, loadAnalytics].forEach((load) => load().catch(() => {}));
+      [loadCommandCentre, loadAnalytics, loadDamage, loadAbout].forEach((load) => load().catch(() => {}));
     }, 900);
     return () => window.clearTimeout(timer);
   }, []);
@@ -51,6 +55,8 @@ export default function App() {
                   <Route path="/" element={page(<Landing />)} />
                   <Route path="/command" element={page(<CommandCentre />)} />
                   <Route path="/analytics" element={page(<Analytics />)} />
+                  <Route path="/damage" element={page(<DamageAssessment />)} />
+                  <Route path="/about" element={page(<About />)} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </AnimatePresence>

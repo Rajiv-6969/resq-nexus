@@ -19,6 +19,7 @@ import "./styles/landing.css";
 import "./styles/command.css";
 import "./styles/map.css";
 import "./styles/analytics.css";
+import "./styles/pages.css";
 import App from "./App.jsx";
 
 createRoot(document.getElementById("root")).render(
