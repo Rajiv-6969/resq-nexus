@@ -1,7 +1,8 @@
 import { motion } from "framer-motion";
 import AnimatedNumber from "./AnimatedNumber";
-import { RESOURCE_ICONS } from "./iconMaps";
 import { RESOURCES, formatNumber } from "../constants";
+
+const HARD = [0.7, 0, 0.2, 1];
 
 // Available stock per resource; after a run it also shows the total need and shortfall.
 export default function StockSummary({ resources, result }) {
@@ -15,14 +16,10 @@ export default function StockSummary({ resources, result }) {
       </h3>
       <ul className="stock-grid">
         {RESOURCES.map((r) => {
-          const Icon = RESOURCE_ICONS[r.key];
           const total = need?.[r.key];
           const ratio = total ? Math.min(resources[r.key] / total, 1) : null;
           return (
-            <li key={r.key} className="stock-tile" style={{ "--accent": r.color }}>
-              <span className="stock-icon">
-                <Icon size={18} />
-              </span>
+            <li key={r.key} className="stock-tile">
               <span className="stock-label">{r.label}</span>
               <span className="stock-value">
                 <AnimatedNumber value={resources[r.key]} />
@@ -32,10 +29,10 @@ export default function StockSummary({ resources, result }) {
               ) : (
                 <>
                   <span className="stock-bar" aria-hidden="true">
-                    <motion.span initial={{ width: 0 }} animate={{ width: `${ratio * 100}%` }} transition={{ duration: 0.9 }} />
+                    <motion.span initial={{ width: 0 }} animate={{ width: `${ratio * 100}%` }} transition={{ duration: 0.5, ease: HARD }} />
                   </span>
                   <span className="stock-hint">
-                    need {formatNumber(total)} · {Math.round((1 - ratio) * 100)}% short
+                    need {formatNumber(total)} / {Math.round((1 - ratio) * 100)}% short
                   </span>
                 </>
               )}

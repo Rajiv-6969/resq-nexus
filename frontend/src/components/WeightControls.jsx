@@ -1,4 +1,3 @@
-import { RefreshIcon, SlidersIcon } from "./icons";
 import { WEIGHT_FIELDS, isDefaultWeights } from "../constants";
 
 // Priority weight sliders (w1..w4): scores and ranking update live as they move.
@@ -14,10 +13,10 @@ export default function WeightControls({ weights, onChange, onReset, settled, ha
     <section className="weights" aria-labelledby="weights-title">
       <header className="panel-head">
         <h3 id="weights-title" className="subhead">
-          <SlidersIcon size={15} /> Priority weights
+          Priority weights
         </h3>
-        <button type="button" className="btn btn-ghost btn-sm" onClick={onReset} disabled={isDefaultWeights(weights)}>
-          <RefreshIcon size={13} /> Reset
+        <button type="button" className="btn btn--sm" onClick={onReset} disabled={isDefaultWeights(weights)}>
+          Reset
         </button>
       </header>
       {WEIGHT_FIELDS.map((f) => {
@@ -31,18 +30,20 @@ export default function WeightControls({ weights, onChange, onReset, settled, ha
             <output htmlFor={`weight-${f.key}`} className="weight-value">
               {share}%
             </output>
-            <input
-              id={`weight-${f.key}`}
-              type="range"
-              min="0"
-              max="100"
-              step="1"
-              value={weights[f.key]}
-              onChange={(e) => change(f.key, Number(e.target.value))}
-              style={{ "--fill": `${weights[f.key]}%` }}
-              aria-describedby="weights-help"
-              aria-valuetext={`${share}% of the score`}
-            />
+            <span className="range" style={{ "--fill": `${weights[f.key]}%` }}>
+              <span className="range-fill" aria-hidden="true" />
+              <input
+                id={`weight-${f.key}`}
+                type="range"
+                min="0"
+                max="100"
+                step="1"
+                value={weights[f.key]}
+                onChange={(e) => change(f.key, Number(e.target.value))}
+                aria-describedby="weights-help"
+                aria-valuetext={`${share}% of the score`}
+              />
+            </span>
           </div>
         );
       })}

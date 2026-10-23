@@ -1,11 +1,13 @@
 import { motion } from "framer-motion";
 import LevelBadge from "./LevelBadge";
-import { LEVEL_COLORS, clusterColor, formatScore } from "../constants";
+import { LEVEL_COLORS, formatScore } from "../constants";
 
-// Zones ranked by priority; rows glide into their new order when the weights change.
+const HARD = [0.7, 0, 0.2, 1];
+
+// Zones ranked by priority; rows slide straight into their new order when the weights change.
 export default function RankingList({ zones, result, selectedZoneId, onSelectZone }) {
   const plans = Object.fromEntries((result?.zones ?? []).map((z) => [z.id, z.engine]));
-  const depotIndex = Object.fromEntries((result?.depots ?? []).map((d, i) => [d.id, i]));
+  const depotLabels = Object.fromEntries((result?.depots ?? []).map((d) => [d.id, d.label]));
 
   return (
     <section className="ranking" aria-label="Zones ranked by priority">
@@ -20,27 +22,30 @@ export default function RankingList({ zones, result, selectedZoneId, onSelectZon
           const plan = plans[z.id];
           const selected = z.id === selectedZoneId;
           return (
-            <motion.li key={z.id} layout="position" transition={{ type: "spring", stiffness: 520, damping: 42 }}>
+            <motion.li key={z.id} layout="position" transition={{ duration: 0.25, ease: HARD }}>
               <button type="button" className={`rank-row${selected ? " is-selected" : ""}`} onClick={() => onSelectZone(z.id)} aria-pressed={selected}>
-                <span className="rank-num">{z.rank}</span>
+                <span className="rank-num">{String(z.rank).padStart(2, "0")}</span>
                 <span className="rank-main">
                   <strong>{z.name}</strong>
                   <span className="rank-bar" aria-hidden="true">
                     <motion.span
                       initial={false}
                       animate={{ width: `${Math.min(z.priority_score, 1) * 100}%` }}
-                      style={{ background: LEVEL_COLORS[z.priority_level].fill, boxShadow: `0 0 8px ${LEVEL_COLORS[z.priority_level].glow}` }}
+                      transition={{ duration: 0.3, ease: HARD }}
+                      style={{ background: LEVEL_COLORS[z.priority_level].fill }}
                     />
                   </span>
                 </span>
                 <span className="rank-score">{formatScore(z.priority_score)}</span>
                 {plan ? (
                   <span className="rank-cov" title={plan.coverage_pct == null ? "No relief needed" : `${plan.coverage_pct}% of needs covered`}>
-                    <span className="rank-depot" style={{ background: clusterColor(depotIndex[plan.depot_id] ?? 0) }} aria-hidden="true" />
+                    <span className="rank-depot" aria-hidden="true">
+                      {depotLabels[plan.depot_id]}
+                    </span>
                     {plan.coverage_pct == null ? "—" : `${plan.coverage_pct.toFixed(0)}%`}
                   </span>
                 ) : (
-                  <LevelBadge level={z.priority_level} size="sm" />
+                  <LevelBadge level={z.priority_level} />
                 )}
               </button>
             </motion.li>

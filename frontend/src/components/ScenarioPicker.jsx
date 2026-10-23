@@ -1,10 +1,10 @@
 import { useRef } from "react";
-import { motion } from "framer-motion";
 import { DISASTER_META } from "../constants";
-import { DISASTER_ICONS } from "./iconMaps";
 
-// Scenario selector: one card per scenario with its disaster-type icon (arrow keys move the choice).
-export default function ScenarioPicker({ scenarios, scenarioId, onSelect, failed, layoutGroup = "picker" }) {
+const pad2 = (n) => String(n).padStart(2, "0");
+
+// Scenario selector: one numbered cell per scenario (arrow keys move the choice).
+export default function ScenarioPicker({ scenarios, scenarioId, onSelect, failed }) {
   const groupRef = useRef(null);
 
   if (!scenarios.length) {
@@ -27,8 +27,7 @@ export default function ScenarioPicker({ scenarios, scenarioId, onSelect, failed
 
   return (
     <div className="picker" role="radiogroup" aria-label="Disaster scenario" ref={groupRef} onKeyDown={onKeyDown}>
-      {scenarios.map((s) => {
-        const Icon = DISASTER_ICONS[s.disaster_type];
+      {scenarios.map((s, i) => {
         const meta = DISASTER_META[s.disaster_type];
         const active = s.id === scenarioId;
         return (
@@ -40,12 +39,10 @@ export default function ScenarioPicker({ scenarios, scenarioId, onSelect, failed
             aria-checked={active}
             tabIndex={active ? 0 : -1}
             className={`picker-option${active ? " is-active" : ""}`}
-            style={{ "--accent": meta?.color ?? "#2EC4B6" }}
             onClick={() => onSelect(s.id)}
             title={`${s.name} (${s.region})`}
           >
-            {active && <motion.span layoutId={`${layoutGroup}-active`} className="picker-active" transition={{ type: "spring", stiffness: 420, damping: 34 }} />}
-            <span className="picker-icon">{Icon && <Icon size={18} />}</span>
+            <span className="picker-no">{pad2(i + 1)}</span>
             <span className="picker-text">
               <strong>{meta?.label ?? s.disaster_type}</strong>
               <span>{s.state}</span>

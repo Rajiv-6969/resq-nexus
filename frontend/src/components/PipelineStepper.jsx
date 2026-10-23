@@ -1,22 +1,28 @@
 import { motion } from "framer-motion";
 import { PIPELINE_STEPS } from "../constants";
-import { AlertIcon, CheckIcon } from "./icons";
-import { PIPELINE_ICONS } from "./iconMaps";
+import { AlertIcon, AsteriskMark, CheckIcon } from "./icons";
 
-const STATE_TEXT = { done: "Complete", active: "Running…", stale: "Out of date", error: "Failed" };
+const STATE_TEXT = { done: "Complete", active: "Running", stale: "Out of date", error: "Failed" };
+const HARD = [0.7, 0, 0.2, 1];
 
-// Assess -> Prioritise -> Allocate -> Explain; lights up step by step while the pipeline runs.
+// Assess -> Prioritise -> Allocate -> Explain; each step switches state as the pipeline runs.
 export default function PipelineStepper({ states }) {
   return (
     <ol className="stepper" aria-label="Pipeline progress">
       {PIPELINE_STEPS.map((step, i) => {
-        const Icon = PIPELINE_ICONS[step.key];
         const state = states[i];
         return (
           <li key={step.key} className={`step step--${state}`} aria-current={state === "active" ? "step" : undefined}>
-            <span className="step-node">
-              {state === "done" ? <CheckIcon size={16} /> : state === "error" ? <AlertIcon size={16} /> : <Icon size={16} />}
-              {state === "active" && <span className="step-spin" aria-hidden="true" />}
+            <span className="step-node" aria-hidden="true">
+              {state === "done" ? (
+                <CheckIcon size={14} />
+              ) : state === "error" ? (
+                <AlertIcon size={14} />
+              ) : state === "active" ? (
+                <AsteriskMark size={13} className="asterisk loader" />
+              ) : (
+                String(i + 1).padStart(2, "0")
+              )}
             </span>
             <span className="step-text">
               <strong>{step.name}</strong>
@@ -28,7 +34,7 @@ export default function PipelineStepper({ states }) {
                   className="step-link-fill"
                   initial={false}
                   animate={{ scaleX: state === "done" || state === "stale" ? 1 : 0 }}
-                  transition={{ duration: 0.45, ease: [0.2, 0.7, 0.2, 1] }}
+                  transition={{ duration: 0.3, ease: HARD }}
                 />
               </span>
             )}
