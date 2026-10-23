@@ -1,0 +1,86 @@
+[
+  {
+    "slug": "hero-chandigarh-assembly",
+    "caption": "Palace of Assembly, Capitol Complex, Chandigarh",
+    "source": "Wikimedia Commons",
+    "title": "Palace of Assembly Chandigarh 2006.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Palace_of_Assembly_Chandigarh_2006.jpg",
+    "author": "duncid",
+    "license": "CC BY-SA 2.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+    "changes": "converted to high-contrast grayscale and cropped",
+    "file": "frontend/src/assets/photos/hero-chandigarh-assembly.jpg"
+  },
+  {
+    "slug": "relief-assam-floods",
+    "caption": "IAF Chetak helicopter on a relief mission over flooded Assam",
+    "source": "Wikimedia Commons",
+    "title": "IAF Chetak helicopter during a relief mission in Assam.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:IAF_Chetak_helicopter_during_a_relief_mission_in_Assam.jpg",
+    "author": "Ministry of Defence, Government of India",
+    "license": "GODL-India",
+    "license_url": "https://data.gov.in/sites/default/files/Gazette_Notification_OGDL.pdf",
+    "changes": "converted to high-contrast grayscale and cropped",
+    "file": "frontend/src/assets/photos/relief-assam-floods.jpg"
+  },
+  {
+    "slug": "flood-assam-aerial",
+    "caption": "Flood-affected areas of Assam, aerial view, 2 July 2012",
+    "source": "Wikimedia Commons",
+    "title": "An aerial view of flood-affected areas of Assam on July 02, 2012 (1).jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:An_aerial_view_of_flood-affected_areas_of_Assam_on_July_02,_2012_(1).jpg",
+    "author": "Ministry of Home Affairs",
+    "license": "GODL-India",
+    "license_url": "https://data.gov.in/sites/default/files/Gazette_Notification_OGDL.pdf",
+    "changes": "converted to high-contrast grayscale and cropped",
+    "file": "frontend/src/assets/photos/flood-assam-aerial.jpg"
+  },
+  {
+    "slug": "earthquake-chautara",
+    "caption": "Collapsed buildings in earthquake-hit Chautara, Nepal, 2015",
+    "source": "Wikimedia Commons",
+    "title": "Collapsed buildings in earthquake-hit Chautara, Nepal (16693413433) (2).jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Collapsed_buildings_in_earthquake-hit_Chautara,_Nepal_(16693413433)_(2).jpg",
+    "author": "DFID - UK Department for International Development",
+    "license": "CC BY 2.0",
+    "license_url": "https://creativecommons.org/licenses/by/2.0",
+    "changes": "converted to high-contrast grayscale and cropped",
+    "file": "frontend/src/assets/photos/earthquake-chautara.jpg"
+  },
+  {
+    "slug": "wildfire-almora",
+    "caption": "Forest fire in Almora district, Uttarakhand, 2016",
+    "source": "Wikimedia Commons",
+    "title": "Forest fire in Almora District 2016.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Forest_fire_in_Almora_District_2016.jpg",
+    "author": "Ramwik",
+    "license": "CC BY-SA 3.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+    "changes": "converted to high-contrast grayscale and cropped",
+    "file": "frontend/src/assets/photos/wildfire-almora.jpg"
+  },
+  {
+    "slug": "damage-collapsed-building",
+    "caption": "Search team in a collapsed building",
+    "source": "Wikimedia Commons",
+    "title": "USAID DART Searches for Victims in Collapsed Building (17126048580).jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:USAID_DART_Searches_for_Victims_in_Collapsed_Building_(17126048580).jpg",
+    "author": "U.S. Department of State from United States",
+    "license": "Public domain",
+    "license_url": null,
+    "changes": "converted to high-contrast grayscale and cropped",
+    "file": "frontend/src/assets/photos/damage-collapsed-building.jpg"
+  },
+  {
+    "slug": "about-concrete-pillars",
+    "caption": "Concrete pillars, Simon Fraser University, Burnaby",
+    "source": "Unsplash",
+    "title": "Brutalist concrete building with repeating pillars",
+    "page": "https://unsplash.com/photos/brutalist-concrete-building-with-repeating-pillars-i0313wt8G20",
+    "author": "Jonathan Lim (@jonathankslim)",
+    "license": "Unsplash License",
+    "license_url": "https://unsplash.com/license",
+    "changes": "converted to high-contrast grayscale and cropped",
+    "file": "frontend/src/assets/photos/about-concrete-pillars.jpg"
+  }
+]
