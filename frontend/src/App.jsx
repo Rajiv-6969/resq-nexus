@@ -9,7 +9,9 @@ import AppDataProvider from "./state/AppDataProvider";
 import ToastProvider from "./state/ToastProvider";
 
 const loadCommandCentre = () => import("./pages/CommandCentre");
+const loadAnalytics = () => import("./pages/Analytics");
 const CommandCentre = lazy(loadCommandCentre);
+const Analytics = lazy(loadAnalytics);
 
 function PageLoader() {
   return (
@@ -28,7 +30,7 @@ export default function App() {
   // Fetch the other pages in the background so navigating never waits on a download.
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      [loadCommandCentre].forEach((load) => load().catch(() => {}));
+      [loadCommandCentre, loadAnalytics].forEach((load) => load().catch(() => {}));
     }, 900);
     return () => window.clearTimeout(timer);
   }, []);
@@ -48,6 +50,7 @@ export default function App() {
                 <Routes location={location} key={location.pathname}>
                   <Route path="/" element={page(<Landing />)} />
                   <Route path="/command" element={page(<CommandCentre />)} />
+                  <Route path="/analytics" element={page(<Analytics />)} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </AnimatePresence>

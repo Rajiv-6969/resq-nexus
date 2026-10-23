@@ -2,10 +2,11 @@ import { motion } from "framer-motion";
 import { Link, NavLink } from "react-router";
 import { SCENARIO_PAGES } from "../constants";
 import { useAppData } from "../state/contexts";
-import { LogoMark, MapIcon, SparkIcon } from "./icons";
+import { ChartIcon, LogoMark, MapIcon, SparkIcon } from "./icons";
 
 const LINKS = [
   { to: "/command", label: "Command Centre", icon: MapIcon },
+  { to: "/analytics", label: "Analytics", icon: ChartIcon },
 ];
 
 export default function NavBar() {
