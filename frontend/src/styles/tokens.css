@@ -1,0 +1,48 @@
+/* Design tokens: mission-control palette, type and surfaces. */
+:root {
+  color-scheme: dark;
+
+  --bg-0: #0b1020;
+  --bg-1: #131a2e;
+  --bg-2: #18213a;
+  --bg-3: #1f2a48;
+  --line: rgba(148, 163, 209, 0.14);
+  --line-strong: rgba(148, 163, 209, 0.28);
+  --text: #e8ecf8;
+  --text-2: #c9d1ea;
+  --muted: #9aa4c4;
+  --dim: #6f7a9e;
+
+  --crimson: #e63946;
+  --amber: #f4a261;
+  --teal: #2ec4b6;
+  --teal-bright: #5ee6d8;
+  --violet: #7b2cbf;
+  --violet-bright: #9d4edd;
+  --violet-soft: #b388ff;
+  --gold: #ffd166;
+  --medium: #e9c46a;
+  --low: #52b788;
+  --sky: #4cc9f0;
+
+  --glass: linear-gradient(180deg, rgba(31, 42, 72, 0.74), rgba(19, 26, 46, 0.7));
+  --glass-dense: rgba(13, 19, 37, 0.9);
+  --shadow: 0 18px 44px rgba(2, 6, 18, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --shadow-sm: 0 8px 22px rgba(2, 6, 18, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --glow-teal: 0 0 0 1px rgba(46, 196, 182, 0.55), 0 0 26px rgba(46, 196, 182, 0.28);
+  --glow-violet: 0 0 0 1px rgba(157, 78, 221, 0.5), 0 0 26px rgba(123, 44, 191, 0.35);
+
+  --radius-lg: 22px;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --radius-xs: 7px;
+
+  --font-gothic: "Pirata One", "UnifrakturMaguntia", "Old English Text MT", serif;
+  --font-display: "Cinzel", "Trajan Pro", Georgia, serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-num: "Rajdhani", "Inter", system-ui, sans-serif;
+
+  --nav-h: 66px;
+  --page-pad: clamp(12px, 1.6vw, 22px);
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
