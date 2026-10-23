@@ -23,6 +23,7 @@ All tunable numbers live in ``PRIORITY_SETTINGS``; pass a modified copy to
 """
 from __future__ import annotations
 
+import copy
 import math
 from collections.abc import Iterable, Mapping
 from typing import Any
@@ -146,6 +147,26 @@ def score_zones(zones: Iterable[Mapping[str, Any]], settings: Mapping[str, Any] 
     for rank, z in enumerate(scored, start=1):
         z["rank"] = rank
     return scored
+
+
+def settings_with_weights(weights: Mapping[str, float] | None = None) -> dict[str, Any]:
+    """A copy of ``PRIORITY_SETTINGS`` with custom w1..w4 rescaled to sum to 1.
+
+    Missing weights keep their default value before rescaling; ``None`` returns
+    the defaults unchanged. Rescaling keeps scores within 0-1 so the level
+    thresholds stay meaningful whatever the slider positions.
+    """
+    settings = copy.deepcopy(PRIORITY_SETTINGS)
+    if weights is None:
+        return settings
+    merged = {key: float(weights.get(key, settings["weights"][key])) for key in WEIGHT_KEYS}
+    if any(value < 0 for value in merged.values()):
+        raise ValueError("weights must not be negative")
+    total = sum(merged.values())
+    if total <= 0:
+        raise ValueError("at least one weight must be greater than zero")
+    settings["weights"] = {key: round(value / total, 6) for key, value in merged.items()}
+    return settings
 
 
 def level_counts(scored: Iterable[Mapping[str, Any]]) -> dict[str, int]:
