@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
+import { SHOW_ANALYTICS } from "../config";
 import AnimatedNumber from "./AnimatedNumber";
 import CoverageRing from "./CoverageRing";
 import LevelBadge from "./LevelBadge";
@@ -259,7 +260,7 @@ export default function ZoneIntel({ zone, zones, total, settings, scenario, run,
         canRun={canRun}
         demand={resultZone?.demand ?? {}}
       />
-      {plan && greedyCoverage != null && plan.coverage_pct != null && (
+      {SHOW_ANALYTICS && plan && greedyCoverage != null && plan.coverage_pct != null && (
         <p className="compare-chip">
           Greedy baseline would cover <strong>{greedyCoverage.toFixed(0)}%</strong> of this zone&apos;s needs
           {greedyCoverage === 0 ? ": nothing at all." : "."}

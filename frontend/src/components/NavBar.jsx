@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Link, NavLink } from "react-router";
+import { SHOW_ANALYTICS } from "../config";
 import { SCENARIO_PAGES } from "../constants";
 import { useAppData } from "../state/contexts";
 import { ChartIcon, InfoIcon, LogoMark, MapIcon, RadarIcon, SparkIcon } from "./icons";
@@ -9,7 +10,7 @@ const LINKS = [
   { to: "/analytics", label: "Analytics", icon: ChartIcon },
   { to: "/damage", label: "Damage Assessment", icon: RadarIcon },
   { to: "/about", label: "About", icon: InfoIcon },
-];
+].filter((link) => SHOW_ANALYTICS || link.to !== "/analytics");
 
 export default function NavBar() {
   const { scenarioId, health, geminiConfigured } = useAppData();

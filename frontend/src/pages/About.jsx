@@ -2,12 +2,13 @@ import { motion } from "framer-motion";
 import { Link } from "react-router";
 import { ArrowRightIcon, CodeIcon, CpuIcon, InfoIcon, MapIcon, RouteIcon, SparkIcon } from "../components/icons";
 import { PIPELINE_ICONS } from "../components/iconMaps";
+import { SHOW_ANALYTICS } from "../config";
 import { PIPELINE_STEPS } from "../constants";
 
 const STEP_COPY = {
   assess: "Each scenario lists zones with damage severity (0–3), population, a vulnerability index and road accessibility, plus the stock available for the whole response.",
   prioritise: "Every factor is normalised to 0–1 and weighted with adjustable weights into a priority score, with a small equity boost for damaged zones that are hard to reach.",
-  allocate: "The Allocation Engine turns the scores into a plan: units of each resource per zone, a relief depot, a route and a travel time, compared against a greedy baseline.",
+  allocate: `The Allocation Engine turns the scores into a plan: units of each resource per zone, a relief depot, a route and a travel time${SHOW_ANALYTICS ? ", compared against a greedy baseline" : ""}.`,
   explain: "Google Gemini writes a short, plain-language reason for each zone's share. Without a key the app uses template explanations, so the demo always works.",
 };
 
