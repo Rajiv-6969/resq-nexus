@@ -9,48 +9,86 @@ It follows a four-stage pipeline: **Assess → Prioritise → Allocate → Expla
 |---|---|
 | **Assess** | Load a disaster scenario: affected zones with damage, population, vulnerability and road access, plus the relief stock available |
 | **Prioritise** | Score every zone with a transparent weighted formula plus an equity adjustment, and rank it Critical / High / Medium / Low. The weights can be changed live |
-| **Allocate** | The **Allocation Engine** turns the scores and the stock into a plan: units of every resource per zone, a relief depot, a road route and a travel time, compared against a greedy baseline |
+| **Allocate** | The **Allocation Engine** turns the scores and the stock into a plan: units of every resource per zone, a relief depot, a road route and a travel time. The API also returns a greedy baseline for comparison |
 | **Explain** | Google Gemini writes a short plain-language reason for every zone's share. Without a key (or if the API fails) template explanations are used, so the demo never breaks |
 
 ![Command Centre: earthquake scenario in Kachchh after allocation, with Bhachau selected](docs/command-centre.jpg)
 
 ## Features
 
-- **Landing page:** gothic ResQ Nexus logo, an animated particle network, live scenario stats, a
-  **Launch Command Centre** button and a card for each pipeline stage.
+- **Landing page:** a full-width ResQ Nexus wordmark, live scenario figures with counting mono
+  numbers, a red problem statement, a black project section with a photograph and the
+  **Launch Command Centre** button, and a card for each demo scenario.
 - **Command Centre** (main dashboard):
-  - scenario selector (flood / earthquake / wildfire) with disaster-type icons
-  - a large dark map: zones coloured by priority and sized by population, pulsing rings on Critical
-    zones, the hazard (earthquake epicentre, fire ignition areas), relief depots, depot areas,
-    the road network, and animated route lines drawn from each depot to its zones
+  - scenario selector (flood / earthquake / wildfire)
+  - a large dark grayscale map: zones coloured by priority and sized by population, blinking
+    corner brackets on Critical zones, the hazard (earthquake epicentre, fire ignition areas),
+    square relief depots, depot areas, the road network, and solid route lines that draw in from
+    each depot to its zones
   - priority weight sliders that re-score and recolour the zones live
-  - **Run Allocation** lights up the pipeline stepper step by step while the engine runs; changing
+  - **Run allocation** switches the pipeline stepper step by step while the engine runs; changing
     the weights afterwards marks the plan as out of date until it is re-run
-  - KPI ribbon with animated counters: zones in need, people affected, Critical zones, depots,
+  - KPI strip with counting numbers: zones in need, people affected, Critical zones, depots,
     priority-weighted coverage, average response time and the Gini fairness score
   - side panel: the selected zone's details and score breakdown, its allocated resources against
-    its need, depot, travel time, road distance, coverage ring, the greedy comparison and the
-    explanation; plus a ranked list and the resource stock
+    its need, depot, travel time, road distance, a coverage meter and the explanation; plus a
+    ranked list and the resource stock
   - toast notifications, loading and error states, keyboard access (Tab to a zone, Enter to
     select), and shareable links (`/command?scenario=earthquake-kutch&zone=EQ-04`)
-- **Analytics** (Recharts): Allocation Engine vs greedy cards and bar charts for every metric, the
-  GA fitness-over-generations line chart, resource distribution per zone (stacked) and per depot,
-  a coverage fairness (Lorenz) curve and coverage by zone.
-- **Damage Assessment:** every zone's severity with disaster-type illustrations, per-level totals and
-  an "AI damage model integration in progress" banner.
-- **About:** project overview, pipeline, Algorithms Used and tech stack.
+- **Damage Assessment:** every zone's severity with disaster-type glyphs, per-level totals and an
+  "AI damage model integration in progress" banner.
+- **About:** project overview, how it works, Algorithms Used, the priority score, the data, the
+  tech stack and photo credits.
+- **Analytics** (hidden for now, see [Feature flags](#feature-flags)): Allocation Engine vs greedy
+  cards and charts for every metric, the GA fitness-over-generations chart, resource distribution
+  per zone and per depot, a coverage fairness (Lorenz) curve and coverage by zone.
 - **Three demo scenarios in real Indian regions** and a **scenario generator** for new ones.
 - Built for presenting: responsive from 1024 px laptops and 1280×720 projectors up to full HD,
   respects "reduce motion", and the production build splits each page into its own chunk.
 
-| Landing page | Analytics | Damage Assessment |
+| Landing page | Damage Assessment | About |
 |---|---|---|
-| ![Landing page with the gothic ResQ Nexus logo](docs/landing.jpg) | ![Analytics: Allocation Engine vs greedy baseline](docs/analytics.jpg) | ![Damage Assessment page](docs/damage-assessment.jpg) |
+| ![Landing page: full-width ResQ Nexus wordmark over the Palace of Assembly, Chandigarh](docs/landing.jpg) | ![Damage Assessment page for the earthquake scenario](docs/damage-assessment.jpg) | ![About page: Algorithms Used](docs/about.jpg) |
+
+## Design
+
+The interface follows an editorial brutalist style: raw concrete, heavy type, hard edges and a
+visible grid.
+
+- **Colour:** black `#0A0A0A`, paper `#EDEBE6`, concrete `#8A8A85` and `#C9C7C1`, signal red
+  `#E10600` as the one strong accent, and a little orange `#FF6B1A` for high-priority states.
+  Full-width black, paper and red sections alternate down each page. A faint noise texture gives
+  the paper and black sections a concrete grain.
+- **Type:** Inter Tight 800 for headings (very large, tight letter-spacing), Inter for body text
+  and IBM Plex Mono for labels, data, coordinates and metrics.
+- **Layout:** a strict grid of 1px rules. No rounded corners, shadows, gradients or blur. Buttons
+  are rectangular and invert their colours on hover. Section numbers, small mono corner labels,
+  large standalone numerals and an asterisk brand mark repeat across the pages.
+- **Photographs:** high-contrast grayscale photographs of concrete buildings, flood, earthquake
+  and wildfire damage, stored in `frontend/src/assets/photos/` (see [Credits](#credits)).
+- **Map:** standard OpenStreetMap tiles turned into a dark grayscale map by one CSS filter (no API
+  key needed). Priority colours: Critical `#E10600`, High `#FF6B1A`, Medium `#C9C7C1`, Low
+  `#5A5A57`. Depots are square markers and routes are solid lines.
+- **Motion:** hard slide-ins, quick reveals on scroll, headings that wipe in, instant hover
+  inversions, counting mono numbers and routes that draw in on the map. Nothing bounces or floats,
+  and "reduce motion" turns the animations off.
+
+## Feature flags
+
+`frontend/src/config.js` holds one flag:
+
+```js
+export const SHOW_ANALYTICS = false;
+```
+
+While it is `false`, the Analytics page, its nav link and every Allocation Engine vs greedy
+comparison are hidden (`/analytics` redirects to the landing page). The backend still computes the
+greedy baseline and its metrics, so setting the flag to `true` brings all of it back.
 
 ## Algorithms Used
 
-- **K-Means clustering** ([scikit-learn](https://scikit-learn.org/))
-- **Dijkstra's shortest path** ([NetworkX](https://networkx.org/))
+- **K-Means Clustering** ([scikit-learn](https://scikit-learn.org/))
+- **Dijkstra's Shortest Path** ([NetworkX](https://networkx.org/))
 - **Genetic Algorithm** ([DEAP](https://github.com/DEAP/deap))
 
 They are used inside the **Allocation Engine** (`backend/services/allocation_engine.py`).
@@ -59,7 +97,7 @@ They are used inside the **Allocation Engine** (`backend/services/allocation_eng
 
 | Layer | Tools |
 |---|---|
-| Frontend | React 19, Vite 8, React Router 8, Framer Motion, Recharts, React-Leaflet 5 / Leaflet 1.9 with OpenStreetMap tiles, self-hosted Google Fonts (Pirata One, Cinzel, Inter, Rajdhani), oxlint |
+| Frontend | React 19, Vite 8, React Router 8, Framer Motion, React-Leaflet 5 / Leaflet 1.9 with OpenStreetMap tiles, Recharts (Analytics page), self-hosted Google Fonts (Inter Tight, Inter, IBM Plex Mono), oxlint |
 | Backend | Python 3.12+ (tested on 3.13), FastAPI, Pydantic 2, NumPy, scikit-learn, NetworkX, DEAP, Uvicorn, pytest |
 | AI | Google Gemini API (`google-genai`) for the Explain stage, with a template fallback |
 
@@ -91,11 +129,13 @@ resq-nexus/
 │   ├── src/
 │   │   ├── main.jsx               router, fonts and stylesheets
 │   │   ├── App.jsx                routes, page transitions, lazy-loaded pages
+│   │   ├── config.js              feature flags (SHOW_ANALYTICS)
 │   │   ├── api.js                 API client
 │   │   ├── constants.js           colours, labels, number formatting
+│   │   ├── assets/photos/         grayscale photographs and credits.json
 │   │   ├── state/                 app data (scenarios, scores, allocation, pipeline) and toasts
-│   │   ├── lib/                   depot-area geometry, hooks, pipeline stepper state
-│   │   ├── pages/                 Landing, CommandCentre, Analytics, DamageAssessment, About
+│   │   ├── lib/                   depot-area geometry, hooks, pipeline stepper state, photo list
+│   │   ├── pages/                 Landing, CommandCentre, DamageAssessment, About, Analytics (hidden)
 │   │   ├── components/            CommandMap, ZoneIntel, PipelineStepper, KpiRibbon, charts, ...
 │   │   └── styles/                tokens.css (colours, fonts) and one stylesheet per area
 │   └── .env.example               optional: API address for the dashboard
@@ -158,16 +198,16 @@ The same checks run on GitHub Actions for every push (`.github/workflows/ci.yml`
 
 ### Demo walkthrough (about 3 minutes)
 
-1. **Landing page:** introduce the pipeline cards, then press **Launch Command Centre**.
-2. **Command Centre:** pick **Earthquake**. Zones are coloured by priority; Bhachau and Dudhai pulse
-   as Critical. Press **Run Allocation** and watch Assess → Prioritise → Allocate → Explain light up.
-   Depots, depot areas and route lines appear, and the KPIs count up.
+1. **Landing page:** introduce the project and the three scenarios, then press **Launch Command
+   Centre**.
+2. **Command Centre:** pick **Earthquake**. Zones are coloured by priority; Bhachau and Dudhai are
+   marked Critical. Press **Run allocation** and watch Assess → Prioritise → Allocate → Explain
+   complete one by one. Depots, depot areas and route lines appear, and the KPIs count up.
 3. Click **Bhachau** (or a row in **Ranking**): show its resources against its need, the depot, the
-   27-minute route, 79 % coverage, the greedy comparison and the explanation.
+   27-minute route, 79 % coverage and the explanation.
 4. Open **Controls** and raise the severity weight: the map recolours live and the plan is marked out
    of date. Press **Re-run allocation**.
-5. **Analytics:** compare the Allocation Engine with the greedy baseline and show the fitness chart.
-6. **Damage Assessment** and **About** to close (Algorithms Used, tech stack).
+5. **Damage Assessment** and **About** to close (Algorithms Used, tech stack).
 
 ### Troubleshooting
 
@@ -500,6 +540,24 @@ stage has real trade-offs to make.
 ## Credits
 
 - Map data © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright) (ODbL). Map
-  tiles come from `tile.openstreetmap.org`, which suits light demo use under the OSM tile usage policy.
-- Fonts: Pirata One, Cinzel, Inter and Rajdhani (SIL Open Font License), self-hosted via Fontsource.
+  tiles come from `tile.openstreetmap.org`, which suits light demo use under the OSM tile usage
+  policy; the site shows them in grayscale.
+- Fonts: Inter Tight, Inter and IBM Plex Mono (SIL Open Font License), self-hosted via Fontsource.
 - Built on the Script Desk template (React/Vite + FastAPI + Google Gemini).
+
+### Photographs
+
+All photographs are free-licence images, downloaded into `frontend/src/assets/photos/` (nothing is
+hotlinked). Each was converted to high-contrast grayscale and cropped; the modified versions are
+shared under the same licence as the original. The same list is in
+`frontend/src/assets/photos/credits.json` and on the About page.
+
+| File | Subject | Author | Source | Licence |
+|---|---|---|---|---|
+| `hero-chandigarh-assembly.jpg` | Palace of Assembly, Capitol Complex, Chandigarh | duncid | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Palace_of_Assembly_Chandigarh_2006.jpg) | [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0) |
+| `relief-assam-floods.jpg` | IAF Chetak helicopter on a relief mission over flooded Assam | Ministry of Defence, Government of India | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:IAF_Chetak_helicopter_during_a_relief_mission_in_Assam.jpg) | [GODL-India](https://data.gov.in/sites/default/files/Gazette_Notification_OGDL.pdf) |
+| `flood-assam-aerial.jpg` | Flood-affected areas of Assam, aerial view, 2 July 2012 | Ministry of Home Affairs, Government of India | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:An_aerial_view_of_flood-affected_areas_of_Assam_on_July_02,_2012_%281%29.jpg) | [GODL-India](https://data.gov.in/sites/default/files/Gazette_Notification_OGDL.pdf) |
+| `earthquake-chautara.jpg` | Collapsed buildings in earthquake-hit Chautara, Nepal, 2015 | DFID - UK Department for International Development | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Collapsed_buildings_in_earthquake-hit_Chautara,_Nepal_%2816693413433%29_%282%29.jpg) | [CC BY 2.0](https://creativecommons.org/licenses/by/2.0) |
+| `wildfire-almora.jpg` | Forest fire in Almora district, Uttarakhand, 2016 | Ramwik | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Forest_fire_in_Almora_District_2016.jpg) | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0) |
+| `damage-collapsed-building.jpg` | Search team in a collapsed building (USAID DART, Nepal) | U.S. Department of State | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:USAID_DART_Searches_for_Victims_in_Collapsed_Building_%2817126048580%29.jpg) | Public domain |
+| `about-concrete-pillars.jpg` | Concrete pillars, Simon Fraser University, Burnaby | Jonathan Lim ([@jonathankslim](https://unsplash.com/@jonathankslim)) | [Unsplash](https://unsplash.com/photos/brutalist-concrete-building-with-repeating-pillars-i0313wt8G20) | [Unsplash License](https://unsplash.com/license) |
