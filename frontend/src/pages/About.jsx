@@ -39,6 +39,13 @@ const STACK = [
   { group: "Quality", items: ["pytest", "oxlint", "GitHub Actions CI"] },
 ];
 
+const TEAM = [
+  { name: "Rajiv Siddharth", id: "2411021061420" },
+  { name: "Akash", id: "2411021061441" },
+  { name: "Abhi Rathod", id: "2411021061436" },
+  { name: "Sameer Basha Mulla", id: "2411021061446" },
+];
+
 export default function About() {
   return (
     <div className="about">
@@ -174,6 +181,19 @@ export default function About() {
           Launch Command Centre <span className="arrow">&rarr;</span>
         </Link>
       </section>
+
+      <footer className="team" aria-labelledby="team-title">
+        <p id="team-title" className="team-title">
+          Project Team
+        </p>
+        <ul className="team-list">
+          {TEAM.map((m) => (
+            <li key={m.id}>
+              {m.name} — {m.id}
+            </li>
+          ))}
+        </ul>
+      </footer>
     </div>
   );
 }

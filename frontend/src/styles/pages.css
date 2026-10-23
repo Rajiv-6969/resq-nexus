@@ -534,6 +534,31 @@
   line-height: 0.9;
 }
 
+/* project team: small, quiet, last thing on the page */
+.team {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 28px;
+  padding: 14px var(--pad) 16px;
+  border-top: 1px solid var(--concrete-light);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  color: var(--concrete);
+}
+.team-title {
+  text-transform: uppercase;
+}
+.team-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 28px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
 /* ------------------------------------------------------------------ responsive */
 @media (max-width: 1180px) {
   .about-steps,
@@ -609,6 +634,10 @@
   }
   .credits-list li > :nth-child(n + 3) {
     grid-column: 2;
+  }
+  .team,
+  .team-list {
+    flex-direction: column;
   }
 }
 
