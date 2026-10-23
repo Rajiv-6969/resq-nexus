@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { Wipe } from "../components/Reveal";
 import ScenarioPicker from "../components/ScenarioPicker";
 import PipelineStepper from "../components/PipelineStepper";
 import {
@@ -9,7 +10,7 @@ import {
   ZoneCoverageChart,
   ZoneDistributionChart,
 } from "../components/charts";
-import { ChartIcon, ClockIcon, CpuIcon, PlayIcon, RefreshIcon, ScaleIcon, ShieldIcon, TargetIcon, UsersIcon, AlertIcon } from "../components/icons";
+import { AlertIcon, AsteriskMark, ClockIcon, CpuIcon, ScaleIcon, ShieldIcon, TargetIcon, UsersIcon } from "../components/icons";
 import { RESOURCE_ICONS } from "../components/iconMaps";
 import { RESOURCES, disasterLabel, formatNumber } from "../constants";
 import { stepperStates } from "../lib/pipeline";
@@ -22,11 +23,11 @@ const two = (v) => v.toFixed(2);
 function ChartPanel({ title, sub, wide, children, delay = 0 }) {
   return (
     <motion.section
-      className={`chart-panel glass${wide ? " chart-panel--wide" : ""}`}
-      initial={{ opacity: 0, y: 18 }}
+      className={`chart-panel${wide ? " chart-panel--wide" : ""}`}
+      initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.15 }}
-      transition={{ duration: 0.5, delay }}
+      transition={{ duration: 0.3, ease: [0.7, 0, 0.2, 1], delay }}
     >
       <header>
         <h2 className="panel-title">{title}</h2>
@@ -39,19 +40,17 @@ function ChartPanel({ title, sub, wide, children, delay = 0 }) {
 
 function EmptyState({ onRun, canRun, running, states, scenario }) {
   return (
-    <motion.div className="empty-state glass" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }}>
-      <span className="empty-icon">
-        <ChartIcon size={34} />
-      </span>
-      <h2 className="display-title">No allocation yet{scenario ? ` for the ${disasterLabel(scenario.disaster_type).toLowerCase()} scenario` : ""}</h2>
+    <motion.div className="empty-state" initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, ease: [0.7, 0, 0.2, 1] }}>
+      <p className="label">No plan</p>
+      <h2 className="empty-title">No allocation yet{scenario ? ` for the ${disasterLabel(scenario.disaster_type).toLowerCase()} scenario` : ""}</h2>
       <p>
         Run the pipeline to compare the Allocation Engine with the greedy baseline on response time, coverage, unmet demand,
         fairness and computation time.
       </p>
       <PipelineStepper states={states} />
-      <button type="button" className="btn btn-primary btn-lg" onClick={onRun} disabled={!canRun}>
-        {running ? <span className="spinner spinner--sm" aria-hidden="true" /> : <PlayIcon size={15} />}
-        {running ? "Running…" : "Run allocation"}
+      <button type="button" className="btn btn--solid btn--lg" onClick={onRun} disabled={!canRun}>
+        {running ? "Running" : "Run allocation"}
+        {running ? <AsteriskMark size={16} className="asterisk loader" /> : <span className="arrow">&rarr;</span>}
       </button>
     </motion.div>
   );
@@ -70,25 +69,30 @@ export default function Analytics() {
 
   return (
     <div className="analytics">
-      <header className="page-head">
-        <div>
-          <p className="kicker">Allocation Engine vs greedy baseline</p>
-          <h1 className="page-title">Analytics</h1>
+      <section className="sec sec--black page-hero" aria-labelledby="analytics-title">
+        <p className="sec-bar mono">
+          <span>(04) Analytics</span>
+          <span>Allocation Engine vs greedy baseline</span>
+        </p>
+        <div className="page-hero-row">
+          <Wipe as="h1" id="analytics-title" className="page-title">
+            Analytics
+          </Wipe>
           <p className="page-sub">
             Same stock, same depots, same roads. The greedy baseline serves the highest-priority zone first from its nearest
             depot until the stock runs out.
           </p>
         </div>
-        <div className="page-head-tools">
-          <ScenarioPicker scenarios={scenarios} scenarioId={scenarioId} onSelect={selectScenario} failed={listState.status === "error"} layoutGroup="analytics-picker" />
-          {result && (
-            <button type="button" className={`btn ${runStale ? "btn-warn" : "btn-ghost"}`} onClick={runPipeline} disabled={!canRun}>
-              {running ? <span className="spinner spinner--sm" aria-hidden="true" /> : <RefreshIcon size={14} />}
-              {running ? "Running…" : runStale ? "Re-run (weights changed)" : "Re-run"}
-            </button>
-          )}
-        </div>
-      </header>
+      </section>
+      <div className="toolbar">
+        <p className="toolbar-label mono">01 / Scenario</p>
+        <ScenarioPicker scenarios={scenarios} scenarioId={scenarioId} onSelect={selectScenario} failed={listState.status === "error"} />
+        {result && (
+          <button type="button" className={`btn btn--sm${runStale ? " btn--red" : ""} toolbar-action`} onClick={runPipeline} disabled={!canRun}>
+            {running ? "Running" : runStale ? "Re-run (weights changed)" : "Re-run"}
+          </button>
+        )}
+      </div>
 
       {!result ? (
         <EmptyState onRun={runPipeline} canRun={canRun} running={running} states={states} scenario={scenario} />
@@ -114,7 +118,7 @@ export default function Analytics() {
               help="Zones in need that receive at least some relief." />
             <MetricCard index={6} title="Computation time" icon={CpuIcon} engine={e.computation_ms} greedy={g.computation_ms} format={zero} unit=" ms" lowerIsBetter
               help="Wall-clock time to produce the plan on this machine." />
-            <motion.article className="metric-card glass unmet-card" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, delay: 0.42 }}>
+            <motion.article className="metric-card unmet-card" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, ease: [0.7, 0, 0.2, 1], delay: 0.28 }}>
               <header>
                 <span className="metric-icon">
                   <AlertIcon size={17} />
@@ -169,7 +173,7 @@ export default function Analytics() {
               <DepotDistributionChart result={result} />
             </ChartPanel>
           </div>
-          <p className="landing-note">Synthetic demo data: zones are real OpenStreetMap places; damage, needs and stock are generated.</p>
+          <p className="analytics-note mono">Synthetic demo data: zones are real OpenStreetMap places; damage, needs and stock are generated.</p>
         </>
       )}
     </div>

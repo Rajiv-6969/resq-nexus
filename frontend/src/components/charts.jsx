@@ -17,12 +17,12 @@ import {
 import AnimatedNumber from "./AnimatedNumber";
 import { RESOURCES, clusterColor, formatNumber } from "../constants";
 
-export const ENGINE_COLOR = "#2EC4B6";
-export const GREEDY_COLOR = "#8E97C7";
-const GRID = "rgba(148, 163, 209, 0.12)";
-const TICK = { fill: "#9AA4C4", fontSize: 12, fontFamily: "Inter, sans-serif" };
+export const ENGINE_COLOR = "#E10600";
+export const GREEDY_COLOR = "#8A8A85";
+const GRID = "rgba(10, 10, 10, 0.18)";
+const TICK = { fill: "#5A5A57", fontSize: 11, fontFamily: "IBM Plex Mono, monospace" };
 
-function GlassTooltip({ active, payload, label, formatter, labelFormatter }) {
+function ChartTooltip({ active, payload, label, formatter, labelFormatter }) {
   if (!active || !payload?.length) return null;
   return (
     <div className="chart-tooltip">
@@ -51,11 +51,10 @@ export function MetricCard({ title, icon: Icon, help, engine, greedy, format, lo
   ];
   return (
     <motion.article
-      className="metric-card glass"
+      className="metric-card"
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.45, delay: index * 0.06 }}
-      whileHover={{ y: -4 }}
+      transition={{ duration: 0.25, ease: [0.7, 0, 0.2, 1], delay: index * 0.04 }}
     >
       <header>
         <span className="metric-icon">
@@ -85,8 +84,8 @@ export function MetricCard({ title, icon: Icon, help, engine, greedy, format, lo
       <BarChart responsive style={{ width: "100%", height: 92 }} data={data} layout="vertical" margin={{ top: 4, right: 12, bottom: 0, left: 0 }}>
         <XAxis type="number" hide domain={[0, (max) => (max > 0 ? max * 1.08 : 1)]} />
         <YAxis type="category" dataKey="name" tick={TICK} width={60} axisLine={false} tickLine={false} />
-        <Tooltip cursor={{ fill: "rgba(255,255,255,0.04)" }} content={<GlassTooltip formatter={(v) => `${format(v)}${unit ?? ""}`} />} />
-        <Bar dataKey="value" name={title} radius={[0, 6, 6, 0]} barSize={16} animationDuration={900}>
+        <Tooltip cursor={{ fill: "rgba(10,10,10,0.06)" }} content={<ChartTooltip formatter={(v) => `${format(v)}${unit ?? ""}`} />} />
+        <Bar dataKey="value" name={title} barSize={16} animationDuration={900}>
           {data.map((d) => (
             <Cell key={d.name} fill={d.fill} />
           ))}
@@ -113,22 +112,22 @@ export function FitnessChart({ history, passes, selectedPass }) {
     <LineChart responsive style={{ width: "100%", height: 300 }} data={data} margin={{ top: 16, right: 18, bottom: 8, left: 0 }}>
       <CartesianGrid stroke={GRID} vertical={false} />
       <XAxis dataKey="step" tick={TICK} tickLine={false} axisLine={{ stroke: GRID }} interval="preserveStartEnd" minTickGap={36}
-        label={{ value: "Generation", position: "insideBottomRight", offset: -4, fill: "#6B7699", fontSize: 12 }} />
+        label={{ value: "Generation", position: "insideBottomRight", offset: -4, fill: "#5A5A57", fontSize: 12 }} />
       <YAxis tick={TICK} tickLine={false} axisLine={false} width={52} domain={["auto", "auto"]} tickFormatter={(v) => v.toFixed(2)} />
       <Tooltip
         content={
-          <GlassTooltip
+          <ChartTooltip
             formatter={(v) => v.toFixed(4)}
             labelFormatter={(label, payload) => `Pass ${payload[0]?.payload.pass} · generation ${payload[0]?.payload.generation}`}
           />
         }
       />
-      <Legend wrapperStyle={{ color: "#C9D1EA", fontSize: 12 }} />
+      <Legend wrapperStyle={{ color: "#0A0A0A", fontSize: 12 }} />
       {boundaries.slice(1).map((b) => (
-        <ReferenceLine key={b.pass} x={b.start} stroke="rgba(255, 209, 102, 0.45)" strokeDasharray="4 4" label={{ value: `Pass ${b.pass}`, fill: "#FFD166", fontSize: 11, position: "insideTopLeft" }} />
+        <ReferenceLine key={b.pass} x={b.start} stroke="#FF6B1A" strokeDasharray="4 4" label={{ value: `Pass ${b.pass}`, fill: "#0A0A0A", fontSize: 11, position: "insideTopLeft" }} />
       ))}
-      <Line type="monotone" dataKey="best" name="Best fitness" stroke="#FFD166" strokeWidth={2.4} dot={false} animationDuration={1400} />
-      <Line type="monotone" dataKey="mean" name="Population mean" stroke="#B388FF" strokeWidth={1.6} dot={false} strokeDasharray="5 4" animationDuration={1600} />
+      <Line type="linear" dataKey="best" name="Best fitness" stroke="#E10600" strokeWidth={2.4} dot={false} animationDuration={1400} />
+      <Line type="linear" dataKey="mean" name="Population mean" stroke="#0A0A0A" strokeWidth={1.6} dot={false} strokeDasharray="5 4" animationDuration={1600} />
       {selectedPass && boundaries.length > 1 && (
         <ReferenceArea
           x1={boundaries.find((b) => b.pass === selectedPass)?.start}
@@ -196,17 +195,17 @@ export function ZoneDistributionChart({ result }) {
         <CartesianGrid stroke={GRID} vertical={false} />
         <XAxis dataKey="name" tick={{ ...TICK, fontSize: 11 }} interval={0} angle={-38} textAnchor="end" height={64} tickLine={false} axisLine={{ stroke: GRID }} />
         <YAxis tick={TICK} tickLine={false} axisLine={false} width={44} tickFormatter={(v) => `${v.toFixed(0)}%`} />
-        <Tooltip cursor={{ fill: "rgba(255,255,255,0.04)" }} content={<ZoneShareTooltip />} />
-        <Legend verticalAlign="top" wrapperStyle={{ color: "#C9D1EA", fontSize: 12, paddingBottom: 8 }} />
-        {RESOURCES.map((r, i) => (
-          <Bar key={r.key} dataKey={r.key} name={r.label} stackId="share" fill={r.color} radius={i === RESOURCES.length - 1 ? [5, 5, 0, 0] : 0} animationDuration={900} />
+        <Tooltip cursor={{ fill: "rgba(10,10,10,0.06)" }} content={<ZoneShareTooltip />} />
+        <Legend verticalAlign="top" wrapperStyle={{ color: "#0A0A0A", fontSize: 12, paddingBottom: 8 }} />
+        {RESOURCES.map((r) => (
+          <Bar key={r.key} dataKey={r.key} name={r.label} stackId="share" fill={r.color} animationDuration={900} />
         ))}
       </BarChart>
     </>
   );
 }
 
-const RESERVE_COLOR = "rgba(148, 163, 209, 0.22)";
+const RESERVE_COLOR = "#C9C7C1";
 
 function DepotShareTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
@@ -250,13 +249,13 @@ export function DepotDistributionChart({ result }) {
     <BarChart responsive style={{ width: "100%", height: 300 }} data={data} layout="vertical" margin={{ top: 4, right: 16, bottom: 4, left: 8 }}>
       <CartesianGrid stroke={GRID} horizontal={false} />
       <XAxis type="number" domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} tick={TICK} tickLine={false} axisLine={{ stroke: GRID }} tickFormatter={(v) => `${v}%`} />
-      <YAxis type="category" dataKey="name" tick={{ ...TICK, fill: "#C9D1EA" }} width={104} tickLine={false} axisLine={false} />
-      <Tooltip cursor={{ fill: "rgba(255,255,255,0.04)" }} content={<DepotShareTooltip />} />
-      <Legend wrapperStyle={{ color: "#C9D1EA", fontSize: 12 }} />
+      <YAxis type="category" dataKey="name" tick={{ ...TICK, fill: "#0A0A0A" }} width={104} tickLine={false} axisLine={false} />
+      <Tooltip cursor={{ fill: "rgba(10,10,10,0.06)" }} content={<DepotShareTooltip />} />
+      <Legend wrapperStyle={{ color: "#0A0A0A", fontSize: 12 }} />
       {result.depots.map((d, i) => (
         <Bar key={d.id} dataKey={d.id} name={d.name} stackId="stock" fill={clusterColor(i)} barSize={22} animationDuration={900} />
       ))}
-      <Bar dataKey="reserve" name="Not sent" stackId="stock" fill={RESERVE_COLOR} radius={[0, 5, 5, 0]} barSize={22} animationDuration={900} />
+      <Bar dataKey="reserve" name="Not sent" stackId="stock" fill={RESERVE_COLOR} barSize={22} animationDuration={900} />
     </BarChart>
   );
 }
@@ -284,13 +283,13 @@ export function FairnessChart({ result }) {
     <LineChart responsive style={{ width: "100%", height: 300 }} data={data} margin={{ top: 10, right: 18, bottom: 18, left: 0 }}>
       <CartesianGrid stroke={GRID} />
       <XAxis dataKey="zones" type="number" domain={[0, 100]} tick={TICK} tickLine={false} axisLine={{ stroke: GRID }} tickFormatter={(v) => `${v}%`}
-        label={{ value: "Share of zones in need (least covered first)", position: "insideBottom", offset: -10, fill: "#6B7699", fontSize: 12 }} />
+        label={{ value: "Share of zones in need (least covered first)", position: "insideBottom", offset: -10, fill: "#5A5A57", fontSize: 12 }} />
       <YAxis type="number" domain={[0, 100]} tick={TICK} tickLine={false} axisLine={false} width={44} tickFormatter={(v) => `${v}%`} />
-      <Tooltip content={<GlassTooltip formatter={(v) => `${v}%`} labelFormatter={(l) => `${l}% of zones`} />} />
-      <Legend verticalAlign="top" wrapperStyle={{ color: "#C9D1EA", fontSize: 12, paddingBottom: 6 }} />
-      <Line type="linear" dataKey="equality" name="Perfect equality" stroke="rgba(255,255,255,0.35)" strokeDasharray="4 4" dot={false} animationDuration={600} />
-      <Line type="monotone" dataKey="greedy" name={`Greedy (Gini ${result.greedy.metrics.gini?.toFixed(2)})`} stroke={GREEDY_COLOR} strokeWidth={2} dot={{ r: 2.5 }} animationDuration={1200} />
-      <Line type="monotone" dataKey="engine" name={`Engine (Gini ${result.engine.metrics.gini?.toFixed(2)})`} stroke={ENGINE_COLOR} strokeWidth={2.6} dot={{ r: 2.5 }} animationDuration={1400} />
+      <Tooltip content={<ChartTooltip formatter={(v) => `${v}%`} labelFormatter={(l) => `${l}% of zones`} />} />
+      <Legend verticalAlign="top" wrapperStyle={{ color: "#0A0A0A", fontSize: 12, paddingBottom: 6 }} />
+      <Line type="linear" dataKey="equality" name="Perfect equality" stroke="#8A8A85" strokeDasharray="4 4" dot={false} animationDuration={600} />
+      <Line type="linear" dataKey="greedy" name={`Greedy (Gini ${result.greedy.metrics.gini?.toFixed(2)})`} stroke={GREEDY_COLOR} strokeWidth={2} dot={{ r: 2.5 }} animationDuration={1200} />
+      <Line type="linear" dataKey="engine" name={`Engine (Gini ${result.engine.metrics.gini?.toFixed(2)})`} stroke={ENGINE_COLOR} strokeWidth={2.6} dot={{ r: 2.5 }} animationDuration={1400} />
     </LineChart>
   );
 }
@@ -305,10 +304,10 @@ export function ZoneCoverageChart({ result }) {
       <CartesianGrid stroke={GRID} vertical={false} />
       <XAxis dataKey="name" tick={{ ...TICK, fontSize: 11 }} interval={0} angle={-38} textAnchor="end" height={70} tickLine={false} axisLine={{ stroke: GRID }} />
       <YAxis tick={TICK} domain={[0, 100]} tickLine={false} axisLine={false} width={44} tickFormatter={(v) => `${v}%`} />
-      <Tooltip cursor={{ fill: "rgba(255,255,255,0.04)" }} content={<GlassTooltip formatter={(v) => `${v.toFixed(0)}%`} labelFormatter={(l, p) => `${l} · ${p[0]?.payload.level}`} />} />
-      <Legend verticalAlign="top" wrapperStyle={{ color: "#C9D1EA", fontSize: 12, paddingBottom: 8 }} />
-      <Bar dataKey="engine" name="Allocation Engine" fill={ENGINE_COLOR} radius={[4, 4, 0, 0]} animationDuration={900} />
-      <Bar dataKey="greedy" name="Greedy baseline" fill={GREEDY_COLOR} radius={[4, 4, 0, 0]} animationDuration={1100} />
+      <Tooltip cursor={{ fill: "rgba(10,10,10,0.06)" }} content={<ChartTooltip formatter={(v) => `${v.toFixed(0)}%`} labelFormatter={(l, p) => `${l} · ${p[0]?.payload.level}`} />} />
+      <Legend verticalAlign="top" wrapperStyle={{ color: "#0A0A0A", fontSize: 12, paddingBottom: 8 }} />
+      <Bar dataKey="engine" name="Allocation Engine" fill={ENGINE_COLOR} animationDuration={900} />
+      <Bar dataKey="greedy" name="Greedy baseline" fill={GREEDY_COLOR} animationDuration={1100} />
     </BarChart>
   );
 }
