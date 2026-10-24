@@ -1,0 +1,96 @@
+"""SOS requests: severity score, the status workflow and the JSON shape the API returns."""
+from __future__ import annotations
+
+import math
+from collections.abc import Iterable
+from typing import Any
+
+from db.models import SosRequest
+
+# Severity = 0.5 x injuries + 0.3 x people affected + 0.2 x vulnerable groups (each 0-1).
+INJURY_SCORE = {"none": 0.0, "minor": 0.35, "serious": 0.7, "critical": 1.0}
+SEVERITY_WEIGHTS = {"injuries": 0.5, "people": 0.3, "vulnerable": 0.2}
+PEOPLE_AT_FULL_SCORE = 50  # people score = ln(1 + people) / ln(1 + 50), capped at 1
+VULNERABLE_GROUPS = ("children", "elderly", "disabled", "pregnant")
+CRITICAL_INJURY_FLOOR = 0.60  # a critical injury always rates Critical
+LEVELS = (("Critical", 0.60), ("High", 0.40), ("Medium", 0.20))
+
+EMERGENCY_TYPES = ("flood", "earthquake", "wildfire", "cyclone", "fire", "medical", "other")
+NEEDS = ("rescue", "medical", "ambulance", "food", "water", "shelter")
+
+STATUS_FLOW = ("PENDING", "ACKNOWLEDGED", "DISPATCHED", "RESOLVED")
+ACTIVE_STATUSES = STATUS_FLOW[:-1]
+_STAMP = {"PENDING": "created_at", "ACKNOWLEDGED": "acknowledged_at", "DISPATCHED": "dispatched_at", "RESOLVED": "resolved_at"}
+
+
+def severity(injuries: str | None, people_affected: int | None, vulnerable: Iterable[str]) -> dict[str, Any] | None:
+    """Score (0-1) and level of one request; None until its details are known."""
+    if injuries is None or people_affected is None:
+        return None
+    people = min(1.0, math.log1p(people_affected) / math.log1p(PEOPLE_AT_FULL_SCORE))
+    groups = len(set(vulnerable) & set(VULNERABLE_GROUPS)) / len(VULNERABLE_GROUPS)
+    score = (SEVERITY_WEIGHTS["injuries"] * INJURY_SCORE[injuries]
+             + SEVERITY_WEIGHTS["people"] * people
+             + SEVERITY_WEIGHTS["vulnerable"] * groups)
+    if injuries == "critical":
+        score = max(score, CRITICAL_INJURY_FLOOR)
+    score = round(min(score, 1.0), 3)
+    level = next((name for name, floor in LEVELS if score >= floor), "Low")
+    return {"score": score, "level": level}
+
+
+def sos_severity(sos: SosRequest) -> dict[str, Any] | None:
+    return severity(sos.injuries, sos.people_affected, sos.vulnerable or [])
+
+
+def next_status(status: str) -> str | None:
+    index = STATUS_FLOW.index(status)
+    return STATUS_FLOW[index + 1] if index + 1 < len(STATUS_FLOW) else None
+
+
+def timeline(sos: SosRequest) -> list[dict[str, Any]]:
+    return [{"status": status, "at": getattr(sos, _STAMP[status])} for status in STATUS_FLOW]
+
+
+def provider_brief(provider) -> dict[str, Any] | None:
+    if provider is None:
+        return None
+    return {
+        "id": provider.id,
+        "organisation_name": provider.organisation_name,
+        "organisation_type": provider.organisation_type,
+        "phone": provider.user.phone if provider.user else None,
+        "latitude": provider.latitude,
+        "longitude": provider.longitude,
+    }
+
+
+def serialize(sos: SosRequest, *, include_citizen: bool = False, distance_km: float | None = None) -> dict[str, Any]:
+    data = {
+        "id": sos.id,
+        "status": sos.status,
+        "latitude": sos.latitude,
+        "longitude": sos.longitude,
+        "location_source": sos.location_source,
+        "accuracy_m": sos.accuracy_m,
+        "emergency_type": sos.emergency_type,
+        "people_affected": sos.people_affected,
+        "injuries": sos.injuries,
+        "needs": list(sos.needs or []),
+        "vulnerable": list(sos.vulnerable or []),
+        "description": sos.description,
+        "contact_phone": sos.contact_phone,
+        "details_submitted": sos.details_submitted_at is not None,
+        "details_submitted_at": sos.details_submitted_at,
+        "severity": sos_severity(sos),
+        "timeline": timeline(sos),
+        "assigned_provider": provider_brief(sos.assigned_provider),
+        "assigned_at": sos.assigned_at,
+        "created_at": sos.created_at,
+        "updated_at": sos.updated_at,
+        "citizen": None,
+        "distance_km": None if distance_km is None else round(distance_km, 2),
+    }
+    if include_citizen and sos.citizen is not None:
+        data["citizen"] = {"id": sos.citizen.id, "full_name": sos.citizen.full_name, "phone": sos.citizen.phone}
+    return data

@@ -22,7 +22,7 @@ load_dotenv(Path(__file__).resolve().parent / ".env")
 # The modules below read the environment when imported, so they come after load_dotenv.
 from db.database import init_db  # noqa: E402
 from deps import require_admin  # noqa: E402
-from routers import auth  # noqa: E402
+from routers import auth, sos  # noqa: E402
 from services import allocation_engine, explain, gemini_client, priority, scenarios  # noqa: E402
 from services.scenarios import Scenario, ScenarioNotFoundError, ScenarioSummary, Zone  # noqa: E402
 
@@ -47,6 +47,7 @@ app.add_middleware(
 # Tables are created (and the demo data loaded into an empty database) on start-up.
 init_db()
 app.include_router(auth.router)
+app.include_router(sos.router)
 
 
 def _scenario_or_404(scenario_id: str) -> Scenario:
@@ -69,6 +70,10 @@ def root():
             "POST /auth/register/provider",
             "POST /auth/login",
             "GET /auth/me",
+            "POST /sos",
+            "PATCH /sos/{id}/details",
+            "GET /sos/mine",
+            "GET /sos/{id}",
             "GET /scenarios",
             "GET /scenarios/{id}",
             "GET /scenarios/{id}/priority",

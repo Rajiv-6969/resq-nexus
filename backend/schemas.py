@@ -150,3 +150,93 @@ class TokenResponse(BaseModel):
 
 class ProviderRegistered(TokenResponse):
     message: str
+
+
+# --------------------------------------------------------------------------- SOS
+EmergencyType = Literal["flood", "earthquake", "wildfire", "cyclone", "fire", "medical", "other"]
+Injuries = Literal["none", "minor", "serious", "critical"]
+Need = Literal["rescue", "medical", "ambulance", "food", "water", "shelter"]
+VulnerableGroup = Literal["children", "elderly", "disabled", "pregnant"]
+SosStatus = Literal["PENDING", "ACKNOWLEDGED", "DISPATCHED", "RESOLVED"]
+SeverityLevel = Literal["Critical", "High", "Medium", "Low"]
+
+_NEED_ORDER = ("rescue", "medical", "ambulance", "food", "water", "shelter")
+_GROUP_ORDER = ("children", "elderly", "disabled", "pregnant")
+
+
+def _needs(values: list[str]) -> list[str]:
+    if not values:
+        raise ValueError("Choose at least one need.")
+    return [need for need in _NEED_ORDER if need in values]
+
+
+def _groups(values: list[str]) -> list[str]:
+    return [group for group in _GROUP_ORDER if group in values]
+
+
+class SosCreate(Strict):
+    latitude: Latitude
+    longitude: Longitude
+    location_source: Literal["gps", "pin"]
+    accuracy_m: float | None = Field(None, ge=0, le=100_000)
+
+
+class SosDetails(Strict):
+    emergency_type: EmergencyType
+    people_affected: int = Field(ge=1, le=10_000)
+    injuries: Injuries
+    needs: Annotated[list[Need], AfterValidator(_needs)]
+    vulnerable: Annotated[list[VulnerableGroup], AfterValidator(_groups)] = []
+    description: Annotated[str, AfterValidator(_text(500, "Description"))] = ""
+    contact_phone: Phone
+
+
+class Severity(BaseModel):
+    score: float
+    level: SeverityLevel
+
+
+class TimelineStep(BaseModel):
+    status: SosStatus
+    at: datetime | None
+
+
+class ProviderBrief(BaseModel):
+    id: int
+    organisation_name: str
+    organisation_type: ResourceType
+    phone: str | None
+    latitude: float
+    longitude: float
+
+
+class CitizenBrief(BaseModel):
+    id: int
+    full_name: str
+    phone: str | None
+
+
+class SosOut(BaseModel):
+    id: int
+    status: SosStatus
+    latitude: float
+    longitude: float
+    location_source: Literal["gps", "pin"]
+    accuracy_m: float | None
+    emergency_type: EmergencyType | None
+    people_affected: int | None
+    injuries: Injuries | None
+    needs: list[Need]
+    vulnerable: list[VulnerableGroup]
+    description: str | None
+    contact_phone: str | None
+    details_submitted: bool
+    details_submitted_at: datetime | None
+    severity: Severity | None
+    timeline: list[TimelineStep]
+    assigned_provider: ProviderBrief | None
+    assigned_at: datetime | None
+    created_at: datetime
+    updated_at: datetime
+    citizen: CitizenBrief | None = None
+    distance_km: float | None = None
