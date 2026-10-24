@@ -15,15 +15,19 @@ from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, ConfigDict, Field, model_validator
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 # Secrets (GEMINI_API_KEY, JWT_SECRET) live in backend/.env, which is git-ignored.
 load_dotenv(Path(__file__).resolve().parent / ".env")
 
 # The modules below read the environment when imported, so they come after load_dotenv.
-from db.database import init_db  # noqa: E402
+from db.database import get_db, init_db  # noqa: E402
+from db.models import SosRequest  # noqa: E402
 from deps import require_admin  # noqa: E402
 from routers import admin, auth, provider, resources, sos  # noqa: E402
-from services import allocation_engine, explain, gemini_client, priority, scenarios  # noqa: E402
+from services import allocation_engine, explain, gemini_client, priority, scenarios, sos_demand  # noqa: E402
+from services.sos import ACTIVE_STATUSES  # noqa: E402
 from services.scenarios import Scenario, ScenarioNotFoundError, ScenarioSummary, Zone  # noqa: E402
 
 API_VERSION = "0.3.0"
@@ -212,6 +216,10 @@ class AllocationRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     weights: PriorityWeights | None = None
+    include_sos: bool = Field(
+        False,
+        description="Add every active SOS request to the demand of its nearest zone (within 30 km) before the run",
+    )
 
 
 class AllocationResponse(BaseModel):
@@ -230,6 +238,7 @@ class AllocationResponse(BaseModel):
     passes: list[dict[str, Any]]
     selected_pass: int
     settings: dict[str, Any]
+    sos: dict[str, Any] | None = None
 
 
 class Explanation(BaseModel):
@@ -260,8 +269,8 @@ def clear_caches() -> None:
         _explanations.clear()
 
 
-def _cache_key(scenario: Scenario, weights: dict[str, float] | None) -> str:
-    payload = scenario.model_dump_json() + json.dumps(weights, sort_keys=True)
+def _cache_key(scenario: Scenario, weights: dict[str, float] | None, sos_plan: dict[str, Any] | None) -> str:
+    payload = scenario.model_dump_json() + json.dumps(weights, sort_keys=True) + json.dumps(sos_plan, sort_keys=True)
     return hashlib.sha256(payload.encode()).hexdigest()
 
 
@@ -273,12 +282,26 @@ def _remember(cache: OrderedDict, key: str, value: dict[str, Any]) -> None:
             cache.popitem(last=False)
 
 
-def _allocation_for(scenario: Scenario, weights: dict[str, float] | None) -> tuple[str, dict[str, Any]]:
-    key = _cache_key(scenario, weights)
+def _live_sos_plan(db: Session, scenario: Scenario) -> dict[str, Any]:
+    """Active SOS requests matched to the scenario's zones, with the demand each zone gains."""
+    active = db.scalars(select(SosRequest).where(SosRequest.status.in_(ACTIVE_STATUSES)).order_by(SosRequest.id))
+    return sos_demand.assign_to_zones([zone.model_dump() for zone in scenario.zones], active)
+
+
+def _allocation_for(
+    scenario: Scenario, weights: dict[str, float] | None, sos_plan: dict[str, Any] | None = None
+) -> tuple[str, dict[str, Any]]:
+    key = _cache_key(scenario, weights, sos_plan)
     with _cache_lock:
         cached = _allocations.get(key)
     if cached is None:
-        cached = allocation_engine.allocate(scenario, weights=weights)
+        extra = sos_plan["extra_demand"] if sos_plan else None
+        cached = allocation_engine.allocate(scenario, weights=weights, extra_demand=extra)
+        added = {entry["zone_id"]: entry for entry in (sos_plan or {}).get("zones", [])}
+        for zone in cached["zones"]:
+            entry = added.get(zone["id"])
+            zone["sos"] = {key_: entry[key_] for key_ in ("requests", "people", "demand")} if entry else None
+        cached["sos"] = None if sos_plan is None else {k: v for k, v in sos_plan.items() if k != "extra_demand"}
         _remember(_allocations, key, cached)
     return key, cached
 
@@ -287,22 +310,27 @@ def _weights(request: AllocationRequest | None) -> dict[str, float] | None:
     return request.weights.model_dump() if request and request.weights else None
 
 
+def _sos_plan(request: AllocationRequest | None, db: Session, scenario: Scenario) -> dict[str, Any] | None:
+    return _live_sos_plan(db, scenario) if request and request.include_sos else None
+
+
 @app.post("/scenarios/{scenario_id}/allocate", response_model=AllocationResponse, dependencies=ADMIN_ONLY)
-def allocate(scenario_id: str, request: AllocationRequest | None = None):
+def allocate(scenario_id: str, request: AllocationRequest | None = None, db: Session = Depends(get_db)):
     """Run the Allocation Engine and the greedy baseline.
 
     Returns per-zone allocations, depots, routes, travel times and coverage for
-    both methods, comparison metrics and the GA fitness per generation.
+    both methods, comparison metrics and the GA fitness per generation. With
+    include_sos, active SOS requests first add to the demand of their nearest zone.
     """
     scenario = _scenario_or_404(scenario_id)
-    return _allocation_for(scenario, _weights(request))[1]
+    return _allocation_for(scenario, _weights(request), _sos_plan(request, db, scenario))[1]
 
 
 @app.post("/scenarios/{scenario_id}/explain", response_model=ExplanationResponse, dependencies=ADMIN_ONLY)
-def explain_allocation(scenario_id: str, request: AllocationRequest | None = None):
+def explain_allocation(scenario_id: str, request: AllocationRequest | None = None, db: Session = Depends(get_db)):
     """Plain-language explanation for every zone of the allocation (Gemini, or templates as a fallback)."""
     scenario = _scenario_or_404(scenario_id)
-    key, result = _allocation_for(scenario, _weights(request))
+    key, result = _allocation_for(scenario, _weights(request), _sos_plan(request, db, scenario))
     with _cache_lock:
         cached = _explanations.get(key)
     if cached is not None:

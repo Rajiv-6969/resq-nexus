@@ -498,8 +498,13 @@ def allocate(
     weights: Mapping[str, float] | None = None,
     seed: int | None = None,
     settings: Mapping[str, Any] | None = None,
+    extra_demand: Mapping[str, Mapping[str, int]] | None = None,
 ) -> dict[str, Any]:
-    """Allocate the scenario's resources to its zones; also runs the greedy baseline."""
+    """Allocate the scenario's resources to its zones; also runs the greedy baseline.
+
+    extra_demand (zone id -> resource -> units) is added to the zones' own demand first,
+    e.g. live SOS requests near a zone.
+    """
     settings = ENGINE_SETTINGS if settings is None else settings
     seed = int(settings["seed"] if seed is None else seed)
     ga, roads, feedback = settings["ga"], settings["roads"], settings["feedback"]
@@ -511,6 +516,10 @@ def allocate(
     zones = [scored[z["id"]] for z in raw]  # scenario order
     ids = [z["id"] for z in zones]
     demand = np.array([[zone_demand(z["damage_severity"], z["population"])[r] for r in RESOURCE_TYPES] for z in zones], dtype=np.int64)
+    for i, zone_id in enumerate(ids):
+        extra = (extra_demand or {}).get(zone_id)
+        if extra:
+            demand[i] += np.array([int(extra.get(r, 0)) for r in RESOURCE_TYPES], dtype=np.int64)
     stock = np.array([getattr(scenario.resources, r) for r in RESOURCE_TYPES], dtype=np.int64)
     scores = np.array([z["priority_score"] for z in zones], dtype=float)
     coords = np.array([[z["latitude"], z["longitude"]] for z in zones], dtype=float)

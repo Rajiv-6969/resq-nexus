@@ -89,6 +89,8 @@ def zone_facts(result: Mapping[str, Any]) -> list[dict[str, Any]]:
             "road_distance_km": plan["distance_km"],
             "regional_average_coverage_pct": average,
             "highest_priority_first_coverage_pct": z["greedy"]["coverage_pct"],
+            "live_sos_requests": len((z.get("sos") or {}).get("requests", [])),
+            "live_sos_people": (z.get("sos") or {}).get("people", 0),
         })
     return facts
 
@@ -105,19 +107,29 @@ def _resource_list(allocated: Mapping[str, int]) -> str:
 def template_explanation(fact: Mapping[str, Any], disaster_type: str) -> str:
     """Two or three plain sentences built only from the zone's facts."""
     name, depot, minutes = fact["name"], fact["depot"], round(fact["travel_time_min"])
-    if fact["damage_severity"] == 0:
+    live = fact.get("live_sos_requests", 0)
+    requests = f"{format_count(live)} live SOS request{'' if live == 1 else 's'}"
+    if fact["damage_severity"] == 0 and not live:
         return (
             f"{name} reported no damage, so it needs no relief and none is sent there. "
             f"Its share goes to damaged zones instead; if that changes it can be reached from {depot} "
             f"in about {minutes} minutes by road."
         )
 
-    damage = DAMAGE_PHRASES.get(disaster_type, {}).get(fact["damage_severity"], f"{fact['damage'].lower()} damage")
-    vulnerable = ", many of them highly vulnerable" if fact["vulnerability_index"] >= 0.66 else ""
-    first = (
-        f"{name} is a {fact['priority_level']}-priority zone (rank {fact['priority_rank']} of {fact['zones_total']}): "
-        f"{damage} affects about {format_count(fact['population'])} people{vulnerable}."
-    )
+    if fact["damage_severity"] == 0:
+        first = (
+            f"{name} reported no damage in the scenario data, but {requests} ask for help for about "
+            f"{format_count(fact['live_sos_people'])} people."
+        )
+    else:
+        damage = DAMAGE_PHRASES.get(disaster_type, {}).get(fact["damage_severity"], f"{fact['damage'].lower()} damage")
+        vulnerable = ", many of them highly vulnerable" if fact["vulnerability_index"] >= 0.66 else ""
+        first = (
+            f"{name} is a {fact['priority_level']}-priority zone (rank {fact['priority_rank']} of {fact['zones_total']}): "
+            f"{damage} affects about {format_count(fact['population'])} people{vulnerable}."
+        )
+        if live:
+            first += f" Its need includes {requests} for about {format_count(fact['live_sos_people'])} people."
 
     access = fact["road_accessibility"]
     roads = " over poor roads" if access < 0.3 else " over limited roads" if access < 0.6 else ""
@@ -151,7 +163,8 @@ def template_explanation(fact: Mapping[str, Any], disaster_type: str) -> str:
 PROMPT = """You are an emergency-operations analyst writing a briefing for a disaster response team.
 For each zone below, write 2-3 short sentences in plain English explaining why it received the relief it did.
 Refer to its damage, population, vulnerability, road access, travel time from its depot and fairness
-(compare its coverage with the regional average). Use only the facts given: do not invent numbers,
+(compare its coverage with the regional average). If live_sos_requests is above 0, say that its need
+includes that many live SOS requests. Use only the facts given: do not invent numbers,
 places or causes. Do not mention algorithms or technical methods; you may call the planner
 "the Allocation Engine". Return a JSON array with one object per zone: {{"zone_id": ..., "explanation": ...}}.
 
