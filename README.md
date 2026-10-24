@@ -16,6 +16,30 @@ It follows a four-stage pipeline: **Assess → Prioritise → Allocate → Expla
 
 ## Features
 
+- **Accounts and roles:** citizens register themselves; service providers register their
+  organisation (name, type, location on a map) and wait for admin approval; admins run the
+  control room. Passwords are hashed with bcrypt, logins are JWTs, and each role lands on its own
+  dashboard. Protected pages send visitors to the login page, which has one-click **Demo Login**
+  buttons (see [Roles and demo accounts](#roles-and-demo-accounts)).
+- **SOS emergency (citizen):** a very large red SOS button, a confirm step, browser geolocation (or
+  a pin dropped on the map if location is denied), and the request is saved with its location at
+  once. The Emergency Details form follows (type, people affected, injuries, needs, vulnerable
+  people, description, phone). A status tracker (PENDING → ACKNOWLEDGED → DISPATCHED → RESOLVED)
+  shows timestamps and the assigned responder and refreshes every 10 seconds; **My Requests** lists
+  past requests. A fixed notice says the prototype is not connected to emergency services (call 112).
+- **Nearby resources (citizen):** hospitals, ambulances, shelters, food and water points, fire and
+  police stations near the user, on a map with a square/geometric marker per type and in a list
+  sorted by distance (haversine), with type filters, a radius selector, availability, status
+  (OPEN / FULL / CLOSED), phone and last update.
+- **Service provider dashboard:** counters, requests assigned to the organisation and nearby
+  unassigned ones on a map and list, **Accept** then **Dispatched** / **Resolved**, and an editor
+  for the organisation's own capacity and status.
+- **Admin dashboard:** the **SOS monitor** (animated counters, a live map of every request coloured
+  by severity, status and type filters, **Suggest nearest provider** and **Assign**), provider
+  approvals, resources and users. The Command Centre is admin-only and has an **Include live SOS**
+  option: each active SOS adds to the demand of its nearest zone (within 30 km) before the
+  Allocation Engine runs.
+- **Demo data notice:** a thin DEMO DATA bar at the top of every page and a Data Notice on About.
 - **Landing page:** a full-width ResQ Nexus wordmark, live scenario figures with counting mono
   numbers, a red problem statement, a black project section with a photograph and the
   **Launch Command Centre** button, and a card for each demo scenario.
@@ -43,7 +67,7 @@ It follows a four-stage pipeline: **Assess → Prioritise → Allocate → Expla
   cards and charts for every metric, the GA fitness-over-generations chart, resource distribution
   per zone and per depot, a coverage fairness (Lorenz) curve and coverage by zone.
 - **Three demo scenarios in real Indian regions** and a **scenario generator** for new ones.
-- Built for presenting: responsive from 1024 px laptops and 1280×720 projectors up to full HD,
+- Built for presenting in a desktop browser: laptops and 1280×720 projectors up to full HD,
   respects "reduce motion", and the production build splits each page into its own chunk.
 
 | Landing page | Damage Assessment | About |
@@ -188,7 +212,7 @@ address, copy `frontend/.env.example` to `frontend/.env.local` and change `VITE_
 
 ```bash
 cd backend
-python -m pytest              # 127 tests: scoring, schema, generator, Allocation Engine, API, demo data
+python -m pytest              # 322 tests: scoring, Allocation Engine, API, auth, roles, SOS, resources, dashboards
 
 cd ../frontend
 npm run lint                  # oxlint
@@ -197,10 +221,21 @@ npm run build                 # production build into frontend/dist
 
 The same checks run on GitHub Actions for every push (`.github/workflows/ci.yml`).
 
-### Demo walkthrough (about 3 minutes)
+### Demo walkthrough (about 5 minutes)
+
+1. **Citizen:** on the login page press **Demo login → Citizen**. Press **SOS**, confirm, allow
+   location (or drop a pin), fill in the Emergency Details and show the status tracker.
+2. **Service provider:** log out, **Demo login → Service provider**. Accept the new request on
+   **Requests**, mark it dispatched, and update a figure on **My Resources**. The citizen's tracker
+   (and Nearby Resources) pick the change up within 10 seconds.
+3. **Admin:** **Demo login → Admin** opens the **SOS monitor**: counters, the severity map, filters,
+   **Suggest nearest provider** and **Assign**. Approve the pending provider on **Providers**.
+4. **Command Centre** (admin): tick **Include live SOS**, then continue with the steps below.
+
+Command Centre walkthrough:
 
 1. **Landing page:** introduce the project and the three scenarios, then press **Launch Command
-   Centre**.
+   Centre** (log in as the admin).
 2. **Command Centre:** pick **Earthquake**. Zones are coloured by priority; Bhachau and Dudhai are
    marked Critical. Press **Run allocation** and watch Assess → Prioritise → Allocate → Explain
    complete one by one. Depots, depot areas and route lines appear, and the KPIs count up.
@@ -236,9 +271,59 @@ npx vercel deploy --prod
 ```
 
 Add `GEMINI_API_KEY` under **Project → Settings → Environment Variables** to enable Gemini
-explanations; without it the hosted site uses the template explanations.
+explanations; without it the hosted site uses the template explanations. Also set `JWT_SECRET`
+(32+ random characters) there, so logins stay valid across serverless instances. On Vercel the demo
+database is a SQLite file in `/tmp`, re-seeded per instance: changes made in the hosted demo are
+temporary. Set `DATABASE_URL` to a PostgreSQL database to keep them.
+
+## Roles and demo accounts
+
+The database is seeded with demo accounts (all data is simulated). The login page has a **Demo
+Login** button for each role.
+
+| Role | Email | Password | Lands on |
+|---|---|---|---|
+| Citizen | `citizen@resq.example` | `Citizen#2026` | SOS |
+| Service provider | `provider@resq.example` (Jayanagar Relief Hospital) | `Provider#2026` | Provider dashboard |
+| Admin | `admin@resq.example` | `Admin#2026` | SOS monitor |
+
+Every seeded account of a role shares that role's password (for example
+`koramangala.ambulance@resq.example` is another provider). Two provider registrations are pending
+approval and one was rejected, so the admin screens have something to act on. These passwords are
+public on purpose: never reuse them for a real deployment.
+
+| Role | Pages |
+|---|---|
+| Public | Home, About, Login, Register |
+| Citizen | SOS, My Requests, Nearby Resources |
+| Service provider | Dashboard, Requests, My Resources (after approval) |
+| Admin | SOS Monitor, Command Centre (with Damage Assessment), Providers, Resources, Users |
 
 ## API endpoints
+
+All endpoints except `/health`, `/scenarios`, `/auth/register*` and `/auth/login` need an
+`Authorization: Bearer <token>` header from `/auth/login`.
+
+| Method | Path | Who | Returns |
+|---|---|---|---|
+| POST | `/auth/register` | anyone | Creates a citizen account and logs in |
+| POST | `/auth/register/provider` | anyone | Registers an organisation (pending approval) and logs in |
+| POST | `/auth/login` | anyone | `access_token`, `expires_in` and the `user` |
+| GET | `/auth/me` | any role | The logged-in user (with the organisation for providers) |
+| POST | `/sos` | citizen | Sends an SOS with just its location (`latitude`, `longitude`, `location_source`) |
+| PATCH | `/sos/{id}/details` | citizen | Adds or corrects the emergency details |
+| GET | `/sos/mine`, `/sos/{id}` | citizen (own), assigned provider, admin | Requests with status timeline, severity and responder |
+| GET | `/resources/nearby?lat&lon&radius_km&types` | any role | Resources sorted by distance |
+| GET / PATCH | `/provider/resources[/{id}]` | approved provider | Own resources; update capacity and status |
+| GET | `/provider/requests?radius_km` | approved provider | Assigned requests and nearby unassigned ones |
+| POST | `/provider/requests/{id}/accept`, `/provider/requests/{id}/status` | approved provider | Accept, then DISPATCHED / RESOLVED |
+| GET | `/admin/summary`, `/admin/sos?status&type` | admin | Counters; every request, active and most severe first |
+| GET / POST | `/admin/sos/{id}/suggestions`, `/admin/sos/{id}/assign`, `/admin/sos/{id}/status` | admin | Nearest suitable providers; assign; change status |
+| GET / POST | `/admin/providers`, `/admin/providers/{id}/approve`, `/admin/providers/{id}/reject` | admin | Provider registrations |
+| GET / PATCH | `/admin/users[/{id}]` | admin | Users; deactivate or reactivate |
+| GET / POST / PATCH / DELETE | `/admin/resources[/{id}]` | admin | Manage resources |
+
+Command Centre endpoints (the scenario list is public, the rest are admin-only):
 
 | Method | Path | Returns |
 |---|---|---|
@@ -253,8 +338,11 @@ Both POST endpoints take an optional body with custom priority weights (any non-
 they are rescaled to sum to 1, and missing ones keep their default):
 
 ```json
-{ "weights": { "severity": 0.6, "population": 0.2, "vulnerability": 0.1, "accessibility": 0.1 } }
+{ "weights": { "severity": 0.6, "population": 0.2, "vulnerability": 0.1, "accessibility": 0.1 }, "include_sos": true }
 ```
+
+With `"include_sos": true`, every active SOS request within 30 km of a zone adds to that zone's
+demand before the Allocation Engine runs; the response then lists the requests included per zone.
 
 Unknown scenario ids return `404`; negative or all-zero weights and unknown fields return `422`.
 Results are deterministic, so repeated requests for the same scenario and weights are served from a

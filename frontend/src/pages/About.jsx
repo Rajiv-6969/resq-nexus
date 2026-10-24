@@ -148,9 +148,31 @@ export default function About() {
         </div>
       </section>
 
-      <section className="sec about-credits" aria-labelledby="credits-title">
+      <section className="sec about-notice" aria-labelledby="notice-title">
         <p className="sec-bar mono">
           <span>06</span>
+          <span>Data notice</span>
+        </p>
+        <div className="about-notice-body">
+          <h2 id="notice-title" className="about-notice-title">
+            Data notice
+          </h2>
+          <div className="about-notice-text">
+            <p>
+              All data in this prototype is simulated for demonstration: the disaster scenarios, user accounts, service providers,
+              resources, SOS requests and their locations. Places are real, but every figure attached to them is made up.
+            </p>
+            <p>
+              Real datasets will be integrated once they are finalised, for example satellite damage imagery, government resource
+              registries and live disaster feeds.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="sec about-credits" aria-labelledby="credits-title">
+        <p className="sec-bar mono">
+          <span>07</span>
           <span id="credits-title">Photo credits</span>
         </p>
         <ol className="credits-list">
@@ -175,10 +197,10 @@ export default function About() {
         <p className="credits-note">Every photograph was converted to high-contrast grayscale and cropped for this site.</p>
       </section>
 
-      <section className="sec sec--red about-cta" aria-label="Open the Command Centre">
-        <p className="about-cta-title">Ready to allocate?</p>
-        <Link to="/command" className="btn btn--on-red btn--lg">
-          Launch Command Centre <span className="arrow">&rarr;</span>
+      <section className="sec sec--red about-cta" aria-label="Log in to the demo">
+        <p className="about-cta-title">Try the demo</p>
+        <Link to="/login" className="btn btn--on-red btn--lg">
+          Log in with a demo account <span className="arrow">&rarr;</span>
         </Link>
       </section>
 
