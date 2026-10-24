@@ -1,6 +1,7 @@
 /* Map (React-Leaflet) */
 .map-pane {
   position: relative;
+  isolation: isolate; /* keep Leaflet's z-indexes under the sticky nav and fixed bars */
   width: 100%;
   height: 100%;
   min-height: 360px;

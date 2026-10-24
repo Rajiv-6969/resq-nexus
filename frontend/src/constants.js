@@ -71,6 +71,45 @@ export const RESOURCE_META = {
   POLICE: { label: "Police station", plural: "Police", org: "Police", unit: "patrol units" },
 };
 export const RESOURCE_STATUSES = ["OPEN", "FULL", "CLOSED"];
+
+// SOS requests: the emergency details form and the status tracker.
+export const EMERGENCY_TYPES = [
+  { value: "flood", label: "Flood" },
+  { value: "earthquake", label: "Earthquake" },
+  { value: "wildfire", label: "Wildfire" },
+  { value: "cyclone", label: "Cyclone" },
+  { value: "fire", label: "Fire" },
+  { value: "medical", label: "Medical" },
+  { value: "other", label: "Other" },
+];
+export const INJURY_LEVELS = [
+  { value: "none", label: "None" },
+  { value: "minor", label: "Minor" },
+  { value: "serious", label: "Serious" },
+  { value: "critical", label: "Critical" },
+];
+export const NEEDS = [
+  { value: "rescue", label: "Rescue" },
+  { value: "medical", label: "Medical" },
+  { value: "ambulance", label: "Ambulance" },
+  { value: "food", label: "Food" },
+  { value: "water", label: "Water" },
+  { value: "shelter", label: "Shelter" },
+];
+export const VULNERABLE_GROUPS = [
+  { value: "children", label: "Children" },
+  { value: "elderly", label: "Elderly" },
+  { value: "disabled", label: "Disabled" },
+  { value: "pregnant", label: "Pregnant" },
+];
+export const SOS_STATUSES = ["PENDING", "ACKNOWLEDGED", "DISPATCHED", "RESOLVED"];
+export const SOS_STEPS = {
+  PENDING: { label: "Pending", detail: "Alert received, waiting for a responder" },
+  ACKNOWLEDGED: { label: "Acknowledged", detail: "A responder has accepted your request" },
+  DISPATCHED: { label: "Dispatched", detail: "Help is on the way" },
+  RESOLVED: { label: "Resolved", detail: "The request is closed" },
+};
+export const labelFor = (list, value) => list.find((item) => item.value === value)?.label ?? value;
 export const formatScore = (value) => value.toFixed(3);
 
 export function accessLabel(accessibility) {

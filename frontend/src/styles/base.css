@@ -709,7 +709,7 @@ code {
 
 @media (max-width: 640px) {
   .nav-name {
-    display: none;
+    max-width: 104px;
   }
   .footer-top {
     grid-template-columns: 1fr;

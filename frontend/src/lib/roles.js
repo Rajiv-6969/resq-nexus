@@ -3,7 +3,7 @@
 export const ROLE_LABELS = { CITIZEN: "Citizen", SERVICE_PROVIDER: "Service provider", ADMIN: "Admin" };
 
 // Each role's own dashboard.
-export const ROLE_HOME = { CITIZEN: "/", SERVICE_PROVIDER: "/", ADMIN: "/command" };
+export const ROLE_HOME = { CITIZEN: "/sos", SERVICE_PROVIDER: "/provider", ADMIN: "/admin" };
 
 export const NAV_LINKS = {
   PUBLIC: [
@@ -12,14 +12,22 @@ export const NAV_LINKS = {
     { to: "/login", label: "Login" },
   ],
   CITIZEN: [
-    { to: "/", label: "Home", end: true },
-    { to: "/about", label: "About" },
+    { to: "/sos", label: "SOS" },
+    { to: "/requests", label: "My Requests" },
+    { to: "/resources", label: "Nearby Resources" },
   ],
   SERVICE_PROVIDER: [
-    { to: "/", label: "Home", end: true },
-    { to: "/about", label: "About" },
+    { to: "/provider", label: "Dashboard", end: true },
+    { to: "/provider/requests", label: "Requests" },
+    { to: "/provider/resources", label: "My Resources" },
   ],
-  ADMIN: [{ to: "/command", label: "Command Centre" }],
+  ADMIN: [
+    { to: "/admin", label: "SOS Monitor", end: true },
+    { to: "/command", label: "Command Centre" },
+    { to: "/admin/providers", label: "Providers" },
+    { to: "/admin/resources", label: "Resources" },
+    { to: "/admin/users", label: "Users" },
+  ],
 };
 
 export const homeFor = (user) => (user ? ROLE_HOME[user.role] ?? "/" : "/");

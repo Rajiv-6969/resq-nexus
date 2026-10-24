@@ -2,7 +2,7 @@
 .cc {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - var(--nav-total));
+  height: calc(100vh - var(--nav-total) - var(--demo-h));
   min-height: 640px;
   border-bottom: 1px solid var(--line);
 }

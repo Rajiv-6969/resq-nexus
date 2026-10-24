@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect } from "react";
 import { AnimatePresence, MotionConfig } from "framer-motion";
 import { Navigate, Route, Routes, useLocation } from "react-router";
+import DemoBar from "./components/DemoBar";
 import Footer from "./components/Footer";
 import NavBar from "./components/NavBar";
 import PageLoader from "./components/PageLoader";
@@ -20,6 +21,10 @@ const loaders = {
   Login: () => import("./pages/Login"),
   Register: () => import("./pages/Register"),
   Logout: () => import("./pages/Logout"),
+  SosHome: () => import("./pages/citizen/SosHome"),
+  SosTrack: () => import("./pages/citizen/SosTrack"),
+  MyRequests: () => import("./pages/citizen/MyRequests"),
+  NearbyResources: () => import("./pages/citizen/NearbyResources"),
 };
 const CommandCentre = lazy(loaders.CommandCentre);
 const Analytics = SHOW_ANALYTICS ? lazy(loaders.Analytics) : null;
@@ -28,8 +33,13 @@ const About = lazy(loaders.About);
 const Login = lazy(loaders.Login);
 const Register = lazy(loaders.Register);
 const Logout = lazy(loaders.Logout);
+const SosHome = lazy(loaders.SosHome);
+const SosTrack = lazy(loaders.SosTrack);
+const MyRequests = lazy(loaders.MyRequests);
+const NearbyResources = lazy(loaders.NearbyResources);
 
 const ADMIN = ["ADMIN"];
+const CITIZEN = ["CITIZEN"];
 
 const page = (element) => <PageTransition>{element}</PageTransition>;
 const guarded = (roles, element) => page(<RequireRole roles={roles}>{element}</RequireRole>);
@@ -54,6 +64,7 @@ export default function App() {
               <a className="skip-link" href="#main">
                 Skip to content
               </a>
+              <DemoBar />
               <NavBar />
               <Suspense fallback={<PageLoader />}>
                 <AnimatePresence mode="wait">
@@ -63,6 +74,11 @@ export default function App() {
                     <Route path="/login" element={page(<Login />)} />
                     <Route path="/register" element={page(<Register />)} />
                     <Route path="/logout" element={<Logout />} />
+
+                    <Route path="/sos" element={guarded(CITIZEN, <SosHome />)} />
+                    <Route path="/sos/:id" element={guarded(CITIZEN, <SosTrack />)} />
+                    <Route path="/requests" element={guarded(CITIZEN, <MyRequests />)} />
+                    <Route path="/resources" element={guarded(CITIZEN, <NearbyResources />)} />
 
                     <Route path="/command" element={guarded(ADMIN, <CommandCentre />)} />
                     <Route path="/damage" element={guarded(ADMIN, <DamageAssessment />)} />

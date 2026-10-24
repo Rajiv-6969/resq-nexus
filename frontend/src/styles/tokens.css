@@ -31,6 +31,7 @@
   /* Grid */
   --nav-h: 48px;
   --nav-total: var(--nav-h); /* the whole nav: one row, or two below 1060px */
+  --demo-h: 28px; /* the DEMO DATA bar above the nav */
   --pad: clamp(16px, 2.2vw, 32px);
   --gap: clamp(12px, 1.4vw, 20px);
 
