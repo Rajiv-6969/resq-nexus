@@ -300,3 +300,118 @@ class ProviderBoard(BaseModel):
     radius_km: float
     assigned: list[SosOut]
     nearby: list[SosOut]
+
+
+# --------------------------------------------------------------------------- admin
+def _resource_name(value: str) -> str:
+    value = " ".join(value.split())
+    if not 2 <= len(value) <= 120:
+        raise ValueError("Enter the resource name (2 to 120 characters).")
+    return value
+
+
+ResourceName = Annotated[str, AfterValidator(_resource_name)]
+Area = Annotated[str, AfterValidator(_text(80, "Area"))]
+Region = Annotated[str, AfterValidator(_text(60, "Region"))]
+Capacity = Annotated[int, Field(ge=0, le=1_000_000)]
+
+
+class SosCounts(BaseModel):
+    total: int
+    active: int
+    pending: int
+    acknowledged: int
+    dispatched: int
+    resolved: int
+
+
+class AdminSummary(BaseModel):
+    sos: SosCounts
+    shelter_capacity_available: int
+    ambulances_available: int
+    providers_pending: int
+    resources_open: int
+
+
+class Suggestion(BaseModel):
+    provider: ProviderBrief
+    resource: ResourceOut
+    distance_km: float
+    matched_needs: list[Need]
+
+
+class Suggestions(BaseModel):
+    request_id: int
+    needs: list[Need]
+    radius_km: float
+    candidates: list[Suggestion]
+
+
+class AssignRequest(Strict):
+    provider_id: int
+
+
+class AdminStatusUpdate(Strict):
+    status: Literal["ACKNOWLEDGED", "DISPATCHED", "RESOLVED"]
+
+
+class ProviderReview(Strict):
+    note: Annotated[str, AfterValidator(_text(200, "Note"))] | None = None
+
+
+class ProviderContact(BaseModel):
+    id: int
+    full_name: str
+    email: str
+    phone: str | None
+    is_active: bool
+
+
+class AdminProviderOut(ProviderOut):
+    contact: ProviderContact
+    resource_count: int
+    active_requests: int
+
+
+class AdminUserUpdate(Strict):
+    is_active: bool
+
+
+class AdminResourceCreate(Strict):
+    name: ResourceName
+    resource_type: ResourceType
+    latitude: Latitude
+    longitude: Longitude
+    area: Area | None = None
+    region: Region | None = None
+    contact_phone: Phone | None = None
+    capacity_total: Capacity
+    capacity_available: Capacity
+    status: ResourceStatus = "OPEN"
+    provider_id: int | None = None
+
+    @model_validator(mode="after")
+    def _available_within_total(self) -> AdminResourceCreate:
+        if self.capacity_available > self.capacity_total:
+            raise ValueError("Available capacity cannot be more than the total.")
+        return self
+
+
+class AdminResourceUpdate(Strict):
+    name: ResourceName | None = None
+    resource_type: ResourceType | None = None
+    latitude: Latitude | None = None
+    longitude: Longitude | None = None
+    area: Area | None = None
+    region: Region | None = None
+    contact_phone: Phone | None = None
+    capacity_total: Capacity | None = None
+    capacity_available: Capacity | None = None
+    status: ResourceStatus | None = None
+    provider_id: int | None = None  # send null to remove the owner
+
+    @model_validator(mode="after")
+    def _something_to_update(self) -> AdminResourceUpdate:
+        if not self.model_fields_set:
+            raise ValueError("Nothing to update.")
+        return self

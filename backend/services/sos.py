@@ -7,6 +7,8 @@ from datetime import datetime
 from typing import Any
 
 from db.models import SosRequest
+from services.geo import haversine_km
+from services.resources import serialize as serialize_resource
 
 # Severity = 0.5 x injuries + 0.3 x people affected + 0.2 x vulnerable groups (each 0-1).
 INJURY_SCORE = {"none": 0.0, "minor": 0.35, "serious": 0.7, "critical": 1.0}
@@ -86,6 +88,66 @@ def resolve(sos: SosRequest, now: datetime) -> None:
         raise TransitionError("This request is already resolved.")
     sos.status = "RESOLVED"
     sos.resolved_at = sos.updated_at = now
+
+
+# --------------------------------------------------------------------------- provider suggestions
+# Resource types that can meet each need, best match first.
+NEED_RESOURCE_TYPES = {
+    "rescue": ("FIRE_STATION", "POLICE"),
+    "medical": ("HOSPITAL", "AMBULANCE"),
+    "ambulance": ("AMBULANCE", "HOSPITAL"),
+    "food": ("FOOD", "SHELTER"),
+    "water": ("WATER", "FOOD"),
+    "shelter": ("SHELTER",),
+}
+# Needs assumed from the emergency type when a request lists none.
+EMERGENCY_NEEDS = {
+    "flood": ("rescue", "shelter"),
+    "earthquake": ("rescue", "medical"),
+    "wildfire": ("rescue",),
+    "cyclone": ("shelter", "rescue"),
+    "fire": ("rescue",),
+    "medical": ("medical", "ambulance"),
+    "other": (),
+}
+SUGGESTION_RADIUS_KM = 75
+SUGGESTION_LIMIT = 5
+
+
+def needs_for(sos: SosRequest) -> list[str]:
+    """The needs a provider should meet: the citizen's own list, else what the emergency type implies."""
+    if sos.needs:
+        return [need for need in NEEDS if need in sos.needs]
+    return list(EMERGENCY_NEEDS.get(sos.emergency_type or "", ()))
+
+
+def suggest_providers(sos: SosRequest, providers: Iterable, limit: int = SUGGESTION_LIMIT) -> list[dict[str, Any]]:
+    """Approved providers that can help, nearest first: each with its closest suitable resource that is
+    OPEN with capacity left. A request without needs yet considers every resource type."""
+    needs = needs_for(sos)
+    wanted = {t for need in needs for t in NEED_RESOURCE_TYPES[need]} or None
+    candidates = []
+    for provider in providers:
+        if provider.approval_status != "APPROVED" or not provider.user.is_active:
+            continue
+        usable = [
+            (haversine_km(sos.latitude, sos.longitude, r.latitude, r.longitude), r)
+            for r in provider.resources
+            if r.status == "OPEN" and r.capacity_available > 0 and (wanted is None or r.resource_type in wanted)
+        ]
+        if not usable:
+            continue
+        distance, resource = min(usable, key=lambda pair: (pair[0], pair[1].name))
+        if distance > SUGGESTION_RADIUS_KM:
+            continue
+        candidates.append({
+            "provider": provider_brief(provider),
+            "resource": serialize_resource(resource, distance),
+            "distance_km": round(distance, 2),
+            "matched_needs": [need for need in needs if resource.resource_type in NEED_RESOURCE_TYPES[need]],
+        })
+    candidates.sort(key=lambda c: (c["distance_km"], -len(c["matched_needs"]), c["provider"]["organisation_name"]))
+    return candidates[:limit]
 
 
 def timeline(sos: SosRequest) -> list[dict[str, Any]]:

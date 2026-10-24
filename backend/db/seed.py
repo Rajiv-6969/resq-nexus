@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from db.models import Provider, Resource, SosRequest, User, utcnow
 from services.security import hash_password
+from services.sos import NEEDS, VULNERABLE_GROUPS
 
 DEMO_SEED = Path(__file__).resolve().parent.parent / "data" / "demo_seed.json"
 
@@ -75,7 +76,8 @@ def seed_demo_data(session: Session, path: Path = DEMO_SEED, now: datetime | Non
             citizen=citizens[s["citizen"]], latitude=s["latitude"], longitude=s["longitude"],
             location_source=s["location_source"], accuracy_m=s["accuracy_m"],
             emergency_type=details.get("emergency_type"), people_affected=details.get("people_affected"),
-            injuries=details.get("injuries"), needs=details.get("needs", []), vulnerable=details.get("vulnerable", []),
+            injuries=details.get("injuries"), needs=[n for n in NEEDS if n in details.get("needs", [])],
+            vulnerable=[g for g in VULNERABLE_GROUPS if g in details.get("vulnerable", [])],
             description=details.get("description"), contact_phone=details.get("contact_phone"),
             details_submitted_at=submitted, status=s["status"], assigned_provider=providers.get(s["provider"]),
             assigned_at=events[0], acknowledged_at=events[1], dispatched_at=events[2], resolved_at=events[3],
