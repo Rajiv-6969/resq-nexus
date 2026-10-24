@@ -25,6 +25,11 @@ const loaders = {
   SosTrack: () => import("./pages/citizen/SosTrack"),
   MyRequests: () => import("./pages/citizen/MyRequests"),
   NearbyResources: () => import("./pages/citizen/NearbyResources"),
+  ProviderDashboard: () => import("./pages/provider/ProviderDashboard"),
+  ProviderRequests: () => import("./pages/provider/ProviderRequests"),
+  ProviderResources: () => import("./pages/provider/ProviderResources"),
+  SosMonitor: () => import("./pages/admin/SosMonitor"),
+  AdminTables: () => import("./pages/admin/AdminTables"),
 };
 const CommandCentre = lazy(loaders.CommandCentre);
 const Analytics = SHOW_ANALYTICS ? lazy(loaders.Analytics) : null;
@@ -37,9 +42,17 @@ const SosHome = lazy(loaders.SosHome);
 const SosTrack = lazy(loaders.SosTrack);
 const MyRequests = lazy(loaders.MyRequests);
 const NearbyResources = lazy(loaders.NearbyResources);
+const ProviderDashboard = lazy(loaders.ProviderDashboard);
+const ProviderRequests = lazy(loaders.ProviderRequests);
+const ProviderResources = lazy(loaders.ProviderResources);
+const SosMonitor = lazy(loaders.SosMonitor);
+const AdminProviders = lazy(() => loaders.AdminTables().then((m) => ({ default: m.AdminProviders })));
+const AdminResources = lazy(() => loaders.AdminTables().then((m) => ({ default: m.AdminResources })));
+const AdminUsers = lazy(() => loaders.AdminTables().then((m) => ({ default: m.AdminUsers })));
 
 const ADMIN = ["ADMIN"];
 const CITIZEN = ["CITIZEN"];
+const PROVIDER = ["SERVICE_PROVIDER"];
 
 const page = (element) => <PageTransition>{element}</PageTransition>;
 const guarded = (roles, element) => page(<RequireRole roles={roles}>{element}</RequireRole>);
@@ -80,6 +93,14 @@ export default function App() {
                     <Route path="/requests" element={guarded(CITIZEN, <MyRequests />)} />
                     <Route path="/resources" element={guarded(CITIZEN, <NearbyResources />)} />
 
+                    <Route path="/provider" element={guarded(PROVIDER, <ProviderDashboard />)} />
+                    <Route path="/provider/requests" element={guarded(PROVIDER, <ProviderRequests />)} />
+                    <Route path="/provider/resources" element={guarded(PROVIDER, <ProviderResources />)} />
+
+                    <Route path="/admin" element={guarded(ADMIN, <SosMonitor />)} />
+                    <Route path="/admin/providers" element={guarded(ADMIN, <AdminProviders />)} />
+                    <Route path="/admin/resources" element={guarded(ADMIN, <AdminResources />)} />
+                    <Route path="/admin/users" element={guarded(ADMIN, <AdminUsers />)} />
                     <Route path="/command" element={guarded(ADMIN, <CommandCentre />)} />
                     <Route path="/damage" element={guarded(ADMIN, <DamageAssessment />)} />
                     {SHOW_ANALYTICS && <Route path="/analytics" element={guarded(ADMIN, <Analytics />)} />}

@@ -15,6 +15,9 @@ function readStoredScenario() {
   }
 }
 
+// A run is reused only for the same weights and the same live-SOS setting.
+const runKeyFor = (w, includeSos) => `${weightsKey(w)}|sos:${includeSos ? 1 : 0}`;
+
 export default function AppDataProvider({ children }) {
   const toast = useToast();
   const { user } = useAuth();
@@ -38,6 +41,7 @@ export default function AppDataProvider({ children }) {
   const [runs, setRuns] = useState({}); // scenarioId -> { weightsKey, weights, result, explanations, explainError }
   const [pipeline, setPipeline] = useState({ status: "idle", step: -1, scenarioId: null, error: null });
   const runCounter = useRef(0);
+  const [includeSos, setIncludeSos] = useState(false); // add live SOS requests to zone demand before allocating
 
   // A different account (or a logout) starts with no Command Centre data in memory.
   const userId = user?.id ?? null;
@@ -159,6 +163,8 @@ export default function AppDataProvider({ children }) {
     const id = scenarioId;
     const w = weights;
     const key = weightsKey(w);
+    const keyForRun = runKeyFor(w, includeSos);
+    const withSos = includeSos;
     const current = () => runCounter.current === runId;
     const setStep = (step) => current() && setPipeline({ status: "running", step, scenarioId: id, error: null });
 
@@ -174,9 +180,9 @@ export default function AppDataProvider({ children }) {
       setRanking({ scenarioId: id, key, data: scored });
 
       setStep(2);
-      const result = await withMinimum(postAllocate(id, w, false), 900);
+      const result = await withMinimum(postAllocate(id, w, withSos), 900);
       if (!current()) return;
-      setRuns((all) => ({ ...all, [id]: { weightsKey: key, weights: w, result, explanations: null, explainError: null } }));
+      setRuns((all) => ({ ...all, [id]: { weightsKey: keyForRun, weights: w, result, explanations: null, explainError: null } }));
       const m = result.engine.metrics;
       toast.success(
         "Allocation complete",
@@ -185,7 +191,7 @@ export default function AppDataProvider({ children }) {
 
       setStep(3);
       try {
-        const explained = await withMinimum(postExplain(id, w, false), 600);
+        const explained = await withMinimum(postExplain(id, w, withSos), 600);
         if (!current()) return;
         setRuns((all) => ({ ...all, [id]: { ...all[id], explanations: explained } }));
         if (explained.source === "gemini") toast.info("Explanations ready", `Written by Gemini (${explained.model}).`);
@@ -201,7 +207,7 @@ export default function AppDataProvider({ children }) {
       setPipeline((p) => ({ ...p, status: "error", error: err.message }));
       toast.error("Pipeline stopped", err.message);
     }
-  }, [scenarioId, weights, details, toast]);
+  }, [scenarioId, weights, details, toast, includeSos]);
 
   const run = scenarioId ? (runs[scenarioId] ?? null) : null;
   const value = useMemo(
@@ -223,13 +229,15 @@ export default function AppDataProvider({ children }) {
       rankingSettled: ranking?.scenarioId === scenarioId && ranking.key === weightsKey(weights),
       rankingError,
       run,
-      runStale: Boolean(run && run.weightsKey !== weightsKey(weights)),
+      runStale: Boolean(run && run.weightsKey !== runKeyFor(weights, includeSos)),
+      includeSos,
+      setIncludeSos,
       pipeline: pipeline.scenarioId === scenarioId ? pipeline : { status: "idle", step: -1, scenarioId, error: null },
       runPipeline,
       retry,
     }),
     [health, scenarios, listState, scenarioId, details, detailError, selectScenario, weights, setWeight, resetWeights,
-      ranking, rankingError, run, pipeline, runPipeline, retry],
+      ranking, rankingError, run, pipeline, runPipeline, retry, includeSos],
   );
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;

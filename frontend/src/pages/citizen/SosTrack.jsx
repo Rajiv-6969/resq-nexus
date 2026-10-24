@@ -58,7 +58,7 @@ export default function SosTrack() {
   const [editing, setEditing] = useState(false);
   const [later, setLater] = useState(false);
 
-  const load = useCallback((signal) => fetchSos(id, { signal }), [id]);
+  const load = useCallback((options) => fetchSos(id, options), [id]);
   const poll = usePolling(load, stopped ? 0 : POLL_MS);
   const sos = poll.data;
   if (sos?.status === "RESOLVED" && !stopped) setStopped(true);

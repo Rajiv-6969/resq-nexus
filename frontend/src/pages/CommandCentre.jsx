@@ -55,6 +55,8 @@ export default function CommandCentre() {
     pipeline,
     runPipeline,
     retry,
+    includeSos,
+    setIncludeSos,
   } = useAppData();
   const [searchParams, setSearchParams] = useSearchParams();
   const [tab, setTab] = useState("zone");
@@ -122,6 +124,18 @@ export default function CommandCentre() {
         <div className="cc-cell cc-cell--stepper">
           <p className="cell-label">02 / Pipeline</p>
           <PipelineStepper states={states} />
+        </div>
+        <div className="cc-cell cc-cell--sos">
+          <p className="cell-label">03 / Live data</p>
+          <label className="sos-toggle mono">
+            <input type="checkbox" checked={includeSos} onChange={(e) => setIncludeSos(e.target.checked)} />
+            Include live SOS
+          </label>
+          {run?.result?.sos && (
+            <p className="mono sos-added">
+              +{run.result.sos.requests_included} SOS / {run.result.sos.people} people
+            </p>
+          )}
         </div>
         <RunButton running={running} hasRun={Boolean(run)} stale={runStale} disabled={!canRun} onRun={runPipeline} />
       </section>

@@ -20,7 +20,8 @@ export function prefersReducedMotion() {
   return typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-// Calls `load(signal)` now and every `intervalMs` while `enabled` (paused while the tab is hidden).
+// Calls `load({ signal })` now and every `intervalMs` while `enabled` (paused while the tab is hidden),
+// so API helpers that take an options object can be passed directly.
 // Returns { data, error, loading, refresh, updatedAt }.
 export function usePolling(load, intervalMs, { enabled = true } = {}) {
   const [state, setState] = useState({ data: null, error: null, loading: true, updatedAt: null });
@@ -34,7 +35,7 @@ export function usePolling(load, intervalMs, { enabled = true } = {}) {
     if (!enabled) return undefined;
     const controller = new AbortController();
     loadRef
-      .current(controller.signal)
+      .current({ signal: controller.signal })
       .then((data) => setState({ data, error: null, loading: false, updatedAt: new Date() }))
       .catch((err) => err.name !== "AbortError" && setState((s) => ({ ...s, error: err.message, loading: false })));
     return () => controller.abort();
