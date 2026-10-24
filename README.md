@@ -188,7 +188,7 @@ address, copy `frontend/.env.example` to `frontend/.env.local` and change `VITE_
 
 ```bash
 cd backend
-python -m pytest              # 122 tests: scoring, schema, generator, Allocation Engine, API, demo data
+python -m pytest              # 127 tests: scoring, schema, generator, Allocation Engine, API, demo data
 
 cd ../frontend
 npm run lint                  # oxlint
@@ -220,6 +220,23 @@ The same checks run on GitHub Actions for every push (`.github/workflows/ci.yml`
   `VITE_API_BASE_URL=http://localhost:8001` in `frontend/.env.local`.
 - **PowerShell refuses to run `activate`:** run
   `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` once, or use Command Prompt.
+
+### Deploy to Vercel
+
+The repository deploys as one Vercel project with two services (`vercel.json`): the Vite frontend
+at `/` and the FastAPI backend at `/api` on the same domain, so the browser needs no CORS setup.
+`backend/vercel_app.py` mounts the API from `main.py` under `/api`, and the frontend is built with
+`VITE_API_BASE_URL=/api`. `.vercelignore` keeps `.env` files, the virtual environment, tests and
+docs out of the upload.
+
+```bash
+npx vercel login
+npx vercel link --project resq-nexus     # once, from the repository root
+npx vercel deploy --prod
+```
+
+Add `GEMINI_API_KEY` under **Project → Settings → Environment Variables** to enable Gemini
+explanations; without it the hosted site uses the template explanations.
 
 ## API endpoints
 

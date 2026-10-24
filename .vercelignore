@@ -1,0 +1,20 @@
+# Files the Vercel CLI must never upload
+# Secrets and local environments
+.env
+.env.*
+**/.env
+**/.env.*
+backend/venv/
+**/.venv/
+.vercel/
+
+# Build output and caches (Vercel builds its own)
+frontend/node_modules/
+frontend/dist/
+**/__pycache__/
+**/.pytest_cache/
+
+# Not needed to run the site
+backend/tests/
+docs/
+.github/
