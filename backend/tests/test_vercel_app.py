@@ -1,9 +1,12 @@
 """The Vercel entrypoint serves the same API under /api on the site's own domain."""
 from fastapi.testclient import TestClient
 
+import main
 import vercel_app
+from conftest import demo_headers
 
-client = TestClient(vercel_app.app)
+# Admin session (tokens work the same at / and /api), because the Command Centre is admin-only.
+client = TestClient(vercel_app.app, headers=demo_headers(TestClient(main.app), "ADMIN"))
 
 
 def test_health_is_served_under_api():

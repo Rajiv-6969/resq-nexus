@@ -3,9 +3,11 @@ import pytest
 from fastapi.testclient import TestClient
 
 import main
+from conftest import demo_headers
 from services.scenarios import RESOURCE_TYPES, Scenario, get_scenario
 
-client = TestClient(main.app)
+# The Command Centre endpoints are admin-only, so this client is logged in as the demo admin.
+client = TestClient(main.app, headers=demo_headers(TestClient(main.app), "ADMIN"))
 
 DEMO_SCENARIOS = {"flood-assam": "flood", "earthquake-kutch": "earthquake", "wildfire-kumaon": "wildfire"}
 

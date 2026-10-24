@@ -5,10 +5,12 @@ import pytest
 from fastapi.testclient import TestClient
 
 import main
+from conftest import demo_headers
 from services import explain, gemini_client
 from services.priority import PRIORITY_SETTINGS
 
-client = TestClient(main.app)
+# The Command Centre endpoints are admin-only, so this client is logged in as the demo admin.
+client = TestClient(main.app, headers=demo_headers(TestClient(main.app), "ADMIN"))
 ONLY_SEVERITY = {"severity": 1, "population": 0, "vulnerability": 0, "accessibility": 0}
 ALGORITHM_NAMES = ("k-means", "kmeans", "dijkstra", "genetic", "deap")
 

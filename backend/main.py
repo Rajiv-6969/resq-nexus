@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -21,6 +21,7 @@ load_dotenv(Path(__file__).resolve().parent / ".env")
 
 # The modules below read the environment when imported, so they come after load_dotenv.
 from db.database import init_db  # noqa: E402
+from deps import require_admin  # noqa: E402
 from routers import auth  # noqa: E402
 from services import allocation_engine, explain, gemini_client, priority, scenarios  # noqa: E402
 from services.scenarios import Scenario, ScenarioNotFoundError, ScenarioSummary, Zone  # noqa: E402
@@ -94,7 +95,12 @@ def list_scenarios():
     return scenarios.list_scenarios()
 
 
-@app.get("/scenarios/{scenario_id}", response_model=Scenario)
+# The Command Centre (scenario details, priority scoring, Allocation Engine, explanations) is
+# admin-only; the scenario list stays public for the landing page.
+ADMIN_ONLY = [Depends(require_admin)]
+
+
+@app.get("/scenarios/{scenario_id}", response_model=Scenario, dependencies=ADMIN_ONLY)
 def get_scenario(scenario_id: str):
     """Full scenario: metadata, available resources and every zone."""
     return _scenario_or_404(scenario_id)
@@ -122,7 +128,7 @@ class PriorityResponse(BaseModel):
 WEIGHT_HELP = "Optional priority weight (any non-negative number; the four are rescaled to sum to 1)"
 
 
-@app.get("/scenarios/{scenario_id}/priority", response_model=PriorityResponse)
+@app.get("/scenarios/{scenario_id}/priority", response_model=PriorityResponse, dependencies=ADMIN_ONLY)
 def get_priority(
     scenario_id: str,
     severity: float | None = Query(None, ge=0, description=WEIGHT_HELP),
@@ -255,7 +261,7 @@ def _weights(request: AllocationRequest | None) -> dict[str, float] | None:
     return request.weights.model_dump() if request and request.weights else None
 
 
-@app.post("/scenarios/{scenario_id}/allocate", response_model=AllocationResponse)
+@app.post("/scenarios/{scenario_id}/allocate", response_model=AllocationResponse, dependencies=ADMIN_ONLY)
 def allocate(scenario_id: str, request: AllocationRequest | None = None):
     """Run the Allocation Engine and the greedy baseline.
 
@@ -266,7 +272,7 @@ def allocate(scenario_id: str, request: AllocationRequest | None = None):
     return _allocation_for(scenario, _weights(request))[1]
 
 
-@app.post("/scenarios/{scenario_id}/explain", response_model=ExplanationResponse)
+@app.post("/scenarios/{scenario_id}/explain", response_model=ExplanationResponse, dependencies=ADMIN_ONLY)
 def explain_allocation(scenario_id: str, request: AllocationRequest | None = None):
     """Plain-language explanation for every zone of the allocation (Gemini, or templates as a fallback)."""
     scenario = _scenario_or_404(scenario_id)
