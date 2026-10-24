@@ -1,6 +1,7 @@
 """ResQ Nexus API – Intelligent Disaster Response and Resource Allocation.
 
-Pipeline: Assess -> Prioritise -> Allocate -> Explain.
+Pipeline: Assess -> Prioritise -> Allocate -> Explain, plus accounts (citizens,
+service providers, admins), SOS requests and nearby resources.
 """
 import hashlib
 import json
@@ -15,13 +16,16 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-# Secrets (GEMINI_API_KEY) live in backend/.env, which is git-ignored.
+# Secrets (GEMINI_API_KEY, JWT_SECRET) live in backend/.env, which is git-ignored.
 load_dotenv(Path(__file__).resolve().parent / ".env")
 
-from services import allocation_engine, explain, gemini_client, priority, scenarios  # noqa: E402  (needs the env loaded first)
+# The modules below read the environment when imported, so they come after load_dotenv.
+from db.database import init_db  # noqa: E402
+from routers import auth  # noqa: E402
+from services import allocation_engine, explain, gemini_client, priority, scenarios  # noqa: E402
 from services.scenarios import Scenario, ScenarioNotFoundError, ScenarioSummary, Zone  # noqa: E402
 
-API_VERSION = "0.2.0"
+API_VERSION = "0.3.0"
 
 app = FastAPI(
     title="ResQ Nexus API",
@@ -38,6 +42,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Tables are created (and the demo data loaded into an empty database) on start-up.
+init_db()
+app.include_router(auth.router)
 
 
 def _scenario_or_404(scenario_id: str) -> Scenario:
@@ -56,6 +64,10 @@ def root():
         "docs": "/docs",
         "endpoints": [
             "GET /health",
+            "POST /auth/register",
+            "POST /auth/register/provider",
+            "POST /auth/login",
+            "GET /auth/me",
             "GET /scenarios",
             "GET /scenarios/{id}",
             "GET /scenarios/{id}/priority",

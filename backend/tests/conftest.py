@@ -1,7 +1,19 @@
-"""Shared test helpers: small, hand-built scenario data."""
+"""Shared test helpers: small, hand-built scenario data, a throwaway database and login helpers."""
 import copy
+import os
+import tempfile
+from pathlib import Path
 
 import pytest
+
+# Every test run gets its own SQLite file and test-only secrets. These are set before
+# any test module imports main (main loads backend/.env without overriding them).
+_TEST_DIR = Path(tempfile.mkdtemp(prefix="resq-nexus-tests-"))
+os.environ["DATABASE_URL"] = f"sqlite:///{(_TEST_DIR / 'test.db').as_posix()}"
+os.environ["JWT_SECRET"] = "test-only-jwt-secret-" + "0123456789abcdef" * 3
+os.environ["BCRYPT_ROUNDS"] = "4"  # the minimum bcrypt cost, so hashing stays fast in tests
+os.environ["SEED_DEMO_DATA"] = "1"
+os.environ.pop("VERCEL", None)
 
 ZONE = {
     "id": "Z01",
@@ -38,3 +50,37 @@ def make_scenario(scenario_id="test-flood", zones=None, **overrides):
 @pytest.fixture
 def scenario_factory():
     return make_scenario
+
+
+# --------------------------------------------------------------------------- accounts
+DEMO_ACCOUNTS = {
+    "ADMIN": ("admin@resq.example", "Admin#2026"),
+    "SERVICE_PROVIDER": ("provider@resq.example", "Provider#2026"),
+    "CITIZEN": ("citizen@resq.example", "Citizen#2026"),
+}
+DEMO_PASSWORD = {role: password for role, (_, password) in DEMO_ACCOUNTS.items()}
+
+
+def bearer(token):
+    return {"Authorization": f"Bearer {token}"}
+
+
+def login_headers(client, email, password):
+    response = client.post("/auth/login", json={"email": email, "password": password})
+    assert response.status_code == 200, response.text
+    return bearer(response.json()["access_token"])
+
+
+def demo_headers(client, role):
+    return login_headers(client, *DEMO_ACCOUNTS[role])
+
+
+@pytest.fixture
+def fresh_db():
+    """Rebuild the test database from the demo seed (and forget failed logins) for one test."""
+    from db.database import reset_database
+    from routers.auth import reset_login_attempts
+
+    reset_database()
+    reset_login_attempts()
+    yield

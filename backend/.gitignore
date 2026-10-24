@@ -5,3 +5,5 @@ venv/
 !.env.example
 __pycache__/
 .pytest_cache/
+# Local SQLite database (demo data is re-created from data/demo_seed.json)
+instance/
