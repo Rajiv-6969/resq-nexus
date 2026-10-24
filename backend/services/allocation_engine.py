@@ -27,6 +27,7 @@ from sklearn.cluster import KMeans
 
 from services import priority as priority_service
 from services.demand import zone_demand
+from services.geo import haversine_km
 from services.scenarios import RESOURCE_TYPES, Scenario
 
 ENGINE_SETTINGS: dict[str, Any] = {
@@ -52,7 +53,6 @@ ENGINE_SETTINGS: dict[str, Any] = {
     "feedback": {"unmet_threshold": 0.40, "max_iterations": 3, "upweight": 1.5, "generations": 40, "carry_over": 20},
 }
 
-EARTH_RADIUS_KM = 6371.0088
 DEPOT_LABELS = "ABCDE"
 PRIORITY_FLOOR = 0.01  # keeps zero-score zones from vanishing in weighted sums
 
@@ -63,15 +63,6 @@ if not hasattr(creator, "ResQPlan"):
     creator.create("ResQPlan", np.ndarray, fitness=getattr(creator, "ResQFitness"))
 Fitness = getattr(creator, "ResQFitness")
 Plan = getattr(creator, "ResQPlan")
-
-
-# --------------------------------------------------------------------------- geometry
-def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
-    """Great-circle distance in kilometres."""
-    p1, p2 = math.radians(lat1), math.radians(lat2)
-    dp, dl = p2 - p1, math.radians(lon2 - lon1)
-    a = math.sin(dp / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dl / 2) ** 2
-    return 2 * EARTH_RADIUS_KM * math.asin(math.sqrt(min(1.0, a)))
 
 
 # --------------------------------------------------------------------------- K-Means

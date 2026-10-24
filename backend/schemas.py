@@ -240,3 +240,40 @@ class SosOut(BaseModel):
     updated_at: datetime
     citizen: CitizenBrief | None = None
     distance_km: float | None = None
+
+
+# --------------------------------------------------------------------------- resources
+class ResourceProvider(BaseModel):
+    id: int
+    organisation_name: str
+
+
+class ResourceOut(BaseModel):
+    id: int
+    name: str
+    resource_type: ResourceType
+    type_label: str
+    latitude: float
+    longitude: float
+    area: str | None
+    region: str | None
+    contact_phone: str | None
+    capacity_total: int
+    capacity_available: int
+    unit: str
+    status: ResourceStatus
+    provider: ResourceProvider | None
+    updated_at: datetime
+    distance_km: float | None = None
+
+
+class Point(BaseModel):
+    latitude: float
+    longitude: float
+
+
+class NearbyResources(BaseModel):
+    origin: Point
+    radius_km: float
+    count: int
+    resources: list[ResourceOut]
