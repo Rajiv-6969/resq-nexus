@@ -3,7 +3,7 @@ import { useLocation, useSearchParams } from "react-router";
 import { fetchHealth, fetchPriority, fetchScenario, fetchScenarios, postAllocate, postExplain } from "../api";
 import { DEFAULT_WEIGHTS, SCENARIO_PAGES, weightsKey } from "../constants";
 import { useDebouncedValue, withMinimum } from "../lib/hooks";
-import { AppDataContext, useToast } from "./contexts";
+import { AppDataContext, useAuth, useToast } from "./contexts";
 
 const STORAGE_KEY = "resq.scenario";
 
@@ -17,6 +17,8 @@ function readStoredScenario() {
 
 export default function AppDataProvider({ children }) {
   const toast = useToast();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "ADMIN"; // the Command Centre data is admin-only
   const { pathname } = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [attempt, setAttempt] = useState(0);
@@ -36,6 +38,22 @@ export default function AppDataProvider({ children }) {
   const [runs, setRuns] = useState({}); // scenarioId -> { weightsKey, weights, result, explanations, explainError }
   const [pipeline, setPipeline] = useState({ status: "idle", step: -1, scenarioId: null, error: null });
   const runCounter = useRef(0);
+
+  // A different account (or a logout) starts with no Command Centre data in memory.
+  const userId = user?.id ?? null;
+  const [dataOwner, setDataOwner] = useState(userId);
+  if (dataOwner !== userId) {
+    setDataOwner(userId);
+    setDetails({});
+    setDetailError(null);
+    setRanking(null);
+    setRankingError(null);
+    setRuns({});
+    setPipeline({ status: "idle", step: -1, scenarioId: null, error: null });
+  }
+  useEffect(() => {
+    runCounter.current += 1; // a run still in flight for the previous account no longer reports back
+  }, [userId]);
 
   // Which scenario is on screen: the URL wins, then the last choice, then the first scenario.
   const urlId = searchParams.get("scenario");
@@ -70,18 +88,18 @@ export default function AppDataProvider({ children }) {
   // Full scenario (cached per id).
   const haveDetail = Boolean(scenarioId && details[scenarioId]);
   useEffect(() => {
-    if (!scenarioId || haveDetail) return;
+    if (!isAdmin || !scenarioId || haveDetail) return;
     const controller = new AbortController();
     setDetailError(null);
     fetchScenario(scenarioId, { signal: controller.signal })
       .then((data) => setDetails((all) => ({ ...all, [scenarioId]: data })))
       .catch((err) => err.name !== "AbortError" && setDetailError(err.message));
     return () => controller.abort();
-  }, [scenarioId, haveDetail, attempt]);
+  }, [isAdmin, scenarioId, haveDetail, attempt]);
 
   // Priority ranking: re-scored live (debounced) whenever the weights move.
   useEffect(() => {
-    if (!scenarioId) return;
+    if (!isAdmin || !scenarioId) return;
     const controller = new AbortController();
     const key = weightsKey(liveWeights);
     fetchPriority(scenarioId, liveWeights, { signal: controller.signal })
@@ -91,7 +109,7 @@ export default function AppDataProvider({ children }) {
       })
       .catch((err) => err.name !== "AbortError" && setRankingError(err.message));
     return () => controller.abort();
-  }, [scenarioId, liveWeights, attempt]);
+  }, [isAdmin, scenarioId, liveWeights, attempt]);
 
   // Keep ?scenario=<id> in the address bar on scenario pages (refresh / shared links).
   useEffect(() => {
@@ -156,7 +174,7 @@ export default function AppDataProvider({ children }) {
       setRanking({ scenarioId: id, key, data: scored });
 
       setStep(2);
-      const result = await withMinimum(postAllocate(id, w), 900);
+      const result = await withMinimum(postAllocate(id, w, false), 900);
       if (!current()) return;
       setRuns((all) => ({ ...all, [id]: { weightsKey: key, weights: w, result, explanations: null, explainError: null } }));
       const m = result.engine.metrics;
@@ -167,7 +185,7 @@ export default function AppDataProvider({ children }) {
 
       setStep(3);
       try {
-        const explained = await withMinimum(postExplain(id, w), 600);
+        const explained = await withMinimum(postExplain(id, w, false), 600);
         if (!current()) return;
         setRuns((all) => ({ ...all, [id]: { ...all[id], explanations: explained } }));
         if (explained.source === "gemini") toast.info("Explanations ready", `Written by Gemini (${explained.model}).`);

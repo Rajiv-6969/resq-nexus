@@ -1,22 +1,15 @@
 import { Link, NavLink } from "react-router";
-import { SHOW_ANALYTICS } from "../config";
 import { SCENARIO_PAGES } from "../constants";
-import { useAppData } from "../state/contexts";
+import { NAV_LINKS, ROLE_LABELS } from "../lib/roles";
+import { useAppData, useAuth } from "../state/contexts";
 import { AsteriskMark } from "./icons";
 
-const LINKS = [
-  { to: "/command", label: "Command Centre" },
-  { to: "/analytics", label: "Analytics" },
-  { to: "/damage", label: "Damage Assessment" },
-  { to: "/about", label: "About" },
-].filter((link) => SHOW_ANALYTICS || link.to !== "/analytics");
-
-const API_TEXT = { checking: "API …", online: "API online", offline: "API offline" };
-
+// Thin bordered bar: wordmark on the left, the role's links and the logged-in user on the right.
 export default function NavBar() {
-  const { scenarioId, health, geminiConfigured } = useAppData();
+  const { user } = useAuth();
+  const { scenarioId } = useAppData();
   const query = scenarioId ? `?scenario=${encodeURIComponent(scenarioId)}` : "";
-  const apiState = health.status; // checking | online | offline
+  const links = NAV_LINKS[user?.role ?? "PUBLIC"];
 
   return (
     <header className="nav">
@@ -26,20 +19,24 @@ export default function NavBar() {
       </Link>
 
       <nav className="nav-links" aria-label="Main">
-        {LINKS.map(({ to, label }) => (
-          <NavLink key={to} to={SCENARIO_PAGES.includes(to) ? `${to}${query}` : to} className="nav-link">
+        {links.map(({ to, label, end }) => (
+          <NavLink key={to} to={SCENARIO_PAGES.includes(to) ? `${to}${query}` : to} end={end} className="nav-link">
             {label}
           </NavLink>
         ))}
       </nav>
 
-      <p
-        className="nav-status mono"
-        title={geminiConfigured ? "Explanations are written by Google Gemini" : "No GEMINI_API_KEY: template explanations"}
-      >
-        <span className={`status-sq is-${apiState}`} aria-hidden="true" />
-        {API_TEXT[apiState] ?? "API"} / {geminiConfigured ? "Gemini" : "Templates"}
-      </p>
+      {user && (
+        <div className="nav-user">
+          <p className="nav-who mono" title={user.email}>
+            <span className="nav-name">{user.full_name}</span>
+            <span className={`nav-role nav-role--${user.role.toLowerCase()}`}>{ROLE_LABELS[user.role]}</span>
+          </p>
+          <Link to="/logout" className="nav-logout mono">
+            Logout
+          </Link>
+        </div>
+      )}
     </header>
   );
 }

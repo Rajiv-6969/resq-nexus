@@ -2,7 +2,7 @@
 .cc {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - var(--nav-h));
+  height: calc(100vh - var(--nav-total));
   min-height: 640px;
   border-bottom: 1px solid var(--line);
 }
@@ -19,6 +19,23 @@
   min-width: 0;
   padding: 24px 16px 10px;
   border-right: 1px solid var(--line);
+}
+
+.cell-link {
+  position: absolute;
+  top: 4px;
+  right: 12px;
+  padding: 2px 4px;
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  text-decoration: none;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.cell-link:hover {
+  background: var(--black);
+  color: var(--paper);
 }
 
 .cell-label {
@@ -1252,7 +1269,7 @@
     overflow: visible;
   }
   .ranking-head {
-    top: var(--nav-h);
+    top: var(--nav-total);
   }
 }
 

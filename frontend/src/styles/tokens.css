@@ -30,10 +30,17 @@
 
   /* Grid */
   --nav-h: 48px;
+  --nav-total: var(--nav-h); /* the whole nav: one row, or two below 1060px */
   --pad: clamp(16px, 2.2vw, 32px);
   --gap: clamp(12px, 1.4vw, 20px);
 
   /* Motion: hard in, hard out */
   --ease-hard: cubic-bezier(0.7, 0, 0.2, 1);
   --noise: url("../assets/noise.png");
+}
+
+@media (max-width: 1060px) {
+  :root {
+    --nav-total: calc(var(--nav-h) + 43px);
+  }
 }

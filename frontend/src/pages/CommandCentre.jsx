@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { useSearchParams } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import CommandMap from "../components/CommandMap";
 import ErrorBanner from "../components/ErrorBanner";
 import KpiRibbon from "../components/KpiRibbon";
@@ -112,6 +112,11 @@ export default function CommandCentre() {
       <section className="cc-bar" aria-label="Scenario and pipeline">
         <div className="cc-cell cc-cell--picker">
           <p className="cell-label">01 / Scenario</p>
+          {scenarioId && (
+            <Link className="cell-link mono" to={`/damage?scenario=${encodeURIComponent(scenarioId)}`}>
+              Damage assessment &rarr;
+            </Link>
+          )}
           <ScenarioPicker scenarios={scenarios} scenarioId={scenarioId} onSelect={selectScenario} failed={listState.status === "error"} />
         </div>
         <div className="cc-cell cc-cell--stepper">

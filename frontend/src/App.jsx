@@ -2,33 +2,37 @@ import { lazy, Suspense, useEffect } from "react";
 import { AnimatePresence, MotionConfig } from "framer-motion";
 import { Navigate, Route, Routes, useLocation } from "react-router";
 import Footer from "./components/Footer";
-import { AsteriskMark } from "./components/icons";
 import NavBar from "./components/NavBar";
+import PageLoader from "./components/PageLoader";
 import PageTransition from "./components/PageTransition";
+import RequireRole from "./components/RequireRole";
 import { SHOW_ANALYTICS } from "./config";
 import Landing from "./pages/Landing";
 import AppDataProvider from "./state/AppDataProvider";
+import AuthProvider from "./state/AuthProvider";
 import ToastProvider from "./state/ToastProvider";
 
-const loadCommandCentre = () => import("./pages/CommandCentre");
-const loadAnalytics = SHOW_ANALYTICS ? () => import("./pages/Analytics") : null;
-const loadDamage = () => import("./pages/DamageAssessment");
-const loadAbout = () => import("./pages/About");
-const CommandCentre = lazy(loadCommandCentre);
-const Analytics = SHOW_ANALYTICS ? lazy(loadAnalytics) : null;
-const DamageAssessment = lazy(loadDamage);
-const About = lazy(loadAbout);
+const loaders = {
+  CommandCentre: () => import("./pages/CommandCentre"),
+  Analytics: SHOW_ANALYTICS ? () => import("./pages/Analytics") : null,
+  DamageAssessment: () => import("./pages/DamageAssessment"),
+  About: () => import("./pages/About"),
+  Login: () => import("./pages/Login"),
+  Register: () => import("./pages/Register"),
+  Logout: () => import("./pages/Logout"),
+};
+const CommandCentre = lazy(loaders.CommandCentre);
+const Analytics = SHOW_ANALYTICS ? lazy(loaders.Analytics) : null;
+const DamageAssessment = lazy(loaders.DamageAssessment);
+const About = lazy(loaders.About);
+const Login = lazy(loaders.Login);
+const Register = lazy(loaders.Register);
+const Logout = lazy(loaders.Logout);
 
-function PageLoader() {
-  return (
-    <div className="page-loader" role="status">
-      <AsteriskMark size={22} className="asterisk loader" />
-      Loading
-    </div>
-  );
-}
+const ADMIN = ["ADMIN"];
 
 const page = (element) => <PageTransition>{element}</PageTransition>;
+const guarded = (roles, element) => page(<RequireRole roles={roles}>{element}</RequireRole>);
 
 export default function App() {
   const location = useLocation();
@@ -36,7 +40,7 @@ export default function App() {
   // Fetch the other pages in the background so navigating never waits on a download.
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      [loadCommandCentre, loadAnalytics, loadDamage, loadAbout].forEach((load) => load?.().catch(() => {}));
+      Object.values(loaders).forEach((load) => load?.().catch(() => {}));
     }, 900);
     return () => window.clearTimeout(timer);
   }, []);
@@ -44,27 +48,34 @@ export default function App() {
   return (
     <MotionConfig reducedMotion="user">
       <ToastProvider>
-        <AppDataProvider>
-          <div className="shell">
-            <a className="skip-link" href="#main">
-              Skip to content
-            </a>
-            <NavBar />
-            <Suspense fallback={<PageLoader />}>
-              <AnimatePresence mode="wait">
-                <Routes location={location} key={location.pathname}>
-                  <Route path="/" element={page(<Landing />)} />
-                  <Route path="/command" element={page(<CommandCentre />)} />
-                  {SHOW_ANALYTICS && <Route path="/analytics" element={page(<Analytics />)} />}
-                  <Route path="/damage" element={page(<DamageAssessment />)} />
-                  <Route path="/about" element={page(<About />)} />
-                  <Route path="*" element={<Navigate to="/" replace />} />
-                </Routes>
-              </AnimatePresence>
-            </Suspense>
-            <Footer />
-          </div>
-        </AppDataProvider>
+        <AuthProvider>
+          <AppDataProvider>
+            <div className="shell">
+              <a className="skip-link" href="#main">
+                Skip to content
+              </a>
+              <NavBar />
+              <Suspense fallback={<PageLoader />}>
+                <AnimatePresence mode="wait">
+                  <Routes location={location} key={location.pathname}>
+                    <Route path="/" element={page(<Landing />)} />
+                    <Route path="/about" element={page(<About />)} />
+                    <Route path="/login" element={page(<Login />)} />
+                    <Route path="/register" element={page(<Register />)} />
+                    <Route path="/logout" element={<Logout />} />
+
+                    <Route path="/command" element={guarded(ADMIN, <CommandCentre />)} />
+                    <Route path="/damage" element={guarded(ADMIN, <DamageAssessment />)} />
+                    {SHOW_ANALYTICS && <Route path="/analytics" element={guarded(ADMIN, <Analytics />)} />}
+
+                    <Route path="*" element={<Navigate to="/" replace />} />
+                  </Routes>
+                </AnimatePresence>
+              </Suspense>
+              <Footer />
+            </div>
+          </AppDataProvider>
+        </AuthProvider>
       </ToastProvider>
     </MotionConfig>
   );

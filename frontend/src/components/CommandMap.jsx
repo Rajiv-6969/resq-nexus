@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { LEVEL_COLORS, PIPELINE_STEPS, PRIORITY_LEVELS, SEVERITY_LABELS, formatNumber, formatScore } from "../constants";
 import { convexHull, padHull } from "../lib/geo";
 import { prefersReducedMotion } from "../lib/hooks";
+import { TILE_ATTRIBUTION, TILE_URL } from "../lib/map";
 import { AsteriskMark } from "./icons";
 
 const INDIA_VIEW = { center: [22.5, 80.5], zoom: 5 };
@@ -14,10 +15,6 @@ const LAYER_LABELS = { routes: "Routes", clusters: "Depot areas", roads: "Road n
 const BLACK = "#0A0A0A";
 const RED = "#E10600";
 const GRAPHITE = "#5A5A57";
-
-// Standard OpenStreetMap tiles in their original colours; the overlays carry the site's style.
-const TILE_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
-const TILE_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 
 // Circle area grows with population (radius ~ sqrt), the usual proportional-symbol rule.
 const radiusFor = (population, maxPopulation) =>

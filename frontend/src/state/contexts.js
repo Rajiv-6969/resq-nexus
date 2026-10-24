@@ -17,3 +17,12 @@ export function useToast() {
   if (!value) throw new Error("useToast must be used inside <ToastProvider>");
   return value;
 }
+
+// The logged-in user and the login / logout actions.
+export const AuthContext = createContext(null);
+
+export function useAuth() {
+  const value = useContext(AuthContext);
+  if (!value) throw new Error("useAuth must be used inside <AuthProvider>");
+  return value;
+}

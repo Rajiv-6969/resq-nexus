@@ -58,6 +58,19 @@ export const PIPELINE_STEPS = [
 
 const numberFormat = new Intl.NumberFormat("en-IN");
 export const formatNumber = (value) => numberFormat.format(Math.round(value));
+
+// Resource and service-provider organisation types, with the unit their capacity counts.
+export const RESOURCE_TYPES = ["HOSPITAL", "AMBULANCE", "SHELTER", "FOOD", "WATER", "FIRE_STATION", "POLICE"];
+export const RESOURCE_META = {
+  HOSPITAL: { label: "Hospital", plural: "Hospitals", org: "Hospital", unit: "beds" },
+  AMBULANCE: { label: "Ambulance", plural: "Ambulances", org: "Ambulance service", unit: "ambulances" },
+  SHELTER: { label: "Shelter", plural: "Shelters", org: "Shelter / relief camp", unit: "places" },
+  FOOD: { label: "Food point", plural: "Food points", org: "Food distribution", unit: "food packets" },
+  WATER: { label: "Water point", plural: "Water points", org: "Water supply", unit: "litres" },
+  FIRE_STATION: { label: "Fire station", plural: "Fire stations", org: "Fire and rescue", unit: "fire engines" },
+  POLICE: { label: "Police station", plural: "Police", org: "Police", unit: "patrol units" },
+};
+export const RESOURCE_STATUSES = ["OPEN", "FULL", "CLOSED"];
 export const formatScore = (value) => value.toFixed(3);
 
 export function accessLabel(accessibility) {

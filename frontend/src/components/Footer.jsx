@@ -1,7 +1,12 @@
 import { Link } from "react-router";
+import { useAppData } from "../state/contexts";
 import { AsteriskMark } from "./icons";
 
+const API_TEXT = { checking: "API …", online: "API online", offline: "API offline" };
+
 export default function Footer() {
+  const { health, geminiConfigured } = useAppData();
+  const apiState = health.status; // checking | online | offline
   return (
     <footer className="footer">
       <div className="footer-top">
@@ -32,6 +37,13 @@ export default function Footer() {
       </div>
       <p className="footer-bottom mono">
         <span>&copy; {new Date().getFullYear()} ResQ Nexus</span>
+        <span
+          className="footer-status"
+          title={geminiConfigured ? "Explanations are written by Google Gemini" : "No GEMINI_API_KEY: template explanations"}
+        >
+          <span className={`status-sq is-${apiState}`} aria-hidden="true" />
+          {API_TEXT[apiState] ?? "API"} / {geminiConfigured ? "Gemini" : "Templates"}
+        </span>
         <span>Synthetic data. Not for operational use.</span>
       </p>
     </footer>
