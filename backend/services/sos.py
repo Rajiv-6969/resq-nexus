@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import math
 from collections.abc import Iterable
+from datetime import datetime
 from typing import Any
 
 from db.models import SosRequest
@@ -46,6 +47,45 @@ def sos_severity(sos: SosRequest) -> dict[str, Any] | None:
 def next_status(status: str) -> str | None:
     index = STATUS_FLOW.index(status)
     return STATUS_FLOW[index + 1] if index + 1 < len(STATUS_FLOW) else None
+
+
+class TransitionError(ValueError):
+    """The requested status change is not allowed from the request's current status (HTTP 409)."""
+
+
+def accept(sos: SosRequest, provider_id: int, now: datetime) -> None:
+    """A provider takes on a PENDING request (unassigned, or assigned to them by an admin)."""
+    if sos.status != "PENDING":
+        if sos.assigned_provider_id == provider_id:
+            raise TransitionError("You have already accepted this request.")
+        raise TransitionError("This request has already been accepted by another provider.")
+    if sos.assigned_provider_id not in (None, provider_id):
+        raise TransitionError("This request is assigned to another provider.")
+    if sos.assigned_provider_id is None:
+        sos.assigned_provider_id = provider_id
+        sos.assigned_at = now
+    sos.status = "ACKNOWLEDGED"
+    sos.acknowledged_at = sos.updated_at = now
+
+
+def advance(sos: SosRequest, target: str, now: datetime) -> None:
+    """Move a request to the next status in PENDING -> ACKNOWLEDGED -> DISPATCHED -> RESOLVED."""
+    if sos.status == "RESOLVED":
+        raise TransitionError("This request is already resolved.")
+    expected = next_status(sos.status)
+    if target != expected:
+        raise TransitionError(f"This request is {sos.status}; move it to {expected} first.")
+    setattr(sos, _STAMP[target], now)
+    sos.status = target
+    sos.updated_at = now
+
+
+def resolve(sos: SosRequest, now: datetime) -> None:
+    """Close an active request straight away (admins, e.g. a duplicate or a false alarm)."""
+    if sos.status == "RESOLVED":
+        raise TransitionError("This request is already resolved.")
+    sos.status = "RESOLVED"
+    sos.resolved_at = sos.updated_at = now
 
 
 def timeline(sos: SosRequest) -> list[dict[str, Any]]:

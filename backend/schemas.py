@@ -9,7 +9,7 @@ import re
 from datetime import datetime
 from typing import Annotated, Literal
 
-from pydantic import AfterValidator, BaseModel, ConfigDict, Field
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field, model_validator
 
 from services.security import MAX_PASSWORD_BYTES
 
@@ -277,3 +277,26 @@ class NearbyResources(BaseModel):
     radius_km: float
     count: int
     resources: list[ResourceOut]
+
+
+# --------------------------------------------------------------------------- service providers
+class ProviderResourceUpdate(Strict):
+    capacity_total: int | None = Field(None, ge=0, le=1_000_000)
+    capacity_available: int | None = Field(None, ge=0, le=1_000_000)
+    status: ResourceStatus | None = None
+
+    @model_validator(mode="after")
+    def _something_to_update(self) -> ProviderResourceUpdate:
+        if self.capacity_total is None and self.capacity_available is None and self.status is None:
+            raise ValueError("Nothing to update: send capacity_total, capacity_available or status.")
+        return self
+
+
+class ProviderStatusUpdate(Strict):
+    status: Literal["DISPATCHED", "RESOLVED"]
+
+
+class ProviderBoard(BaseModel):
+    radius_km: float
+    assigned: list[SosOut]
+    nearby: list[SosOut]

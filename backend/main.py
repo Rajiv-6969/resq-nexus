@@ -22,7 +22,7 @@ load_dotenv(Path(__file__).resolve().parent / ".env")
 # The modules below read the environment when imported, so they come after load_dotenv.
 from db.database import init_db  # noqa: E402
 from deps import require_admin  # noqa: E402
-from routers import auth, resources, sos  # noqa: E402
+from routers import auth, provider, resources, sos  # noqa: E402
 from services import allocation_engine, explain, gemini_client, priority, scenarios  # noqa: E402
 from services.scenarios import Scenario, ScenarioNotFoundError, ScenarioSummary, Zone  # noqa: E402
 
@@ -49,6 +49,7 @@ init_db()
 app.include_router(auth.router)
 app.include_router(sos.router)
 app.include_router(resources.router)
+app.include_router(provider.router)
 
 
 def _scenario_or_404(scenario_id: str) -> Scenario:
@@ -76,6 +77,11 @@ def root():
             "GET /sos/mine",
             "GET /sos/{id}",
             "GET /resources/nearby",
+            "GET /provider/resources",
+            "PATCH /provider/resources/{id}",
+            "GET /provider/requests",
+            "POST /provider/requests/{id}/accept",
+            "POST /provider/requests/{id}/status",
             "GET /scenarios",
             "GET /scenarios/{id}",
             "GET /scenarios/{id}/priority",
