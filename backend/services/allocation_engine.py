@@ -28,7 +28,8 @@ from sklearn.cluster import KMeans
 from services import priority as priority_service
 from services.demand import zone_demand
 from services.geo import haversine_km
-from services.scenarios import RESOURCE_TYPES, Scenario
+from schemas.contracts import ZoneAssessment
+from services.scenarios import RESOURCE_TYPES, Resources, Scenario
 
 ENGINE_SETTINGS: dict[str, Any] = {
     "seed": 42,
@@ -493,18 +494,46 @@ def plan_metrics(plan: np.ndarray, ctx: GAContext, minutes: np.ndarray, computat
 
 
 # --------------------------------------------------------------------------- engine
+def _zones_from_assessments(assessments: Sequence[ZoneAssessment], disaster_type: str) -> list[dict[str, Any]]:
+    """Flat zone dicts (plus the SOS demand carried by each assessment) for a list of ZoneAssessment."""
+    return [dict(a.to_zone_dict(disaster_type), _sos_demand=dict(a.sos_demand)) for a in assessments]
+
+
 def allocate(
-    scenario: Scenario,
+    scenario: Scenario | Sequence[ZoneAssessment],
     weights: Mapping[str, float] | None = None,
     seed: int | None = None,
     settings: Mapping[str, Any] | None = None,
     extra_demand: Mapping[str, Mapping[str, int]] | None = None,
+    resources: Resources | Mapping[str, int] | None = None,
+    scenario_id: str = "assessment",
+    scenario_name: str = "Zone assessment",
+    disaster_type: str = "flood",
 ) -> dict[str, Any]:
-    """Allocate the scenario's resources to its zones; also runs the greedy baseline.
+    """Allocate resources to zones; also runs the greedy baseline.
 
+    ``scenario`` is either a Scenario (its zones and stock are used) or a list of
+    ZoneAssessment (see schemas/contracts.py); for the latter pass the available stock in
+    ``resources``. Each assessment's ``sos_demand`` is added to its demand.
     extra_demand (zone id -> resource -> units) is added to the zones' own demand first,
     e.g. live SOS requests near a zone.
     """
+    if not isinstance(scenario, Scenario):
+        if resources is None:
+            raise ValueError("resources are required when allocating a list of ZoneAssessment")
+        stock_model = resources if isinstance(resources, Resources) else Resources.model_validate(dict(resources))
+        raw = _zones_from_assessments(list(scenario), disaster_type)
+        merged: dict[str, dict[str, int]] = {k: dict(v) for k, v in (extra_demand or {}).items()}
+        for z in raw:
+            sos = z.pop("_sos_demand")
+            if sos:
+                entry = merged.setdefault(z["id"], {})
+                for r, units in sos.items():
+                    entry[r] = entry.get(r, 0) + int(units)
+        scenario = Scenario(id=scenario_id, name=scenario_name, disaster_type=disaster_type, region="", state="",
+                            resources=stock_model, zones=raw)
+        extra_demand = merged
+
     settings = ENGINE_SETTINGS if settings is None else settings
     seed = int(settings["seed"] if seed is None else seed)
     ga, roads, feedback = settings["ga"], settings["roads"], settings["feedback"]
