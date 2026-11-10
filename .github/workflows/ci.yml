@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, final]
   pull_request:
 
 permissions:
@@ -26,6 +26,10 @@ jobs:
         run: python -m pip install -r requirements-dev.txt
       - name: Run tests
         run: python -m pytest
+      - name: Alembic migration compiles (offline SQL for PostgreSQL)
+        run: DATABASE_URL=postgresql+psycopg://u:p@localhost/x python -m alembic upgrade head --sql > /dev/null
+      - name: Simulated assessments
+        run: python ../ml/simulate_assessments.py flood-assam > /dev/null
       - name: Generator smoke test (custom centre, printed to stdout)
         run: >-
           python generate_scenario.py --type flood --center 26.15,85.90
@@ -50,3 +54,13 @@ jobs:
         run: npm run lint
       - name: Build
         run: npm run build
+
+  docker:
+    name: Docker images build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build backend image
+        run: docker build -f backend/Dockerfile .
+      - name: Build frontend image
+        run: docker build frontend

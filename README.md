@@ -123,7 +123,9 @@ They are used inside the **Allocation Engine** (`backend/services/allocation_eng
 | Layer | Tools |
 |---|---|
 | Frontend | React 19, Vite 8, React Router 8, Framer Motion, React-Leaflet 5 / Leaflet 1.9 with OpenStreetMap tiles, Recharts (Analytics page), self-hosted Google Fonts (Inter Tight, Inter, IBM Plex Mono), oxlint |
-| Backend | Python 3.12+ (tested on 3.13), FastAPI, Pydantic 2, NumPy, scikit-learn, NetworkX, DEAP, Uvicorn, pytest |
+| Backend | Python 3.12+ (tested on 3.13), FastAPI, Pydantic 2, SQLAlchemy 2 + GeoAlchemy2, Alembic, NumPy, scikit-learn, NetworkX, DEAP, Uvicorn, pytest |
+| Database | PostgreSQL 16 + PostGIS 3.4 (docker-compose); locations are PostGIS `POINT` geometry. SQLite fallback for tests and quick local runs |
+| Infra | docker-compose: `db` (postgis), `backend` (FastAPI), `frontend` (nginx serving the Vite build, `/api` proxied to the backend) |
 | AI | Google Gemini API (`google-genai`) for the Explain stage, with a template fallback |
 
 The project started from the Script Desk template (React/Vite frontend, FastAPI backend, Gemini
@@ -133,44 +135,68 @@ client); its script-writing features and branding were removed.
 
 ```
 resq-nexus/
-├── backend/
-│   ├── main.py                    FastAPI app and endpoints
+├── frontend/                      React + Vite client (Dockerfile + nginx.conf for compose)
+│   └── src/                       pages/, components/, state/, lib/, styles/, api.js, config.js
+├── backend/                       FastAPI API
+│   ├── main.py                    app, scenario / priority / allocate / explain endpoints
+│   ├── routers/                   auth, sos, resources, provider, admin
+│   ├── services/                  priority.py, demand.py, allocation_engine.py, explain.py, ...
+│   ├── schemas/
+│   │   ├── __init__.py            request / response models of the role APIs
+│   │   └── contracts.py           shared ml <-> backend shapes: BuildingAssessment, ZoneAssessment
+│   ├── db/                        database.py (engine), models.py, geo.py (PostGIS column), seed.py
+│   ├── alembic/                   migrations (versions/0001_initial_postgis.py)
+│   ├── paths.py                   where data/ is (RESQ_DATA_DIR override)
 │   ├── generate_scenario.py       random scenario generator (CLI)
-│   ├── services/
-│   │   ├── scenarios.py           scenario schema (Pydantic) and file loader
-│   │   ├── priority.py            priority scoring, all settings in PRIORITY_SETTINGS
-│   │   ├── demand.py              relief demand per zone (shared with the generator)
-│   │   ├── allocation_engine.py   Allocation Engine + greedy baseline + metrics, settings in ENGINE_SETTINGS
-│   │   ├── explain.py             per-zone explanations: Gemini with a template fallback
-│   │   └── gemini_client.py       Google Gemini client
-│   ├── (data moved to ../data/)
-│   │   ├── regions.json           region presets: real localities, river lines, reference hazards
-│   │   └── scenarios/             flood-assam.json, earthquake-kutch.json, wildfire-kumaon.json
 │   ├── tests/                     pytest suite
-│   ├── requirements.txt           runtime dependencies
-│   ├── requirements-dev.txt       + pytest
-│   └── .env.example               copy to .env and add your Gemini key
-├── frontend/
-│   ├── src/
-│   │   ├── main.jsx               router, fonts and stylesheets
-│   │   ├── App.jsx                routes, page transitions, lazy-loaded pages
-│   │   ├── config.js              feature flags (SHOW_ANALYTICS)
-│   │   ├── api.js                 API client
-│   │   ├── constants.js           colours, labels, number formatting
-│   │   ├── assets/photos/         grayscale photographs and credits.json
-│   │   ├── state/                 app data (scenarios, scores, allocation, pipeline) and toasts
-│   │   ├── lib/                   depot-area geometry, hooks, pipeline stepper state, photo list
-│   │   ├── pages/                 Landing, CommandCentre, DamageAssessment, About, Analytics (hidden)
-│   │   ├── components/            CommandMap, ZoneIntel, PipelineStepper, KpiRibbon, charts, ...
-│   │   └── styles/                tokens.css (colours, fonts) and one stylesheet per area
-│   └── .env.example               optional: API address for the dashboard
-├── docs/                          screenshots used in this README
+│   ├── Dockerfile, docker/        API image: wait for the database, alembic upgrade head, uvicorn
+│   └── .env.example               copy to .env (Gemini key, JWT secret, DATABASE_URL)
+├── ml/                            damage-assessment scripts; simulate_assessments.py for now
+├── data/                          shared by backend and ml
+│   ├── demo_seed.json             SYNTHETIC accounts, resources and SOS requests
+│   ├── regions.json               region presets: real localities, river lines, reference hazards
+│   └── scenarios/                 flood-assam.json, earthquake-kutch.json, wildfire-kumaon.json
+├── docs/                          PROJECT_CONTEXT.md (standing rules) and screenshots
+├── docker-compose.yml             PostgreSQL + PostGIS, backend, frontend
+├── .env.example                   compose settings (JWT_SECRET, GEMINI_API_KEY, ports)
 └── .github/workflows/ci.yml       tests, lint and build on every push
 ```
 
+Rules that apply to every change (design, documentation wording, data notices, secrets) are in
+[`docs/PROJECT_CONTEXT.md`](docs/PROJECT_CONTEXT.md).
+
 ## Getting started
 
-### Prerequisites
+### Option A: Docker (PostgreSQL + PostGIS, the full stack)
+
+```bash
+cp .env.example .env            # set JWT_SECRET (and GEMINI_API_KEY if you have one)
+docker compose up --build
+```
+
+| Service | URL |
+|---|---|
+| Frontend | <http://localhost:8080> |
+| API (through the frontend) | <http://localhost:8080/api/health>, docs at <http://localhost:8080/api/docs> |
+| API (direct) | <http://localhost:8000> |
+| PostgreSQL | `localhost:5432`, database `resq_nexus`, user/password `resq` / `resq` (change in `.env`) |
+
+On the first start the backend container waits for the database, runs `alembic upgrade head`
+(creates the PostGIS extension and the tables) and loads the synthetic demo data into the empty
+database (`SEED_DEMO_DATA=1`). Data persists in the `pgdata` volume; `docker compose down -v`
+wipes it.
+
+Schema changes: edit `backend/db/models.py`, then from `backend/` with `DATABASE_URL` pointing at
+the compose database run `alembic revision --autogenerate -m "..."` and `alembic upgrade head`.
+
+### Option B: run locally without Docker
+
+The backend falls back to a SQLite file (`backend/instance/resq_nexus.db`) when `DATABASE_URL` is
+unset; everything works, but locations are stored as text instead of PostGIS geometry and radius
+searches use a bounding box. Set `DATABASE_URL=postgresql+psycopg://resq:resq@localhost:5432/resq_nexus`
+in `backend/.env` to use the compose database from a local backend.
+
+#### Prerequisites
 
 - **Python 3.12 or newer** (tested with 3.13; NumPy, SciPy and NetworkX need 3.12+)
 - **Node.js 22.22 or newer** (required by React Router 8; tested with Node 24 and 26)
@@ -212,7 +238,7 @@ address, copy `frontend/.env.example` to `frontend/.env.local` and change `VITE_
 
 ```bash
 cd backend
-python -m pytest              # 322 tests: scoring, Allocation Engine, API, auth, roles, SOS, resources, dashboards
+python -m pytest              # 326 tests: contracts, scoring, Allocation Engine, API, auth, roles, SOS, resources, dashboards
 
 cd ../frontend
 npm run lint                  # oxlint
@@ -274,7 +300,14 @@ Add `GEMINI_API_KEY` under **Project → Settings → Environment Variables** to
 explanations; without it the hosted site uses the template explanations. Also set `JWT_SECRET`
 (32+ random characters) there, so logins stay valid across serverless instances. On Vercel the demo
 database is a SQLite file in `/tmp`, re-seeded per instance: changes made in the hosted demo are
-temporary. Set `DATABASE_URL` to a PostgreSQL database to keep them.
+temporary. Set `DATABASE_URL` to a PostgreSQL database **with PostGIS** (for example Neon or Supabase)
+to keep them, and run `alembic upgrade head` against it once.
+
+Since the restructure the scenarios and demo seed live in `data/` at the repository root; the
+backend finds them through `backend/paths.py` (`RESQ_DATA_DIR` overrides the location). Check after
+the next Vercel deploy that `GET /api/scenarios` still lists three scenarios; if the backend service's
+root (`backend/`) does not include `../data`, set `RESQ_DATA_DIR` or add a build step that copies
+`data/` into `backend/`.
 
 ## Roles and demo accounts
 
