@@ -1,4 +1,4 @@
-"""Demo data: loads backend/data/demo_seed.json (SYNTHETIC) into an empty database."""
+"""Demo data: loads data/demo_seed.json (SYNTHETIC) into an empty database."""
 from __future__ import annotations
 
 import json
@@ -12,7 +12,7 @@ from db.models import Provider, Resource, SosRequest, User, utcnow
 from services.security import hash_password
 from services.sos import NEEDS, VULNERABLE_GROUPS
 
-DEMO_SEED = Path(__file__).resolve().parent.parent / "data" / "demo_seed.json"
+from paths import DEMO_SEED
 
 # Demo passwords, one per role. They are public on purpose: the README lists them and
 # the login page's Demo Login buttons fill them in. Every seeded account of a role shares

@@ -143,7 +143,7 @@ resq-nexus/
 │   │   ├── allocation_engine.py   Allocation Engine + greedy baseline + metrics, settings in ENGINE_SETTINGS
 │   │   ├── explain.py             per-zone explanations: Gemini with a template fallback
 │   │   └── gemini_client.py       Google Gemini client
-│   ├── data/
+│   ├── (data moved to ../data/)
 │   │   ├── regions.json           region presets: real localities, river lines, reference hazards
 │   │   └── scenarios/             flood-assam.json, earthquake-kutch.json, wildfire-kumaon.json
 │   ├── tests/                     pytest suite
@@ -545,7 +545,7 @@ thresholds keep their meaning.
 
 ### Format
 
-Each scenario is one JSON file in `backend/data/scenarios/<id>.json` (the file name is the id):
+Each scenario is one JSON file in `data/scenarios/<id>.json` (the file name is the id):
 
 ```json
 {
@@ -618,7 +618,7 @@ python generate_scenario.py --type wildfire --region kumaon --zones 15 --stdout
 python generate_scenario.py --type flood --center 26.15,85.90 --radius-km 30 --region-name "Darbhanga, Bihar" --state Bihar
 ```
 
-New files go to `backend/data/scenarios/<id>.json` and appear in the scenario selector after a page
+New files go to `data/scenarios/<id>.json` and appear in the scenario selector after a page
 refresh (no restart needed). Useful options: `--seed` (reproducible), `--zones 15-20`,
 `--magnitude`, `--scarcity` (resources as a fraction of the estimated need), `--id`, `--name`,
 `--out`, `--force` (overwrite; existing files are otherwise protected). Run with `--help` for all options.

@@ -43,7 +43,7 @@ from typing import Any
 from services.demand import estimate_need
 from services.scenarios import DISASTER_TYPES, RESOURCE_TYPES, SCENARIO_DIR, Scenario
 
-REGIONS_FILE = Path(__file__).resolve().parent / "data" / "regions.json"
+from paths import REGIONS_FILE  # noqa: E402
 
 MIN_ZONES, MAX_ZONES = 15, 20
 EARTH_RADIUS_KM = 6371.0088

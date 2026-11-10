@@ -1,6 +1,6 @@
 """Disaster scenarios: data model (validated with Pydantic) and file loader.
 
-Scenario files live in ``backend/data/scenarios/<id>.json``. The file name
+Scenario files live in ``data/scenarios/<id>.json`` at the repository root. The file name
 (without ``.json``) is the scenario id used by the API.
 """
 from __future__ import annotations
@@ -11,8 +11,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-DATA_DIR = Path(__file__).resolve().parent.parent / "data"
-SCENARIO_DIR = DATA_DIR / "scenarios"
+from paths import DATA_DIR, SCENARIO_DIR  # noqa: F401  (re-exported)
 
 DisasterType = Literal["flood", "earthquake", "wildfire"]
 DISASTER_TYPES: tuple[str, ...] = ("flood", "earthquake", "wildfire")
