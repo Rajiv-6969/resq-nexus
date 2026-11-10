@@ -5,12 +5,13 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
-from db.database import get_db
+from db.database import engine, get_db
+from db.geo import within_radius
 from db.models import RESOURCE_TYPES, Resource, User
 from deps import get_current_user
 from schemas import NearbyResources
 from services import resources as resource_service
-from services.geo import bounding_box, sort_by_distance
+from services.geo import sort_by_distance
 
 router = APIRouter(prefix="/resources", tags=["resources"])
 
@@ -39,9 +40,8 @@ def nearby_resources(
     """Hospitals, ambulances, shelters, food and water points, fire and police stations within the radius,
     sorted by haversine distance."""
     wanted = parse_types(types)
-    south, north, west, east = bounding_box(lat, lon, radius_km)
     query = (select(Resource).options(selectinload(Resource.provider))
-             .where(Resource.latitude.between(south, north), Resource.longitude.between(west, east)))
+             .where(within_radius(Resource, lat, lon, radius_km, engine)))
     if wanted:
         query = query.where(Resource.resource_type.in_(wanted))
     ranked = sort_by_distance(db.scalars(query), lat, lon, key=lambda r: (r.latitude, r.longitude),

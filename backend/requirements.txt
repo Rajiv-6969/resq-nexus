@@ -42,3 +42,9 @@ typing-inspection==0.4.2
 urllib3==2.7.0
 uvicorn==0.51.0
 websockets==16.1
+alembic==1.20.1
+GeoAlchemy2==0.21.0
+Mako==1.4.3
+MarkupSafe==3.0.4
+# PostgreSQL driver (PostGIS); SQLite needs nothing extra
+psycopg[binary]==3.3.8

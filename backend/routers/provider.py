@@ -5,13 +5,14 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
-from db.database import get_db
+from db.database import engine, get_db
+from db.geo import within_radius
 from db.models import Provider, Resource, SosRequest, utcnow
 from deps import require_approved_provider
 from schemas import ProviderBoard, ProviderResourceUpdate, ProviderStatusUpdate, ResourceOut, SosOut
 from services import resources as resource_service
 from services import sos as sos_service
-from services.geo import bounding_box, haversine_km, sort_by_distance
+from services.geo import haversine_km, sort_by_distance
 
 router = APIRouter(prefix="/provider", tags=["service provider"])
 
@@ -56,10 +57,9 @@ def request_board(radius_km: float = Query(25, gt=0, le=200, description="How fa
     here = (provider.latitude, provider.longitude)
     assigned = list(db.scalars(_with_people(select(SosRequest)).where(SosRequest.assigned_provider_id == provider.id)))
     assigned.sort(key=lambda s: (s.status == "RESOLVED", -s.updated_at.timestamp()))
-    south, north, west, east = bounding_box(*here, radius_km)
     open_requests = db.scalars(_with_people(select(SosRequest)).where(
         SosRequest.assigned_provider_id.is_(None), SosRequest.status == "PENDING",
-        SosRequest.latitude.between(south, north), SosRequest.longitude.between(west, east),
+        within_radius(SosRequest, *here, radius_km, engine),
     ))
     nearby = sort_by_distance(open_requests, *here, key=lambda s: (s.latitude, s.longitude),
                               name=lambda s: str(s.id), radius_km=radius_km)

@@ -1,9 +1,10 @@
 """Database engine and sessions (SQLAlchemy 2).
 
-The demo uses a SQLite file, backend/instance/resq_nexus.db (git-ignored). To use
-PostgreSQL instead, install a driver (pip install "psycopg[binary]") and set
-DATABASE_URL=postgresql+psycopg://user:password@host/dbname; the tables only use
-portable column types, so nothing else changes.
+Production / docker-compose: PostgreSQL + PostGIS via
+DATABASE_URL=postgresql+psycopg://user:password@host/dbname (locations are PostGIS
+geometry, schema managed by Alembic in backend/alembic/). Without DATABASE_URL the API
+falls back to a SQLite file, backend/instance/resq_nexus.db (git-ignored), which the
+tests and a no-Docker quick start use; see db/geo.py for how locations differ.
 """
 from __future__ import annotations
 
@@ -68,6 +69,9 @@ def init_db() -> None:
     from db import models  # noqa: F401  (registers the tables)
     from db.seed import seed_demo_data
 
+    if engine.dialect.name == "postgresql":
+        with engine.begin() as connection:
+            connection.exec_driver_sql("CREATE EXTENSION IF NOT EXISTS postgis")
     Base.metadata.create_all(engine)
     if seeding_enabled():
         with SessionLocal() as session:

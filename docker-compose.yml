@@ -1,0 +1,61 @@
+# ResQ Nexus: PostgreSQL + PostGIS, FastAPI backend, React frontend (nginx).
+#
+#   cp .env.example .env        # then set JWT_SECRET (and GEMINI_API_KEY if you have one)
+#   docker compose up --build
+#
+#   Frontend  http://localhost:8080        API docs  http://localhost:8080/api/docs
+#   API direct http://localhost:8000       Database  localhost:5432 (resq / resq)
+
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-resq_nexus}
+      POSTGRES_USER: ${POSTGRES_USER:-resq}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-resq}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-resq} -d ${POSTGRES_DB:-resq_nexus}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-resq}:${POSTGRES_PASSWORD:-resq}@db:5432/${POSTGRES_DB:-resq_nexus}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env (python -c "import secrets; print(secrets.token_urlsafe(48))")}
+      JWT_EXPIRE_MINUTES: ${JWT_EXPIRE_MINUTES:-720}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-flash-latest}
+      SEED_DEMO_DATA: ${SEED_DEMO_DATA:-1}
+      CORS_ORIGINS: http://localhost:8080,http://127.0.0.1:8080,http://localhost:5173,http://127.0.0.1:5173
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: /api
+    ports:
+      - "${FRONTEND_PORT:-8080}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  pgdata:

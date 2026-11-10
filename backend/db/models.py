@@ -7,7 +7,10 @@ from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, Integer, Stri
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import TypeDecorator
 
-from db.database import Base
+from db.database import Base, database_url
+from db.geo import location_type, register_location_sync
+
+LOCATION = location_type(database_url())
 
 ROLES = ("CITIZEN", "SERVICE_PROVIDER", "ADMIN")
 APPROVAL_STATUSES = ("PENDING", "APPROVED", "REJECTED")
@@ -63,6 +66,7 @@ class Provider(Base):
     organisation_type: Mapped[str] = mapped_column(String(20))
     latitude: Mapped[float] = mapped_column(Float)
     longitude: Mapped[float] = mapped_column(Float)
+    location: Mapped[str | None] = mapped_column(LOCATION)  # PostGIS POINT (lon lat), kept in sync with lat/lon
     address: Mapped[str | None] = mapped_column(String(160))
     region: Mapped[str | None] = mapped_column(String(60))
     approval_status: Mapped[str] = mapped_column(String(12), default="PENDING", index=True)
@@ -84,6 +88,7 @@ class Resource(Base):
     resource_type: Mapped[str] = mapped_column(String(20), index=True)
     latitude: Mapped[float] = mapped_column(Float)
     longitude: Mapped[float] = mapped_column(Float)
+    location: Mapped[str | None] = mapped_column(LOCATION)  # PostGIS POINT (lon lat), kept in sync with lat/lon
     area: Mapped[str | None] = mapped_column(String(80))
     region: Mapped[str | None] = mapped_column(String(60), index=True)
     contact_phone: Mapped[str | None] = mapped_column(String(20))
@@ -106,6 +111,7 @@ class SosRequest(Base):
     citizen_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
     latitude: Mapped[float] = mapped_column(Float)
     longitude: Mapped[float] = mapped_column(Float)
+    location: Mapped[str | None] = mapped_column(LOCATION)  # PostGIS POINT (lon lat), kept in sync with lat/lon
     location_source: Mapped[str] = mapped_column(String(8))  # gps | pin
     accuracy_m: Mapped[float | None] = mapped_column(Float)
 
@@ -129,3 +135,6 @@ class SosRequest(Base):
 
     citizen: Mapped[User] = relationship()
     assigned_provider: Mapped[Provider | None] = relationship()
+
+
+register_location_sync(Provider, Resource, SosRequest)
