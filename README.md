@@ -167,7 +167,36 @@ Rules that apply to every change (design, documentation wording, data notices, s
 
 ## Getting started
 
-### Option A: Docker (PostgreSQL + PostGIS, the full stack)
+**PostgreSQL + PostGIS is the primary database.** Point the backend at any PostgreSQL that has the
+PostGIS extension (Supabase, Neon, Render, your own server) with one variable; Docker is optional.
+
+### Option A: external PostgreSQL + PostGIS (e.g. Supabase), no Docker
+
+1. Create the database. On Supabase: **Database → Extensions → enable `postgis`** (or run
+   `create extension if not exists postgis;` in the SQL editor). Copy the connection string from
+   **Connect** (use the *session* pooler or the direct connection, port 5432, not the transaction
+   pooler on 6543, which does not support the prepared statements SQLAlchemy uses).
+2. In `backend/.env` set
+
+   ```ini
+   DATABASE_URL=postgresql://postgres.<project>:<password>@aws-0-<region>.pooler.supabase.com:5432/postgres?sslmode=require
+   JWT_SECRET=<32+ random characters>
+   ```
+
+   `postgres://` and `postgresql://` are both accepted; the backend switches the URL to the
+   installed psycopg 3 driver itself.
+3. Start the API as usual (`uvicorn main:app --reload` from `backend/`). On start-up against
+   PostgreSQL the backend runs the Alembic migrations (`alembic upgrade head`: creates the PostGIS
+   extension if it is missing, the tables and the GiST indexes) and seeds the synthetic demo data
+   into an empty database. You can also migrate by hand from `backend/`: `alembic upgrade head`
+   (it reads the same `DATABASE_URL`); `alembic current` shows the applied revision.
+
+Locations (`providers.location`, `resources.location`, `sos_requests.location`) are PostGIS
+`geometry(POINT, 4326)` columns kept in sync with `latitude`/`longitude`; nearby searches use
+`ST_DWithin` on `geography`. Schema changes: edit `backend/db/models.py`, then
+`alembic revision --autogenerate -m "..."` and `alembic upgrade head`.
+
+### Option B: Docker (PostgreSQL + PostGIS, backend and frontend together)
 
 ```bash
 cp .env.example .env            # set JWT_SECRET (and GEMINI_API_KEY if you have one)
@@ -181,20 +210,15 @@ docker compose up --build
 | API (direct) | <http://localhost:8000> |
 | PostgreSQL | `localhost:5432`, database `resq_nexus`, user/password `resq` / `resq` (change in `.env`) |
 
-On the first start the backend container waits for the database, runs `alembic upgrade head`
-(creates the PostGIS extension and the tables) and loads the synthetic demo data into the empty
-database (`SEED_DEMO_DATA=1`). Data persists in the `pgdata` volume; `docker compose down -v`
-wipes it.
+The backend container waits for the database, migrates and seeds exactly as in option A. Data
+persists in the `pgdata` volume; `docker compose down -v` wipes it.
 
-Schema changes: edit `backend/db/models.py`, then from `backend/` with `DATABASE_URL` pointing at
-the compose database run `alembic revision --autogenerate -m "..."` and `alembic upgrade head`.
+### Option C: SQLite fallback (tests and quick local runs only)
 
-### Option B: run locally without Docker
-
-The backend falls back to a SQLite file (`backend/instance/resq_nexus.db`) when `DATABASE_URL` is
-unset; everything works, but locations are stored as text instead of PostGIS geometry and radius
-searches use a bounding box. Set `DATABASE_URL=postgresql+psycopg://resq:resq@localhost:5432/resq_nexus`
-in `backend/.env` to use the compose database from a local backend.
+With no `DATABASE_URL` the backend uses `backend/instance/resq_nexus.db`. Locations are then stored
+as WKT text and radius searches use a bounding box plus a Python haversine filter, which returns the
+same rows in the same order as PostGIS (`backend/tests/test_geo_queries.py` checks this). Do not use
+it for a hosted deployment.
 
 #### Prerequisites
 
@@ -238,7 +262,7 @@ address, copy `frontend/.env.example` to `frontend/.env.local` and change `VITE_
 
 ```bash
 cd backend
-python -m pytest              # 326 tests: contracts, scoring, Allocation Engine, API, auth, roles, SOS, resources, dashboards
+python -m pytest              # 334 tests: contracts, geo queries, scoring, Allocation Engine, API, auth, roles, SOS, resources, dashboards
 
 cd ../frontend
 npm run lint                  # oxlint
@@ -303,11 +327,9 @@ database is a SQLite file in `/tmp`, re-seeded per instance: changes made in the
 temporary. Set `DATABASE_URL` to a PostgreSQL database **with PostGIS** (for example Neon or Supabase)
 to keep them, and run `alembic upgrade head` against it once.
 
-Since the restructure the scenarios and demo seed live in `data/` at the repository root; the
-backend finds them through `backend/paths.py` (`RESQ_DATA_DIR` overrides the location). Check after
-the next Vercel deploy that `GET /api/scenarios` still lists three scenarios; if the backend service's
-root (`backend/`) does not include `../data`, set `RESQ_DATA_DIR` or add a build step that copies
-`data/` into `backend/`.
+The scenarios and demo seed live in `data/` at the repository root; `vercel.json` copies them into
+`backend/data` at build time (`buildCommand`), which `backend/paths.py` falls back to. The final
+backend is meant to run on Render against the external PostGIS database, not on Vercel.
 
 ## Roles and demo accounts
 

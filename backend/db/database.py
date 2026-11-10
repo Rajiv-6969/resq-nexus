@@ -26,8 +26,12 @@ class Base(DeclarativeBase):
 
 def database_url() -> str:
     url = os.getenv("DATABASE_URL", "").strip()
-    if url.startswith("postgres://"):  # the short form many hosts hand out
+    # Hosted databases (Supabase, Render, Neon) hand out postgres:// or postgresql:// URLs;
+    # the installed driver is psycopg 3, so make SQLAlchemy use it.
+    if url.startswith("postgres://"):
         url = "postgresql://" + url.removeprefix("postgres://")
+    if url.startswith("postgresql://"):
+        url = "postgresql+psycopg://" + url.removeprefix("postgresql://")
     if url:
         return url
     if os.getenv("VERCEL"):  # serverless functions can only write to /tmp
@@ -70,12 +74,20 @@ def init_db() -> None:
     from db.seed import seed_demo_data
 
     if engine.dialect.name == "postgresql":
-        with engine.begin() as connection:
-            connection.exec_driver_sql("CREATE EXTENSION IF NOT EXISTS postgis")
-    Base.metadata.create_all(engine)
+        run_migrations()  # PostgreSQL + PostGIS: the schema is owned by Alembic
+    else:
+        Base.metadata.create_all(engine)  # SQLite fallback (tests, no-database local runs)
     if seeding_enabled():
         with SessionLocal() as session:
             seed_demo_data(session)
+
+
+def run_migrations() -> None:
+    """Bring a PostgreSQL database to the latest Alembic revision (creates PostGIS and the tables)."""
+    from alembic import command
+    from alembic.config import Config
+
+    command.upgrade(Config(str(BACKEND_DIR / "alembic.ini")), "head")
 
 
 def reset_database() -> None:
@@ -83,4 +95,7 @@ def reset_database() -> None:
     from db import models  # noqa: F401
 
     Base.metadata.drop_all(engine)
+    if engine.dialect.name == "postgresql":
+        with engine.begin() as connection:
+            connection.exec_driver_sql("DROP TABLE IF EXISTS alembic_version")
     init_db()
