@@ -7,6 +7,46 @@ import { PHOTOS, PHOTO_LIST } from "../lib/photos";
 
 const pad2 = (n) => String(n).padStart(2, "0");
 
+// Base paper and datasets (see docs/PROJECT_CONTEXT.md). Nothing here is loaded yet: the
+// Data notice below says what is simulated.
+const SOURCES = [
+  {
+    name: "DisasterReliefGPT",
+    role: "Base paper",
+    cite: "Technologies 2026, 14, 179",
+    url: "https://www.mdpi.com/journal/technologies",
+    license: "MDPI, open access",
+  },
+  {
+    name: "xBD",
+    role: "Building damage (satellite imagery)",
+    cite: "Gupta et al. 2019",
+    url: "https://xview2.org/dataset",
+    license: "CC BY-NC-SA 4.0",
+  },
+  {
+    name: "Sen1Floods11",
+    role: "Flood extent (Sentinel-1)",
+    cite: "Bonafilia et al. 2020",
+    url: "https://github.com/cloudtostreet/Sen1Floods11",
+    license: "Open dataset",
+  },
+  {
+    name: "OpenStreetMap",
+    role: "Places, boundaries, map tiles",
+    cite: "© OpenStreetMap contributors",
+    url: "https://www.openstreetmap.org/copyright",
+    license: "ODbL",
+  },
+  {
+    name: "WorldPop",
+    role: "Population",
+    cite: "WorldPop, University of Southampton",
+    url: "https://www.worldpop.org/",
+    license: "CC BY 4.0",
+  },
+];
+
 const STEP_COPY = {
   assess: "Each scenario lists zones with damage severity (0–3), population, a vulnerability index and road accessibility, plus the stock available for the whole response.",
   prioritise: "Every factor is normalised to 0–1 and weighted with adjustable weights into a priority score, with a small equity boost for damaged zones that are hard to reach.",
@@ -170,9 +210,32 @@ export default function About() {
         </div>
       </section>
 
-      <section className="sec about-credits" aria-labelledby="credits-title">
+      <section className="sec about-credits" aria-labelledby="sources-title">
         <p className="sec-bar mono">
           <span>07</span>
+          <span id="sources-title">Base paper and datasets</span>
+        </p>
+        <ol className="credits-list">
+          {SOURCES.map((s, i) => (
+            <li key={s.name}>
+              <span className="credits-no">{pad2(i + 1)}</span>
+              <span className="credits-caption">{s.name}</span>
+              <span>{s.role}</span>
+              <a href={s.url} target="_blank" rel="noreferrer">
+                {s.cite}
+              </a>
+              <span>{s.license}</span>
+            </li>
+          ))}
+        </ol>
+        <p className="credits-note">
+          Map data © OpenStreetMap contributors (ODbL). xBD is for non-commercial use; this is an academic prototype.
+        </p>
+      </section>
+
+      <section className="sec about-credits" aria-labelledby="credits-title">
+        <p className="sec-bar mono">
+          <span>08</span>
           <span id="credits-title">Photo credits</span>
         </p>
         <ol className="credits-list">
