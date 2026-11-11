@@ -125,7 +125,7 @@ export default function Landing() {
           </Wipe>
           <Reveal className="project-body">
             <p className="project-desc">
-              Pick a flood, earthquake or wildfire scenario, decide what matters most and run the Allocation Engine.
+              Pick a flood, earthquake or cyclone scenario, decide what matters most and run the Allocation Engine.
               Every affected zone gets its share of each resource, a relief depot, a road route and a travel time,
               with a plain-language explanation beside it.
             </p>

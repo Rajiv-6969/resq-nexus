@@ -4,7 +4,10 @@ export default function DemoBar() {
     <p className="demo-bar mono" role="note">
       <span className="demo-bar-mark" aria-hidden="true" />
       <strong>Demo data</strong>
-      <span className="demo-bar-text">— All scenarios, users, resources and locations shown are simulated. Real datasets are yet to be finalised.</span>
+      <span className="demo-bar-text">
+        — Roads, facilities and population are real (OpenStreetMap, WorldPop); damage values in the Indian scenarios are simulated, as are
+        accounts, relief stock and SOS requests.
+      </span>
     </p>
   );
 }

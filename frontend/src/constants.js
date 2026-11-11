@@ -19,6 +19,7 @@ export const DISASTER_META = {
   flood: { label: "Flood", verb: "Flooding" },
   earthquake: { label: "Earthquake", verb: "Ground shaking" },
   wildfire: { label: "Wildfire", verb: "Fire spread" },
+  cyclone: { label: "Cyclone", verb: "Wind and storm surge" },
 };
 export const disasterLabel = (type) => DISASTER_META[type]?.label ?? type;
 

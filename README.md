@@ -39,7 +39,8 @@ It follows a four-stage pipeline: **Assess → Prioritise → Allocate → Expla
   approvals, resources and users. The Command Centre is admin-only and has an **Include live SOS**
   option: each active SOS adds to the demand of its nearest zone (within 30 km) before the
   Allocation Engine runs.
-- **Demo data notice:** a thin DEMO DATA bar at the top of every page and a Data Notice on About.
+- **Data notice:** a thin bar at the top of every page and a Data Notice on About: roads, facilities and
+  population are real (OpenStreetMap, WorldPop); damage values in the Indian scenarios are simulated.
 - **Landing page:** a full-width ResQ Nexus wordmark, live scenario figures with counting mono
   numbers, a red problem statement, a black project section with a photograph and the
   **Launch Command Centre** button, and a card for each demo scenario.
@@ -88,8 +89,8 @@ visible grid.
 - **Layout:** a strict grid of 1px rules. No rounded corners, shadows, gradients or blur. Buttons
   are rectangular and invert their colours on hover. Section numbers, small mono corner labels,
   large standalone numerals and an asterisk brand mark repeat across the pages.
-- **Photographs:** high-contrast grayscale photographs of concrete buildings, flood, earthquake
-  and wildfire damage, stored in `frontend/src/assets/photos/` (see [Credits](#credits)).
+- **Photographs:** high-contrast grayscale photographs of concrete buildings, flood, earthquake,
+  wildfire and cyclone damage, stored in `frontend/src/assets/photos/` (see [Credits](#credits)).
 - **Map:** standard OpenStreetMap tiles in their original colours, so towns, roads, rivers and
   terrain stay easy to read (no API key needed). The overlays follow the site's style: priority
   colours Critical `#E10600`, High `#FF6B1A`, Medium `#C9C7C1`, Low `#5A5A57` with black outlines,
@@ -147,15 +148,17 @@ resq-nexus/
 │   ├── db/                        database.py (engine), models.py, geo.py (PostGIS column), seed.py
 │   ├── alembic/                   migrations (versions/0001_initial_postgis.py)
 │   ├── paths.py                   where data/ is (RESQ_DATA_DIR override)
-│   ├── generate_scenario.py       random scenario generator (CLI)
+│   ├── scripts/                   build_scenario.py (real-geography scenarios), download_worldpop.py
+│   ├── services/geo/              OSM roads (OSMnx → GraphML), facilities, WorldPop population, H3 zones, routing
 │   ├── tests/                     pytest suite
 │   ├── Dockerfile, docker/        API image: wait for the database, alembic upgrade head, uvicorn
 │   └── .env.example               copy to .env (Gemini key, JWT secret, DATABASE_URL)
 ├── ml/                            damage-assessment scripts; simulate_assessments.py for now
 ├── data/                          shared by backend and ml
 │   ├── demo_seed.json             SYNTHETIC accounts, resources and SOS requests
-│   ├── regions.json               region presets: real localities, river lines, reference hazards
-│   └── scenarios/                 flood-assam.json, earthquake-kutch.json, wildfire-kumaon.json
+│   ├── geo/                       cached OpenStreetMap data per scenario box (roads, facilities, places, hazard lines);
+│   │                              geo/worldpop/ holds the WorldPop raster (not committed)
+│   └── scenarios/                 flood-aluva.json, earthquake-joshimath.json, cyclone-puri.json
 ├── docs/                          PROJECT_CONTEXT.md (standing rules) and screenshots
 ├── docker-compose.yml             PostgreSQL + PostGIS, backend, frontend
 ├── .env.example                   compose settings (JWT_SECRET, GEMINI_API_KEY, ports)
@@ -488,16 +491,24 @@ allocation plan. For each zone it returns:
 
 - the units of each resource it receives (`allocated`)
 - the relief depot that serves it (`depot_id`)
-- the road route from that depot (`route`, `route_coords`), the travel time and the distance
+- the road route from that depot along real OpenStreetMap roads (`route` = OSM node ids,
+  `route_coords` = the road geometry), the travel time and the distance
 - `coverage_pct`: the share of its estimated need that is covered, averaged over the resources it needs
 
-It also returns the relief depots, the synthetic road network drawn on the map, and the GA fitness
-per generation for the Analytics chart. All tunable numbers live in `ENGINE_SETTINGS`. The tests
+It also returns the relief depots (snapped to the nearest road node), the major roads of the
+incident box for the map, `road_source` (`OpenStreetMap`, or `synthetic` for a scenario without a
+cached road graph) and the GA fitness per generation for the Analytics chart.
+
+Road travel: the drivable OpenStreetMap network of the scenario's bounding box is downloaded once
+with OSMnx and cached as GraphML (`data/geo/roads/`). Every edge carries a travel time
+(length ÷ a typical speed for its `highway` type: motorway 80 km/h … residential 20 km/h …
+track 10 km/h). Depots and zone centroids are snapped to the nearest road node; edges inside a
+zone are slowed by the zone's accessibility (travel time ÷ accessibility, floor 0.05). All tunable numbers live in `ENGINE_SETTINGS`. The tests
 check that:
 
 - no resource is ever allocated beyond the available stock
 - results are reproducible: the same scenario, weights and seed (42) always give the same plan
-- every demo scenario finishes in under 5 seconds (about 2.2–2.8 s on a laptop)
+- every demo scenario (about 280 hexagon zones on a 14,000-node road graph) finishes in under 10 seconds (about 3–4 s on a laptop)
 - every zone in need gets some relief, and coverage follows the priority levels
 
 ### Relief demand
@@ -600,103 +611,91 @@ thresholds keep their meaning.
 
 ### Format
 
-Each scenario is one JSON file in `data/scenarios/<id>.json` (the file name is the id):
+Each scenario is one JSON file in `data/scenarios/<id>.json` (the file name is the id). Zones are
+H3 hexagons (resolution 8, about 0.74 km²) covering the incident bounding box:
 
 ```json
 {
-  "id": "flood-assam",
-  "name": "Brahmaputra & Beki floods – Barpeta, Assam",
+  "id": "flood-aluva",
+  "name": "Periyar floods – Aluva, Ernakulam",
   "disaster_type": "flood",
-  "region": "Barpeta, Bajali, Nalbari and Kamrup districts",
-  "state": "Assam",
-  "description": "Hypothetical monsoon flood along the Brahmaputra and Beki rivers. ...",
+  "region": "Aluva and Ernakulam, Ernakulam district",
+  "state": "Kerala",
   "synthetic": true,
-  "data_note": "SYNTHETIC demo data. ...",
-  "hazard": { "model": "river-distance", "rivers": ["Brahmaputra", "Beki"], "extent_km": 9.0 },
-  "generator": { "script": "generate_scenario.py", "seed": 8, "preset_hazard": true, "scarcity": 0.6 },
-  "resources": { "rescue_teams": 8, "medical_kits": 1530, "food_packets": 38300, "shelters": 194, "vehicles": 16 },
+  "data_note": "Roads, facilities and population are real (OpenStreetMap, WorldPop ...). Damage ... SIMULATED ...",
+  "hazard": { "model": "river-distance", "feature": "way[\"waterway\"=\"river\"][\"name\"~\"Periyar|Chalakudy\"]", "extent_km": 2.2, "peak": 0.95 },
+  "bbox": { "south": 10.02, "west": 76.27, "north": 10.15, "east": 76.4 },
+  "geo": { "h3_resolution": 8, "road_graph": "10.020_76.270_10.150_76.400", "road_nodes": 14253, "road_edges": 16719 },
+  "sources": { "roads": "OpenStreetMap via OSMnx (ODbL)", "facilities": "OpenStreetMap via Overpass (ODbL)",
+               "population": "WorldPop 2020 (1 km, constrained to zone area)", "damage": "simulated" },
+  "resources": { "rescue_teams": 26, "medical_kits": 2820, "food_packets": 70500, "shelters": 157, "vehicles": 43 },
+  "facilities": [ { "osm_id": "n123", "name": "...", "resource_type": "HOSPITAL", "latitude": 10.1, "longitude": 76.35, "capacity": 50, "capacity_source": "default" } ],
   "zones": [
     {
-      "id": "FL-07", "name": "Kalgachia", "latitude": 26.36013, "longitude": 90.87007,
-      "disaster_type": "flood", "damage_severity": 3, "population": 12000,
-      "vulnerability_index": 0.49, "accessibility": 0.24
+      "id": "8860a2c8e1fffff", "name": "Aluva 1", "latitude": 10.1069, "longitude": 76.3551,
+      "h3_index": "8860a2c8e1fffff", "geometry": { "type": "Polygon", "coordinates": [[[76.35, 10.10], "..."]] },
+      "disaster_type": "flood", "damage_severity": 3, "population": 4180, "building_count": 0,
+      "vulnerability_index": 0.61, "accessibility": 0.27, "source": "simulated"
     }
   ]
 }
 ```
 
-| Zone field | Meaning |
-|---|---|
-| `damage_severity` | 0 none, 1 minor, 2 major, 3 destroyed |
-| `population` | residents in the zone |
-| `vulnerability_index` | 0–1; 1 = most vulnerable (e.g. poverty, weak housing, elderly residents) |
-| `accessibility` | 0–1; 1 = easy road access, 0 = cut off |
+| Zone field | Meaning | Source |
+|---|---|---|
+| `geometry`, `latitude`, `longitude` | H3 hexagon and its centroid | H3 (real geometry) |
+| `population` | residents in the hexagon | WorldPop 2020 1 km raster, area-weighted; OSM building count × 4.4 when the raster is absent |
+| `damage_severity` | 0 none, 1 minor, 2 major, 3 destroyed | **simulated** from distance to the real river / coastline / epicentre |
+| `vulnerability_index` | 0–1; 1 = most vulnerable | **simulated** (population density + severity) |
+| `accessibility` | 0–1; 1 = easy road access, 0 = cut off | **simulated** (drops with severity) |
+| `source` | `model` / `label` / `simulated` | always `simulated` in the demo scenarios |
+
+`facilities` are real OpenStreetMap hospitals, clinics, fire stations, police stations and
+potential shelters (schools, community centres) inside the box. On first start they are loaded
+into the `resources` table with `source: "osm"`, where service providers and admins can edit
+them like any other resource. Capacities use OSM `beds` / `capacity` tags when present and
+nominal defaults otherwise.
 
 Resources are counted as rescue teams, medical kits, one-day food packets, shelter units and
 vehicles (trucks, boats, ambulances); see [Relief demand](#relief-demand) for how much each zone needs.
 
 ### Demo scenarios
 
-| id | Disaster | Region | Zones | What to look at |
+| id | Disaster | Region | Real geography | Simulated hazard |
 |---|---|---|---|---|
-| `flood-assam` | Brahmaputra & Beki floods | Barpeta, Bajali, Nalbari and Kamrup districts, Assam | 19 | Riverine *char* villages cut off by water (Baghbor, Chenga) top the list |
-| `earthquake-kutch` | M6.9 earthquake (hypothetical, in the source zone of the 2001 Bhuj earthquake) | Kachchh, Gujarat | 19 | Bhachau is destroyed and ranks first; remote Dholavira on Khadir Bet is lifted by the equity boost |
-| `wildfire-kumaon` | Pre-monsoon forest fires from three ignition areas (Binsar, Syahi Devi, Jageshwar) | Almora & Bageshwar, Uttarakhand | 19 | Forest-edge hamlets with poor road access outrank larger towns |
+| `flood-aluva` | Monsoon flood on the Periyar (pattern of August 2018) | Aluva and Ernakulam, Kerala | OSM roads and facilities, WorldPop population, OSM river line | severity decays 2.2 km from the river |
+| `earthquake-joshimath` | M6.8 earthquake near Joshimath (1999 Chamoli region) | Joshimath, Chamoli, Uttarakhand | OSM roads and facilities, WorldPop population | severity decays 9 km from the epicentre |
+| `cyclone-puri` | Very severe cyclonic storm at Puri (pattern of Fani, 2019) | Puri town and coast, Odisha | OSM roads and facilities, WorldPop population, OSM coastline | severity decays 4 km from the coast |
 
-> **This is synthetic demo data.** Zone names and coordinates are real places (OpenStreetMap via
-> Nominatim; river lines from OpenStreetMap). Populations are rounded approximations. Damage,
-> vulnerability, accessibility and resource figures come from the generator's hazard model and are
-> not real observations. Every file carries `"synthetic": true` and a `data_note` saying so.
+> **Roads, facilities and population are real** (OpenStreetMap contributors, ODbL; WorldPop,
+> CC BY 4.0). **Damage values are simulated**: severity, accessibility, vulnerability and relief
+> stock come from `backend/scripts/build_scenario.py` and every zone is marked `source: "simulated"`.
+> Accounts, resources from the seed and SOS requests are synthetic.
 
-The three files were produced with the generator, so they can be regenerated:
-
-```bash
-cd backend
-python generate_scenario.py --type flood      --region assam-barpeta --preset-hazard --seed 8  --id flood-assam      --force
-python generate_scenario.py --type earthquake --region kutch         --preset-hazard --seed 31 --id earthquake-kutch --force
-python generate_scenario.py --type wildfire   --region kumaon        --preset-hazard --seed 14 --id wildfire-kumaon  --force
-```
-
-### Generating new scenarios
+### Rebuilding the scenarios
 
 ```bash
 cd backend
-python generate_scenario.py --list-regions
-
-# Random earthquake in Kutch: random epicentre and magnitude, real localities
-python generate_scenario.py --type earthquake --region kutch --seed 42
-
-# 15 of the Kumaon localities with random fire ignition points, printed instead of saved
-python generate_scenario.py --type wildfire --region kumaon --zones 15 --stdout
-
-# Synthetic zones anywhere in India (here around Darbhanga, Bihar)
-python generate_scenario.py --type flood --center 26.15,85.90 --radius-km 30 --region-name "Darbhanga, Bihar" --state Bihar
+pip install -r requirements-geo.txt          # OSMnx, rasterio, shapely (only for building the caches)
+python scripts/download_worldpop.py          # WorldPop India 1 km raster (19 MB, not committed)
+python scripts/build_scenario.py --list
+python scripts/build_scenario.py --all --force
 ```
 
-New files go to `data/scenarios/<id>.json` and appear in the scenario selector after a page
-refresh (no restart needed). Useful options: `--seed` (reproducible), `--zones 15-20`,
-`--magnitude`, `--scarcity` (resources as a fraction of the estimated need), `--id`, `--name`,
-`--out`, `--force` (overwrite; existing files are otherwise protected). Run with `--help` for all options.
-`--center` scatters zones evenly within the radius and doesn't know where the coast is, so near the
-sea pick an inland centre or a smaller `--radius-km`.
-
-**How damage is generated.** Each disaster type has a simple, explainable hazard model:
-
-- earthquake: intensity `1 / (1 + (d/D)²)` from the epicentre, where `D` grows with magnitude
-- flood: `exp(−d / extent)` from the river lines (the real Brahmaputra and Beki centrelines for Assam)
-- wildfire: `exp(−d / spread)` from the nearest ignition area
-
-A settlement-type adjustment is added (riverine and forest-edge hamlets are more exposed, cities
-less), then noise. Intensity maps to damage 3 / 2 / 1 / 0 at 0.70 / 0.45 / 0.20. Road access falls
-as intensity rises. Available resources are a fraction of the estimated need, so the Allocate
-stage has real trade-offs to make.
+The builder downloads the road network once (OSMnx → `data/geo/roads/<bbox>.graphml.gz`), fetches
+facilities, place names and the hazard line from Overpass (cached as JSON under `data/geo/`) and
+reads the population from the raster. Without the raster it counts OSM buildings per hexagon
+instead (slower: one Overpass request per 40 hexagons). The caches are committed, so the API, the
+tests and the deployments never touch the network. To add a scenario, add a preset to `PRESETS`
+in `scripts/build_scenario.py` (bounding box, hazard model, seed) and run the script.
 
 ## Next steps
 
 - **AI damage assessment:** replace the scenario's damage values with a model (e.g. from satellite
   or drone imagery); the Damage Assessment page is ready for it.
-- **Real road data:** the road network is synthetic (each zone and depot is linked to its nearest
-  neighbours); OpenStreetMap roads would give real routes and travel times.
+- **Real damage data:** the roads, facilities and population are real, but damage is still simulated;
+  Sen1Floods11 flood extents or xBD-trained model output would replace the hazard functions in
+  `scripts/build_scenario.py`.
 
 ## Credits
 
@@ -720,5 +719,6 @@ shared under the same licence as the original. The same list is in
 | `flood-assam-aerial.jpg` | Flood-affected areas of Assam, aerial view, 2 July 2012 | Ministry of Home Affairs, Government of India | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:An_aerial_view_of_flood-affected_areas_of_Assam_on_July_02,_2012_%281%29.jpg) | [GODL-India](https://data.gov.in/sites/default/files/Gazette_Notification_OGDL.pdf) |
 | `earthquake-chautara.jpg` | Collapsed buildings in earthquake-hit Chautara, Nepal, 2015 | DFID - UK Department for International Development | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Collapsed_buildings_in_earthquake-hit_Chautara,_Nepal_%2816693413433%29_%282%29.jpg) | [CC BY 2.0](https://creativecommons.org/licenses/by/2.0) |
 | `wildfire-almora.jpg` | Forest fire in Almora district, Uttarakhand, 2016 | Ramwik | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Forest_fire_in_Almora_District_2016.jpg) | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0) |
+| `cyclone-fani-puri.jpg` | Destruction caused by Cyclone Fani near Narendra Pushkarini, Puri, 7 May 2019 | Th3Snehasish | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Destruction_caused_by_Cyclone_Fani_near_Narendra_Puskarini_Puri.jpg) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0) |
 | `damage-collapsed-building.jpg` | Search team in a collapsed building (USAID DART, Nepal) | U.S. Department of State | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:USAID_DART_Searches_for_Victims_in_Collapsed_Building_%2817126048580%29.jpg) | Public domain |
 | `about-concrete-pillars.jpg` | Concrete pillars, Simon Fraser University, Burnaby | Jonathan Lim ([@jonathankslim](https://unsplash.com/@jonathankslim)) | [Unsplash](https://unsplash.com/photos/brutalist-concrete-building-with-repeating-pillars-i0313wt8G20) | [Unsplash License](https://unsplash.com/license) |

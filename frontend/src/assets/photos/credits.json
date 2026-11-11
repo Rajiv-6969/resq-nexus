@@ -82,5 +82,17 @@
     "license_url": "https://unsplash.com/license",
     "changes": "converted to high-contrast grayscale and cropped",
     "file": "frontend/src/assets/photos/about-concrete-pillars.jpg"
+  },
+  {
+    "slug": "cyclone-fani-puri",
+    "caption": "Destruction caused by Cyclone Fani near Narendra Pushkarini, Puri, 7 May 2019",
+    "source": "Wikimedia Commons",
+    "title": "Destruction caused by Cyclone Fani near Narendra Puskarini Puri.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Destruction_caused_by_Cyclone_Fani_near_Narendra_Puskarini_Puri.jpg",
+    "author": "Th3Snehasish",
+    "license": "CC BY 4.0",
+    "license_url": "https://creativecommons.org/licenses/by/4.0",
+    "changes": "converted to high-contrast grayscale, cropped and downscaled",
+    "file": "frontend/src/assets/photos/cyclone-fani-puri.jpg"
   }
 ]

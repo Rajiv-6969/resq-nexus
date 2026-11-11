@@ -317,6 +317,16 @@
   stroke: var(--paper);
   stroke-width: 2;
 }
+.glyph-wind {
+  fill: none;
+  stroke: var(--paper);
+  stroke-width: 2;
+  stroke-linecap: butt;
+  animation: flame 0.9s steps(2, jump-none) infinite;
+}
+.glyph--s3 .glyph-wind {
+  stroke: var(--red);
+}
 .glyph-flame {
   fill: var(--orange);
   animation: flame 0.9s steps(2, jump-none) infinite;

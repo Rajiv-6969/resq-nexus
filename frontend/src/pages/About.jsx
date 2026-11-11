@@ -157,11 +157,12 @@ export default function About() {
         </Reveal>
         <Reveal className="about-card" delay={0.05}>
           <p className="sec-no">04 / Data</p>
-          <p className="about-card-lead">Synthetic scenarios, real places.</p>
+          <p className="about-card-lead">Real geography, simulated damage.</p>
           <p>
-            The three demo scenarios (Barpeta flood, Kachchh earthquake, Kumaon wildfire) are synthetic: zone names and coordinates are
-            real OpenStreetMap places, populations are rounded approximations, and damage, vulnerability, access and stock are generated
-            by <code>backend/generate_scenario.py</code>.
+            Roads, facilities and population are real: the road network, hospitals, clinics, fire and police stations and shelters come from
+            OpenStreetMap, and zone population from WorldPop (or OSM building counts where the raster is absent). Damage values in the three
+            Indian scenarios (Aluva flood, Joshimath earthquake, Puri cyclone) are simulated by <code>backend/scripts/build_scenario.py</code>
+            and every zone is marked <code>source: simulated</code>; relief stock, accounts and SOS requests are also synthetic.
           </p>
         </Reveal>
       </section>

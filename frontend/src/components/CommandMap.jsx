@@ -11,7 +11,10 @@ import { AsteriskMark } from "./icons";
 const INDIA_VIEW = { center: [22.5, 80.5], zoom: 5 };
 const MIN_RADIUS = 6;
 const MAX_EXTRA_RADIUS = 17;
-const LAYER_LABELS = { routes: "Routes", clusters: "Depot areas", roads: "Road network", hazard: "Hazard" };
+const LAYER_LABELS = { hexes: "Zone hexagons", routes: "Routes", clusters: "Depot areas", roads: "Road network", hazard: "Hazard" };
+
+// GeoJSON Polygon (lon, lat) -> Leaflet positions (lat, lon).
+const ringPositions = (geometry) => (geometry?.type === "Polygon" ? geometry.coordinates[0].map(([lon, lat]) => [lat, lon]) : null);
 const BLACK = "#0A0A0A";
 const RED = "#E10600";
 const GRAPHITE = "#5A5A57";
@@ -211,8 +214,8 @@ function MapLegend({ allocation, hazard }) {
   );
 }
 
-function LayerToggles({ layers, onToggle, allocation, hazard }) {
-  const available = { routes: Boolean(allocation), clusters: Boolean(allocation), roads: Boolean(allocation), hazard: Boolean(hazard?.epicentre || hazard?.hotspots) };
+function LayerToggles({ layers, onToggle, allocation, hazard, hexes }) {
+  const available = { hexes: Boolean(hexes), routes: Boolean(allocation), clusters: Boolean(allocation), roads: Boolean(allocation), hazard: Boolean(hazard?.epicentre || hazard?.hotspots) };
   return (
     <fieldset className="layer-toggles">
       <legend>Layers</legend>
@@ -286,10 +289,35 @@ export default function CommandMap({ scenarioId, zones, hazard, allocation, stal
         <PanToSelected zone={selectedZone} />
         <KeepSized />
 
+        <Pane name="hexes" style={{ zIndex: 340 }} />
         <Pane name="hulls" style={{ zIndex: 350 }} />
         <Pane name="roads" style={{ zIndex: 360 }} />
         <Pane name="routes" style={{ zIndex: 380 }} />
         <Pane name="beacons" style={{ zIndex: 390 }} />
+
+        {layers.hexes &&
+          zones.map((zone) => {
+            const ring = ringPositions(zone.geometry);
+            if (!ring) return null;
+            const selected = zone.id === selectedZoneId;
+            return (
+              <Polygon
+                key={`hex-${zone.id}`}
+                pane="hexes"
+                positions={ring}
+                pathOptions={{
+                  color: selected ? RED : BLACK,
+                  weight: selected ? 2 : 0.6,
+                  opacity: selected ? 1 : 0.5,
+                  fillColor: LEVEL_COLORS[zone.priority_level].fill,
+                  fillOpacity: stale ? 0.15 : 0.35,
+                  lineJoin: "miter",
+                  className: "zone-hex",
+                }}
+                eventHandlers={{ click: () => onSelectZone(zone.id) }}
+              />
+            );
+          })}
 
         {allocation &&
           layers.clusters &&
@@ -308,11 +336,11 @@ export default function CommandMap({ scenarioId, zones, hazard, allocation, stal
         {allocation &&
           layers.roads &&
           allocation.roads.map((r) =>
-            nodes[r.from] && nodes[r.to] ? (
+            r.coords || (nodes[r.from] && nodes[r.to]) ? (
               <Polyline
                 key={`road-${runKey}-${r.from}-${r.to}`}
                 pane="roads"
-                positions={[nodes[r.from], nodes[r.to]]}
+                positions={r.coords ?? [nodes[r.from], nodes[r.to]]}
                 interactive={false}
                 pathOptions={{ color: GRAPHITE, weight: 1, opacity: 0.5, lineCap: "butt", className: "road" }}
               />
@@ -419,7 +447,7 @@ export default function CommandMap({ scenarioId, zones, hazard, allocation, stal
         Map / {zones.length ? `${zones.length} zones` : "no scenario"}
       </p>
 
-      <LayerToggles layers={layers} onToggle={onToggleLayer} allocation={allocation} hazard={hazard} />
+      <LayerToggles layers={layers} onToggle={onToggleLayer} allocation={allocation} hazard={hazard} hexes={zones.some((z) => z.geometry)} />
       <MapLegend allocation={allocation} hazard={hazard} />
 
       {stale && (

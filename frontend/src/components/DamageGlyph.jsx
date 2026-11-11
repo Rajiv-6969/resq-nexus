@@ -30,6 +30,20 @@ export default function DamageGlyph({ type, severity, size = 72 }) {
           <path d="M4 52h56" className="glyph-ground" />
         </>
       )}
+      {type === "cyclone" && (
+        <>
+          <g transform={severity >= 2 ? "skewX(-8)" : undefined}>
+            <path d="M18 34 32 22l14 12v16H18z" className="glyph-house" />
+            <rect x="28" y="40" width="8" height="10" className="glyph-door" />
+          </g>
+          {severity >= 3 && <path d="M44 24l10-6M46 30l12-2" className="glyph-crack" />}
+          {[0, 1, 2].slice(0, severity).map((i) => (
+            <path key={i} className="glyph-wind" style={{ animationDelay: `${i * 0.2}s` }} d={`M4 ${14 + i * 8}h${18 + i * 6}c4 0 4-5 0-5`} />
+          ))}
+          {severity > 0 && <path className="glyph-water" d={`M4 ${56 - severity * 2} q6 -3 12 0 t12 0 t12 0 t12 0 t12 0 V60 H4 Z`} />}
+          <path d="M4 54h56" className="glyph-ground" />
+        </>
+      )}
       {type === "wildfire" && (
         <>
           <path d="M14 50V40M14 40l-6 0 6-12 6 12z" className="glyph-tree" />

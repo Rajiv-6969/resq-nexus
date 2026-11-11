@@ -60,7 +60,7 @@ export default function CommandCentre() {
   } = useAppData();
   const [searchParams, setSearchParams] = useSearchParams();
   const [tab, setTab] = useState("zone");
-  const [layers, setLayers] = useState({ routes: true, clusters: true, roads: true, hazard: true });
+  const [layers, setLayers] = useState({ hexes: true, routes: true, clusters: true, roads: true, hazard: true });
   const sideBodyRef = useRef(null);
 
   const zones = ranking?.zones ?? NO_ZONES;
