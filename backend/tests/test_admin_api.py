@@ -68,7 +68,7 @@ def test_monitor_lists_every_request_with_severity_and_citizen(admin):
         ({"status": "PENDING,ACKNOWLEDGED"}, 8),
         ({"type": "flood"}, 3),
         ({"status": "PENDING", "type": "flood"}, 2),
-        ({"type": "earthquake,wildfire"}, 4),
+        ({"type": "earthquake,cyclone"}, 4),
     ],
 )
 def test_monitor_filters_by_status_and_type(admin, params, expected):
@@ -251,7 +251,9 @@ NEW_RESOURCE = {
 
 
 def test_resources_can_be_listed_and_filtered(admin):
-    assert len(get("/admin/resources", admin)) == 58
+    everything = get("/admin/resources", admin)
+    assert len([r for r in everything if r["source"] == "seed"]) == 58
+    assert len([r for r in everything if r["source"] == "osm"]) > 100  # real OpenStreetMap facilities from the scenarios
     hospitals = get("/admin/resources", admin, type="HOSPITAL", region="Bengaluru")
     assert len(hospitals) == 4 and {r["resource_type"] for r in hospitals} == {"HOSPITAL"}
     assert {r["status"] for r in get("/admin/resources", admin, status="FULL")} == {"FULL"}

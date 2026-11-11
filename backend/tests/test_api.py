@@ -9,7 +9,7 @@ from services.scenarios import RESOURCE_TYPES, Scenario, get_scenario
 # The Command Centre endpoints are admin-only, so this client is logged in as the demo admin.
 client = TestClient(main.app, headers=demo_headers(TestClient(main.app), "ADMIN"))
 
-DEMO_SCENARIOS = {"flood-assam": "flood", "earthquake-kutch": "earthquake", "wildfire-kumaon": "wildfire"}
+DEMO_SCENARIOS = {"flood-aluva": "flood", "earthquake-joshimath": "earthquake", "cyclone-puri": "cyclone"}
 
 
 def test_health_reports_ok():
@@ -26,20 +26,21 @@ def test_list_scenarios_includes_the_three_demos():
     for scenario_id, disaster in DEMO_SCENARIOS.items():
         entry = listed[scenario_id]
         assert entry["disaster_type"] == disaster
-        assert 15 <= entry["zone_count"] <= 20
+        assert 50 <= entry["zone_count"] <= 700
         assert entry["total_population"] > 0
 
 
 def test_get_scenario_returns_full_data():
-    response = client.get("/scenarios/flood-assam")
+    response = client.get("/scenarios/flood-aluva")
     assert response.status_code == 200
     scenario = Scenario.model_validate(response.json())
-    assert scenario.id == "flood-assam"
+    assert scenario.id == "flood-aluva"
     assert set(response.json()["resources"]) == set(RESOURCE_TYPES)
     first = response.json()["zones"][0]
     assert set(first) == {
         "id", "name", "latitude", "longitude", "disaster_type",
         "damage_severity", "population", "vulnerability_index", "accessibility",
+        "h3_index", "geometry", "building_count", "source",
     }
 
 
@@ -53,8 +54,10 @@ def test_unknown_scenario_is_404():
 def test_demo_scenario_files_meet_the_spec(scenario_id, disaster):
     scenario = get_scenario(scenario_id)
     assert scenario.disaster_type == disaster
-    assert 15 <= len(scenario.zones) <= 20
-    assert scenario.synthetic and "SYNTHETIC" in scenario.data_note
+    assert 50 <= len(scenario.zones) <= 700  # H3 resolution-8 hexagons with people in them
+    assert all(z.source == "simulated" and z.h3_index == z.id and z.geometry for z in scenario.zones)
+    assert scenario.bbox and scenario.sources["damage"] == "simulated" and scenario.facilities
+    assert scenario.synthetic and "SIMULATED" in scenario.data_note and "real" in scenario.data_note
     for zone in scenario.zones:
         assert 6.5 <= zone.latitude <= 37.5 and 68.0 <= zone.longitude <= 97.5  # inside India's extent
     assert all(getattr(scenario.resources, key) > 0 for key in RESOURCE_TYPES)

@@ -94,9 +94,10 @@ def test_each_resource_shows_availability_status_contact_and_update_time(citizen
 
 
 def test_scenario_regions_have_resources_too(citizen):
-    bhachau = nearby(citizen, lat=23.298, lon=70.346, radius_km=50).json()["resources"]
-    assert {"HOSPITAL", "SHELTER", "FIRE_STATION"} <= {r["resource_type"] for r in bhachau}
-    assert any(r["name"] == "Bhachau Field Hospital" and r["status"] == "FULL" for r in bhachau)
+    tapovan = nearby(citizen, lat=30.49, lon=79.63, radius_km=50).json()["resources"]
+    assert {"HOSPITAL", "SHELTER", "FIRE_STATION"} <= {r["resource_type"] for r in tapovan}
+    assert any(r["name"] == "Tapovan Field Hospital" and r["status"] == "FULL" for r in tapovan)
+    assert any(r["source"] == "osm" and r["osm_id"] for r in tapovan)  # real OpenStreetMap facilities sit next to the seed
 
 
 def test_nothing_nearby_returns_an_empty_list(citizen):

@@ -19,7 +19,7 @@ def test_building_assessment_validates_scale():
 
 
 def test_zone_assessment_round_trip_from_zone():
-    zone = get_scenario("flood-assam").zones[0]
+    zone = get_scenario("flood-aluva").zones[0]
     za = zone_assessment_from_zone(zone, source="label")
     assert za.zone_id == zone.id and za.source == "label"
     assert za.damage_severity == zone.damage_severity

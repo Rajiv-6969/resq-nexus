@@ -1,0 +1,179 @@
+{
+ "_source": "OpenStreetMap place nodes, Aluva bbox, fetched 2026-11-11 (ODbL); trimmed",
+ "elements": [
+  {
+   "type": "node",
+   "id": 594897437,
+   "lat": 10.0669964,
+   "lon": 76.2989276,
+   "tags": {
+    "alt_name": "Elur",
+    "is_in": "Ernakulam;Kerala;KL;India;IN",
+    "is_in:country": "india",
+    "is_in:district": "Ernakulam",
+    "is_in:state": "kerala",
+    "name": "Eloor",
+    "name:ml": "ഏലൂര്",
+    "place": "suburb",
+    "wikidata": "Q1525338",
+    "wikimedia_commons": "Category:Eloor",
+    "wikipedia": "en:Eloor"
+   }
+  },
+  {
+   "type": "node",
+   "id": 617875104,
+   "lat": 10.044776,
+   "lon": 76.3151306,
+   "tags": {
+    "is_in": "Ernakulam;Kerala;KL;India;IN",
+    "is_in:country": "india",
+    "is_in:district": "Ernakulam",
+    "is_in:state": "kerala",
+    "name": "South Kalamassery",
+    "name:ml": "സൗത്ത് കളമശ്ശേരി",
+    "place": "village"
+   }
+  },
+  {
+   "type": "node",
+   "id": 958195608,
+   "lat": 10.0521676,
+   "lon": 76.3199033,
+   "tags": {
+    "is_in": "Ernakulam;Kerala;KL;India;IN",
+    "is_in:country": "india",
+    "is_in:district": "Ernakulam",
+    "is_in:state": "kerala",
+    "name": "Kalamassery",
+    "name:ar": "كالاماسيري",
+    "name:hi": "कलमश्शेरि",
+    "name:kn": "ಕಳಮಶ್ಶೇರಿ",
+    "name:ml": "കളമശ്ശേരി",
+    "name:ta": "களமசேரி",
+    "place": "town",
+    "wikidata": "Q2475675",
+    "wikimedia_commons": "Category:Kalamassery",
+    "wikipedia": "en:Kalamassery"
+   }
+  },
+  {
+   "type": "node",
+   "id": 1195407506,
+   "lat": 10.0592947,
+   "lon": 76.3949773,
+   "tags": {
+    "name": "Pukkattupady",
+    "name:ml": "പൂക്കാട്ടുപടി",
+    "place": "village",
+    "wikidata": "Q7259140",
+    "wikipedia": "en:Pukkattupadi"
+   }
+  },
+  {
+   "type": "node",
+   "id": 1516567918,
+   "lat": 10.0714367,
+   "lon": 76.3865521,
+   "tags": {
+    "is_in:country": "india",
+    "is_in:district": "Ernakulam",
+    "is_in:state": "kerala",
+    "name": "Edathala",
+    "name:ml": "എടത്തല",
+    "place": "village"
+   }
+  },
+  {
+   "type": "node",
+   "id": 1880437827,
+   "lat": 10.1077682,
+   "lon": 76.3568532,
+   "tags": {
+    "is_in": "Ernakulam;Kerala;KL;India;IN",
+    "is_in:country": "india",
+    "is_in:district": "Ernakulam",
+    "is_in:state": "kerala",
+    "name": "Aluva",
+    "name:ar": "ألوفا",
+    "name:hi": "आलुवा",
+    "name:kn": "ಆಲುವಾ",
+    "name:ml": "ആലുവ",
+    "name:ru": "Алува",
+    "name:ta": "ஆலுவா",
+    "name:te": "ఆలువా",
+    "place": "town",
+    "wikidata": "Q588793",
+    "wikipedia": "en:Aluva"
+   }
+  },
+  {
+   "type": "node",
+   "id": 3864435011,
+   "lat": 10.067755,
+   "lon": 76.2836043,
+   "tags": {
+    "name": "Cheranallor",
+    "name:ml": "ചേരാനല്ലൂർ",
+    "place": "suburb",
+    "wikidata": "Q888939",
+    "wikipedia": "en:Cheranallur"
+   }
+  },
+  {
+   "type": "node",
+   "id": 3864816857,
+   "lat": 10.029049,
+   "lon": 76.3852835,
+   "tags": {
+    "name": "Manakkakadavu",
+    "name:ml": "മനയ്ക്കക്കടവ്",
+    "place": "village"
+   }
+  },
+  {
+   "type": "node",
+   "id": 4621834758,
+   "lat": 10.026764,
+   "lon": 76.3692662,
+   "tags": {
+    "name": "Thengode",
+    "name:ml": "തെങ്ങോട്",
+    "place": "suburb"
+   }
+  },
+  {
+   "type": "node",
+   "id": 4824566502,
+   "lat": 10.0237524,
+   "lon": 76.305771,
+   "tags": {
+    "name": "Sahrudaya Nagar",
+    "name:ml": "സഹൃദയ നഗർ",
+    "place": "neighbourhood"
+   }
+  },
+  {
+   "type": "node",
+   "id": 4824566540,
+   "lat": 10.0315166,
+   "lon": 76.3003422,
+   "tags": {
+    "name": "Theenmoorthy Nagar",
+    "name:ml": "തീൻമൂർത്തി നഗർ",
+    "place": "neighbourhood"
+   }
+  },
+  {
+   "type": "node",
+   "id": 5524950667,
+   "lat": 10.0813565,
+   "lon": 76.3644338,
+   "tags": {
+    "name": "Kodikuthumala",
+    "name:ml": "കൊടികുത്തുമല",
+    "place": "suburb"
+   }
+  }
+ ]
+}

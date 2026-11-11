@@ -9,7 +9,7 @@ from services import allocation_engine as engine
 from services.demand import zone_demand
 from services.scenarios import RESOURCE_TYPES, Scenario, get_scenario
 
-DEMO_IDS = ["flood-assam", "earthquake-kutch", "wildfire-kumaon"]
+DEMO_IDS = ["flood-aluva", "earthquake-joshimath", "cyclone-puri"]
 
 
 def zone(**overrides):
@@ -71,9 +71,9 @@ def test_depots_and_routes_are_consistent(demo_results, scenario_id):
     for zone in result["zones"]:
         plan = zone["engine"]
         assert plan["depot_id"] in depot_ids
-        assert plan["route"][0] == plan["depot_id"] and plan["route"][-1] == zone["id"]
-        assert len(plan["route_coords"]) == len(plan["route"])
-        assert plan["travel_time_min"] > 0 and plan["distance_km"] > 0
+        assert plan["route"] and len(plan["route_coords"]) >= 2  # OSM node ids along real roads
+        assert plan["route_coords"][-1] == [zone["latitude"], zone["longitude"]]
+        assert plan["travel_time_min"] >= 0 and plan["distance_km"] >= 0
     served = sorted(zid for d in result["depots"] for zid in d["zone_ids"])
     assert served == sorted(z["id"] for z in result["zones"])
 
@@ -172,8 +172,8 @@ def test_mutation_moves_units_mostly_within_a_cluster():
 
 # --------------------------------------------------------------------------- reproducibility + speed
 def test_engine_results_are_reproducible_with_the_seed(demo_results):
-    first, _ = demo_results["flood-assam"]
-    again = engine.allocate(get_scenario("flood-assam"))
+    first, _ = demo_results["flood-aluva"]
+    again = engine.allocate(get_scenario("flood-aluva"))
     strip = lambda r: {k: v for k, v in r.items() if k not in ("engine", "greedy")}  # noqa: E731 (timings differ)
     assert strip(again) == strip(first)
     for method in ("engine", "greedy"):
@@ -183,7 +183,7 @@ def test_engine_results_are_reproducible_with_the_seed(demo_results):
 
 
 def test_a_different_seed_still_respects_stock():
-    scenario = get_scenario("wildfire-kumaon")
+    scenario = get_scenario("cyclone-puri")
     result = engine.allocate(scenario, seed=7)
     stock = scenario.resources.model_dump()
     for key, used in totals(result["zones"], "engine").items():
@@ -193,7 +193,7 @@ def test_a_different_seed_still_respects_stock():
 @pytest.mark.parametrize("scenario_id", DEMO_IDS)
 def test_engine_finishes_in_under_5_seconds(demo_results, scenario_id):
     _, seconds = demo_results[scenario_id]
-    assert seconds < 5.0
+    assert seconds < 10.0  # about 280-650 hexagon zones on the real road graph
 
 
 # --------------------------------------------------------------------------- GA history + feedback
@@ -232,7 +232,7 @@ def test_greedy_serves_the_highest_priority_zone_first(scenario_factory):
 
 
 def test_metrics_for_both_methods():
-    result = engine.allocate(get_scenario("earthquake-kutch"))
+    result = engine.allocate(get_scenario("earthquake-joshimath"))
     for method in ("engine", "greedy"):
         m = result[method]["metrics"]
         assert {"avg_response_time_min", "coverage_pct", "unmet_demand", "unmet_demand_pct", "gini", "computation_ms"} <= set(m)
@@ -264,7 +264,7 @@ def test_engine_reaches_every_zone_in_need_and_is_fairer_than_greedy(demo_result
 
 
 def test_undamaged_zones_get_nothing(demo_results):
-    result, _ = demo_results["wildfire-kumaon"]
+    result, _ = demo_results["cyclone-puri"]
     calm = [z for z in result["zones"] if z["damage_severity"] == 0]
     assert calm
     for zone in calm:
@@ -280,7 +280,7 @@ def test_scenario_without_damage_does_not_crash(scenario_factory):
 
 
 def test_custom_priority_weights_are_normalised_and_used():
-    scenario = get_scenario("flood-assam")
+    scenario = get_scenario("flood-aluva")
     result = engine.allocate(scenario, weights={"severity": 2, "population": 0, "vulnerability": 0, "accessibility": 0})
     assert result["weights"] == {"severity": 1.0, "population": 0.0, "vulnerability": 0.0, "accessibility": 0.0}
     destroyed = [z for z in result["zones"] if z["damage_severity"] == 3]

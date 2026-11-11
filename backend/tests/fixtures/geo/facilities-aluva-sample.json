@@ -1,0 +1,250 @@
+{
+ "_source": "OpenStreetMap via Overpass, Aluva/Ernakulam bbox, fetched 2026-11-11 (ODbL); trimmed sample",
+ "version": 0.6,
+ "elements": [
+  {
+   "type": "node",
+   "id": 343719028,
+   "lat": 10.0252315,
+   "lon": 76.3388796,
+   "tags": {
+    "addr:district": "Ernakulam",
+    "addr:full": "Vii/528-B & Vii/528-C, Seaport - Airport Road, Kakkanad, Kochi",
+    "addr:postcode": "682030",
+    "addr:state": "Kerala",
+    "amenity": "hospital",
+    "name": "Sunrise Hospital, Ernakulam",
+    "source": "OpenGovernmentData"
+   }
+  },
+  {
+   "type": "node",
+   "id": 1913549463,
+   "lat": 10.0213004,
+   "lon": 76.3080439,
+   "tags": {
+    "CovidVaccineCenterId": "726714",
+    "amenity": "hospital",
+    "check_date": "2025-08-03",
+    "name": "MAJ Hospital"
+   }
+  },
+  {
+   "type": "node",
+   "id": 4349478584,
+   "lat": 10.090557,
+   "lon": 76.3620708,
+   "tags": {
+    "addr:city": "Aluva",
+    "addr:postcode": "683101",
+    "addr:street": "Aluva - Munnar Road",
+    "amenity": "hospital",
+    "email": "carmelhospital@yahoo.co.in",
+    "emergency": "yes",
+    "fax": "+91 2625798",
+    "healthcare:speciality": "Multi-Speciality",
+    "name": "Carmel Hospital",
+    "phone": "+91 484 2625346, +91 484 2621314, +91 484 2627734, +91 484 2623594",
+    "website": "https://carmelhosp.org/"
+   }
+  },
+  {
+   "type": "node",
+   "id": 1025332957,
+   "lat": 10.046978,
+   "lon": 76.315901,
+   "tags": {
+    "amenity": "police"
+   }
+  },
+  {
+   "type": "node",
+   "id": 3104045428,
+   "lat": 10.1000756,
+   "lon": 76.3574874,
+   "tags": {
+    "amenity": "police",
+    "check_date": "2026-02-28",
+    "name": "Ernakulam Rural DSP office",
+    "ref": "15286067"
+   }
+  },
+  {
+   "type": "node",
+   "id": 3676241139,
+   "lat": 10.1196694,
+   "lon": 76.3427074,
+   "tags": {
+    "amenity": "police",
+    "name": "Police Aid Post"
+   }
+  },
+  {
+   "type": "node",
+   "id": 1474134594,
+   "lat": 10.0204298,
+   "lon": 76.3080792,
+   "tags": {
+    "amenity": "school",
+    "name": "Pius High School For Girls"
+   }
+  },
+  {
+   "type": "node",
+   "id": 2115945971,
+   "lat": 10.0512816,
+   "lon": 76.3145831,
+   "tags": {
+    "amenity": "school",
+    "name": "Rajagiri Convent"
+   }
+  },
+  {
+   "type": "node",
+   "id": 3676246080,
+   "lat": 10.1333617,
+   "lon": 76.2748382,
+   "tags": {
+    "amenity": "school",
+    "name": "EMCT"
+   }
+  },
+  {
+   "type": "node",
+   "id": 3687089343,
+   "lat": 10.1293798,
+   "lon": 76.344981,
+   "tags": {
+    "amenity": "clinic",
+    "healthcare": "clinic",
+    "name": "KNBP Ayurveda clinic"
+   }
+  },
+  {
+   "type": "node",
+   "id": 3813525266,
+   "lat": 10.0596791,
+   "lon": 76.2892867,
+   "tags": {
+    "CovidVaccineCenterId": "155104",
+    "alt_name": "Cheranalloor FHC",
+    "amenity": "clinic",
+    "healthcare": "centre",
+    "name": "Primary Health Centre"
+   }
+  },
+  {
+   "type": "node",
+   "id": 4769428927,
+   "lat": 10.0210207,
+   "lon": 76.3100405,
+   "tags": {
+    "amenity": "clinic",
+    "name": "Kripa Diabetic Clinic"
+   }
+  },
+  {
+   "type": "node",
+   "id": 4300226390,
+   "lat": 10.1127632,
+   "lon": 76.3747947,
+   "tags": {
+    "addr:street": "Aluva-Perumbavoor Road",
+    "amenity": "community_centre",
+    "name": "YMCA Camp site International Guest House , Thottumugam , Aluva"
+   }
+  },
+  {
+   "type": "node",
+   "id": 4349459989,
+   "lat": 10.0810211,
+   "lon": 76.3641857,
+   "tags": {
+    "addr:city": "Kodikuthmala, Aluva",
+    "addr:postcode": "683101",
+    "addr:street": "NAD Road",
+    "amenity": "community_centre",
+    "community_centre:for": "Events, Wedding Functions, Religious Events.",
+    "name": "Kodikuthmala Community Hall",
+    "operator": "Kodikuthmala Juma Masjid Committee"
+   }
+  },
+  {
+   "type": "node",
+   "id": 4504245591,
+   "lat": 10.0585842,
+   "lon": 76.2963514,
+   "tags": {
+    "addr:street": "Cheranallur Road",
+    "amenity": "community_centre",
+    "name": "Mouna Nilayam",
+    "name:en": "Mouna Nilayam",
+    "website": "http://hamsavidyagurukulam.com"
+   }
+  },
+  {
+   "type": "node",
+   "id": 4708279357,
+   "lat": 10.0695041,
+   "lon": 76.3136407,
+   "tags": {
+    "amenity": "fire_station",
+    "name": "Fire and Rescue Station Vallarpadam"
+   }
+  },
+  {
+   "type": "node",
+   "id": 9976314646,
+   "lat": 10.0721672,
+   "lon": 76.317397,
+   "tags": {
+    "amenity": "fire_station",
+    "name": "Fire Station"
+   }
+  },
+  {
+   "type": "way",
+   "id": 667715321,
+   "center": {
+    "lat": 10.0759953,
+    "lon": 76.3180627
+   },
+   "tags": {
+    "amenity": "fire_station",
+    "building": "yes",
+    "operator:wikidata": "Q16133774",
+    "website": "https://fire.kerala.gov.in/"
+   }
+  },
+  {
+   "type": "node",
+   "id": 7726206249,
+   "lat": 10.0869977,
+   "lon": 76.3571143,
+   "tags": {
+    "addr:district": "Ernakulam",
+    "addr:full": "Ashokapuram, Edathala, Aluva",
+    "addr:postcode": "683101",
+    "addr:state": "Kerala",
+    "amenity": "doctors",
+    "name": "Dr. Ferozekhan",
+    "source": "Local Knowledge"
+   }
+  },
+  {
+   "type": "node",
+   "id": 7726206301,
+   "lat": 10.0915094,
+   "lon": 76.3502044,
+   "tags": {
+    "addr:district": "Ernakulam",
+    "addr:full": "Kunnumpuram-Pallikavala Road, Kunnathery Thikavu, Aluva",
+    "addr:postcode": "683106",
+    "addr:state": "Kerala",
+    "amenity": "doctors",
+    "name": "Dr. Sheeba",
+    "source": "Local Knowledge"
+   }
+  }
+ ]
+}

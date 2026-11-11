@@ -10,10 +10,10 @@ HEADERS = {role: demo_headers(client, role) for role in ("ADMIN", "SERVICE_PROVI
 
 # The Command Centre (scenarios, priority scoring, Allocation Engine, explanations) is admin-only.
 COMMAND_CENTRE = [
-    ("GET", "/scenarios/earthquake-kutch"),
-    ("GET", "/scenarios/earthquake-kutch/priority"),
-    ("POST", "/scenarios/earthquake-kutch/allocate"),
-    ("POST", "/scenarios/earthquake-kutch/explain"),
+    ("GET", "/scenarios/earthquake-joshimath"),
+    ("GET", "/scenarios/earthquake-joshimath/priority"),
+    ("POST", "/scenarios/earthquake-joshimath/allocate"),
+    ("POST", "/scenarios/earthquake-joshimath/explain"),
 ]
 
 
@@ -35,7 +35,7 @@ def test_command_centre_is_admin_only(method, path, role):
 
 
 def test_admin_can_use_the_command_centre():
-    assert call("GET", "/scenarios/earthquake-kutch/priority", "ADMIN").status_code == 200
+    assert call("GET", "/scenarios/earthquake-joshimath/priority", "ADMIN").status_code == 200
 
 
 @pytest.mark.parametrize("path", ["/health", "/scenarios"])

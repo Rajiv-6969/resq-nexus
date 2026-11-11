@@ -30,7 +30,7 @@ def admin():
     return demo_headers(client, "ADMIN")
 
 
-def allocate(headers, scenario="earthquake-kutch", **body):
+def allocate(headers, scenario="earthquake-joshimath", **body):
     response = client.post(f"/scenarios/{scenario}/allocate", json=body, headers=headers)
     assert response.status_code == 200, response.text
     return response.json()
@@ -82,15 +82,16 @@ def test_without_the_option_the_allocation_is_unchanged(admin):
 def test_live_sos_requests_add_to_the_demand_of_their_nearest_zones(admin):
     plain, live = allocate(admin), allocate(admin, include_sos=True)
     summary = live["sos"]
-    assert summary["requests_included"] == 3  # the active Kutch requests from the seed
-    assert summary["outside"] == 7  # active requests in Bengaluru, Assam and Kumaon
-    assert {z["zone_id"] for z in summary["zones"]} == {"EQ-04", "EQ-08", "EQ-12"}  # Bhachau, Chobari, Dudhai
-    bhachau = next(z for z in summary["zones"] if z["zone_id"] == "EQ-04")
-    for resource, added in bhachau["demand"].items():
-        assert zone(live, "EQ-04")["demand"][resource] == zone(plain, "EQ-04")["demand"][resource] + added
-    assert zone(live, "EQ-04")["sos"] == {"requests": bhachau["requests"], "people": bhachau["people"],
-                                          "demand": bhachau["demand"]}
-    assert zone(live, "EQ-01")["sos"] is None
+    assert summary["requests_included"] == 3  # the active Chamoli requests from the seed
+    assert summary["outside"] == 7  # active requests in Bengaluru, Ernakulam and Puri
+    hit = {z["zone_id"] for z in summary["zones"]}
+    assert len(hit) == 3 and hit <= {z["id"] for z in plain["zones"]}  # Tapovan, Vishnuprayag, Selang hexagons
+    tapovan = summary["zones"][0]
+    for resource, added in tapovan["demand"].items():
+        assert zone(live, tapovan["zone_id"])["demand"][resource] == zone(plain, tapovan["zone_id"])["demand"][resource] + added
+    assert zone(live, tapovan["zone_id"])["sos"] == {"requests": tapovan["requests"], "people": tapovan["people"],
+                                                     "demand": tapovan["demand"]}
+    assert all(z["sos"] is None for z in live["zones"] if z["id"] not in hit)
 
 
 def test_resolved_requests_no_longer_count(admin):
@@ -103,27 +104,28 @@ def test_resolved_requests_no_longer_count(admin):
 def test_a_new_sos_changes_the_next_run(admin):
     first = allocate(admin, include_sos=True)
     citizen = demo_headers(client, "CITIZEN")
-    sos = client.post("/sos", json={"latitude": 23.25, "longitude": 69.67, "location_source": "pin"}, headers=citizen).json()
+    quiet = next(z for z in first["zones"] if z["sos"] is None and z["demand"]["food_packets"] == 0)  # undamaged hexagon
+    sos = client.post("/sos", json={"latitude": quiet["latitude"], "longitude": quiet["longitude"], "location_source": "pin"}, headers=citizen).json()
     client.patch(f"/sos/{sos['id']}/details", headers=citizen, json={
         "emergency_type": "earthquake", "people_affected": 40, "injuries": "serious", "needs": ["rescue", "medical", "food"],
         "vulnerable": [], "description": "", "contact_phone": "+91 00000 01001"})
     second = allocate(admin, include_sos=True)
     assert second["sos"]["requests_included"] == first["sos"]["requests_included"] + 1
-    bhuj = zone(second, "EQ-01")  # undamaged in the scenario, so its only need is the new SOS
-    assert zone(first, "EQ-01")["demand"]["food_packets"] == 0
-    assert bhuj["demand"]["food_packets"] == 40 and bhuj["sos"]["people"] == 40
+    after = zone(second, quiet["id"])  # undamaged in the scenario, so its only need is the new SOS
+    assert after["demand"]["food_packets"] == 40 and after["sos"]["people"] == 40
 
 
 def test_explanations_mention_the_live_requests(admin):
-    response = client.post("/scenarios/earthquake-kutch/explain", json={"include_sos": True}, headers=admin)
+    response = client.post("/scenarios/earthquake-joshimath/explain", json={"include_sos": True}, headers=admin)
     assert response.status_code == 200
     texts = {e["zone_id"]: e["text"] for e in response.json()["explanations"]}
-    assert "live SOS request" in texts["EQ-04"]
-    assert "live SOS" not in texts["EQ-01"]
-    plain = client.post("/scenarios/earthquake-kutch/explain", json={}, headers=admin).json()
+    with_sos = {z["id"] for z in allocate(admin, include_sos=True)["zones"] if z["sos"]}
+    assert with_sos and all("live SOS request" in texts[z] for z in with_sos)
+    assert all("live SOS" not in texts[z] for z in texts if z not in with_sos)
+    plain = client.post("/scenarios/earthquake-joshimath/explain", json={}, headers=admin).json()
     assert all("live SOS" not in e["text"] for e in plain["explanations"])
 
 
 def test_include_sos_must_be_a_boolean(admin):
-    response = client.post("/scenarios/earthquake-kutch/allocate", json={"include_sos": "maybe"}, headers=admin)
+    response = client.post("/scenarios/earthquake-joshimath/allocate", json={"include_sos": "maybe"}, headers=admin)
     assert response.status_code == 422
