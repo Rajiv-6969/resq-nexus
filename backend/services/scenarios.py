@@ -13,8 +13,8 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from paths import DATA_DIR, SCENARIO_DIR  # noqa: F401  (re-exported)
 
-DisasterType = Literal["flood", "earthquake", "wildfire"]
-DISASTER_TYPES: tuple[str, ...] = ("flood", "earthquake", "wildfire")
+DisasterType = Literal["flood", "earthquake", "wildfire", "cyclone"]
+DISASTER_TYPES: tuple[str, ...] = ("flood", "earthquake", "wildfire", "cyclone")
 
 SEVERITY_LABELS = {0: "None", 1: "Minor", 2: "Major", 3: "Destroyed"}
 RESOURCE_TYPES = ("rescue_teams", "medical_kits", "food_packets", "shelters", "vehicles")
@@ -34,6 +34,10 @@ class Zone(BaseModel):
     population: int = Field(ge=0, description="Residents in the zone")
     vulnerability_index: float = Field(ge=0, le=1, description="0 = resilient, 1 = highly vulnerable")
     accessibility: float = Field(ge=0, le=1, description="1 = easy road access, 0 = cut off")
+    h3_index: str | None = Field(None, description="H3 cell id when the zone is a hexagon")
+    geometry: dict[str, Any] | None = Field(None, description="GeoJSON geometry of the zone")
+    building_count: int = Field(0, ge=0, description="OpenStreetMap buildings inside the zone")
+    source: str | None = Field(None, description="Where the damage values come from: model | label | simulated")
 
 
 class Resources(BaseModel):
@@ -60,8 +64,12 @@ class Scenario(BaseModel):
     synthetic: bool = True
     data_note: str = ""
     hazard: dict[str, Any] = Field(default_factory=dict)
+    bbox: dict[str, float] | None = Field(None, description="Incident bounding box: south, west, north, east")
+    geo: dict[str, Any] = Field(default_factory=dict, description="h3_resolution, road graph cache key, population source")
+    sources: dict[str, str] = Field(default_factory=dict, description="Per-layer data source: roads, facilities, population, damage")
     generator: dict[str, Any] | None = None
     resources: Resources
+    facilities: list[dict[str, Any]] = Field(default_factory=list, description="OpenStreetMap facilities inside bbox (seeded as editable resources)")
     zones: list[Zone] = Field(min_length=1)
 
     @model_validator(mode="after")

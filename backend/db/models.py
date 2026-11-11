@@ -96,6 +96,8 @@ class Resource(Base):
     capacity_available: Mapped[int] = mapped_column(Integer, default=0)
     status: Mapped[str] = mapped_column(String(10), default="OPEN")
     provider_id: Mapped[int | None] = mapped_column(ForeignKey("providers.id", ondelete="SET NULL"), index=True)
+    source: Mapped[str] = mapped_column(String(10), default="seed")  # seed (synthetic) | osm (OpenStreetMap) | user
+    osm_id: Mapped[str | None] = mapped_column(String(20))  # OpenStreetMap element id (n123 / w456 / r789)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
 

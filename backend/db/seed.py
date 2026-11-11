@@ -12,7 +12,7 @@ from db.models import Provider, Resource, SosRequest, User, utcnow
 from services.security import hash_password
 from services.sos import NEEDS, VULNERABLE_GROUPS
 
-from paths import DEMO_SEED
+from paths import DEMO_SEED, SCENARIO_DIR
 
 # Demo passwords, one per role. They are public on purpose: the README lists them and
 # the login page's Demo Login buttons fill them in. Every seeded account of a role shares
@@ -20,7 +20,7 @@ from paths import DEMO_SEED
 DEMO_PASSWORDS = {"ADMIN": "Admin#2026", "SERVICE_PROVIDER": "Provider#2026", "CITIZEN": "Citizen#2026"}
 
 
-def seed_demo_data(session: Session, path: Path = DEMO_SEED, now: datetime | None = None) -> bool:
+def seed_demo_data(session: Session, path: Path = DEMO_SEED, now: datetime | None = None, scenario_dir: Path = SCENARIO_DIR) -> bool:
     """Fill an empty database with the demo accounts, resources and SOS requests. Returns False if not empty."""
     if session.scalar(select(func.count()).select_from(User)):
         return False
@@ -85,5 +85,23 @@ def seed_demo_data(session: Session, path: Path = DEMO_SEED, now: datetime | Non
         ))
 
     session.add_all([*citizens.values(), *providers.values(), *resources, *requests])
+    session.add_all(osm_facility_resources(scenario_dir, created_at=ago(30 * 1440)))
     session.commit()
     return True
+
+
+def osm_facility_resources(directory: Path = SCENARIO_DIR, created_at: datetime | None = None) -> list[Resource]:
+    """Real OpenStreetMap facilities from every scenario file, as editable resources (source="osm")."""
+    from services.geo.facilities import facilities_to_resources
+
+    created_at = created_at or utcnow()
+    out: list[Resource] = []
+    seen: set[str] = set()
+    for path in sorted(Path(directory).glob("*.json")):
+        data = json.loads(path.read_text(encoding="utf-8"))
+        for row in facilities_to_resources(data.get("facilities", []), region=data.get("region", ""), area_fallback=data.get("state", "")):
+            if row["osm_id"] in seen:
+                continue
+            seen.add(row["osm_id"])
+            out.append(Resource(**row, created_at=created_at, updated_at=created_at))
+    return out

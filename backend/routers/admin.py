@@ -199,7 +199,7 @@ def approve_provider(provider_id: int, db: Session = Depends(get_db)):
             name=provider.organisation_name, resource_type=provider.organisation_type,
             latitude=provider.latitude, longitude=provider.longitude, area=provider.address, region=provider.region,
             contact_phone=provider.user.phone, capacity_total=0, capacity_available=0, status="CLOSED",
-            created_at=now, updated_at=now,
+            source="user", created_at=now, updated_at=now,
         ))
     db.commit()
     db.refresh(provider)
@@ -276,7 +276,7 @@ def _check_owner(db: Session, provider_id: int | None) -> None:
 def create_resource(body: AdminResourceCreate, db: Session = Depends(get_db)):
     _check_owner(db, body.provider_id)
     now = utcnow()
-    resource = Resource(**body.model_dump(), created_at=now, updated_at=now)
+    resource = Resource(**body.model_dump(), source="user", created_at=now, updated_at=now)
     db.add(resource)
     db.commit()
     db.refresh(resource)

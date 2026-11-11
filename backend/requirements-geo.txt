@@ -1,0 +1,5 @@
+# Only needed to (re)build the real-geography caches with scripts/build_scenario.py
+# and scripts/download_worldpop.py; the API and tests run without these.
+osmnx==2.1.1
+rasterio==1.5.2
+shapely==2.2.0

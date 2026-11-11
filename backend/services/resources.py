@@ -43,6 +43,8 @@ def serialize(resource: Resource, distance_km: float | None = None) -> dict[str,
         "unit": UNITS[resource.resource_type],
         "status": resource.status,
         "provider": None if provider is None else {"id": provider.id, "organisation_name": provider.organisation_name},
+        "source": resource.source or "seed",
+        "osm_id": resource.osm_id,
         "updated_at": resource.updated_at,
         "distance_km": None if distance_km is None else round(distance_km, 2),
     }

@@ -5,7 +5,7 @@ Layout (see docs/PROJECT_CONTEXT.md):
     frontend/   React + Vite client
     backend/    FastAPI API (this package)
     ml/         damage-assessment models and training scripts
-    data/       scenarios, demo seed, regions (shared by backend and ml)
+    data/       scenarios, demo seed, geo caches (shared by backend and ml)
     docs/       project documentation
 
 ``RESQ_DATA_DIR`` overrides the data folder (used by the Docker image, where the
@@ -33,4 +33,3 @@ def _data_dir() -> Path:
 DATA_DIR = _data_dir()
 SCENARIO_DIR = DATA_DIR / "scenarios"
 DEMO_SEED = DATA_DIR / "demo_seed.json"
-REGIONS_FILE = DATA_DIR / "regions.json"

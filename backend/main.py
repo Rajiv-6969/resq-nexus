@@ -230,7 +230,8 @@ class AllocationResponse(BaseModel):
     weights: dict[str, float]
     resources: dict[str, int]
     depots: list[dict[str, Any]]
-    roads: list[dict[str, Any]]
+    roads: list[dict[str, Any]]  # major roads of the incident box, each with its real geometry (coords)
+    road_source: str = "synthetic"  # OpenStreetMap when the scenario has a cached road graph
     zones: list[dict[str, Any]]
     engine: dict[str, Any]
     greedy: dict[str, Any]

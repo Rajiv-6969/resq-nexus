@@ -28,6 +28,9 @@ from sklearn.cluster import KMeans
 from services import priority as priority_service
 from services.demand import zone_demand
 from services.geo import haversine_km
+from services.geo.roads import RoadNetwork, load_road_graph
+from services.geo.routing import route_table
+from services.geo.zones import DEFAULT_RESOLUTION
 from schemas.contracts import ZoneAssessment
 from services.scenarios import RESOURCE_TYPES, Resources, Scenario
 
@@ -156,6 +159,49 @@ def describe_route(graph: nx.Graph, paths: Mapping[str, Any], depot: str, zone: 
         "travel_time_min": round(cost / speed_kmh * 60, 1),
         "distance_km": round(distance, 2),
     }
+
+
+class SyntheticRouteTable:
+    """Depot x zone travel times on the synthetic nearest-neighbour graph (no road data)."""
+
+    def __init__(self, zones: Sequence[Mapping[str, Any]], depots: Sequence[Mapping[str, Any]], roads: Mapping[str, Any]) -> None:
+        self.zones, self.depots, self.speed = zones, depots, float(roads["speed_kmh"])
+        self.graph = build_road_graph(zones, depots, roads["neighbours"], roads["min_accessibility"], roads["depot_accessibility"])
+        self.paths = shortest_paths(self.graph, [d["id"] for d in depots])
+        self.minutes = np.array([[self.paths[d["id"]][0][z["id"]] / self.speed * 60 for z in zones] for d in depots])
+        self.depot_positions = [(d["latitude"], d["longitude"]) for d in depots]
+
+    def describe(self, depot_index: int, zone_index: int) -> dict[str, Any]:
+        return describe_route(self.graph, self.paths, self.depots[depot_index]["id"], self.zones[zone_index]["id"], self.speed)
+
+    def roads_for_map(self) -> list[dict[str, Any]]:
+        return [
+            {"from": a, "to": b, "distance_km": round(e["distance_km"], 2), "travel_time_min": round(e["weight"] / self.speed * 60, 1),
+             "coords": [[self.graph.nodes[a]["latitude"], self.graph.nodes[a]["longitude"]], [self.graph.nodes[b]["latitude"], self.graph.nodes[b]["longitude"]]]}
+            for a, b, e in self.graph.edges(data=True)
+        ]
+
+
+def road_network_for(scenario: Scenario) -> RoadNetwork | None:
+    """The cached OpenStreetMap network for the scenario's bounding box, or None (synthetic fallback)."""
+    if not scenario.bbox:
+        return None
+    try:
+        graph = load_road_graph(scenario.bbox, download=False)
+    except FileNotFoundError:
+        return None
+    cache = _NETWORKS.setdefault(id(graph), RoadNetwork(graph))
+    return cache
+
+
+_NETWORKS: dict[int, RoadNetwork] = {}
+
+
+def make_route_table(scenario: Scenario, zones, depots, roads: Mapping[str, Any], network: RoadNetwork | None):
+    if network is None:
+        return SyntheticRouteTable(zones, depots, roads)
+    resolution = int((scenario.geo or {}).get("h3_resolution", DEFAULT_RESOLUTION))
+    return route_table(network, zones, depots, resolution, roads["min_accessibility"])
 
 
 # --------------------------------------------------------------------------- Genetic Algorithm
@@ -555,6 +601,7 @@ def allocate(
     needy = demand.sum(axis=1) > 0
 
     k = choose_depot_count(len(zones), scenario.resources.vehicles, settings["depots"])
+    network = road_network_for(scenario)
     sample_weight = np.maximum(scores, PRIORITY_FLOOR)
     passes: list[dict[str, Any]] = []
     history: list[dict[str, Any]] = []
@@ -570,10 +617,12 @@ def allocate(
             for i, (lat, lon) in enumerate(centres)
         ]
         depot_ids = [d["id"] for d in depots]
-        graph = build_road_graph(zones, depots, roads["neighbours"], roads["min_accessibility"], roads["depot_accessibility"])
-        paths = shortest_paths(graph, depot_ids)
-        fastest = [min(depot_ids, key=lambda d, z=z: (paths[d][0][z], d)) for z in ids]
-        minutes = np.array([paths[d][0][z] / roads["speed_kmh"] * 60 for d, z in zip(fastest, ids)])
+        table = make_route_table(scenario, zones, depots, roads, network)
+        for d, (lat, lon) in zip(depots, table.depot_positions):  # depots sit on the nearest road node
+            d["latitude"], d["longitude"] = round(float(lat), 5), round(float(lon), 5)
+        fastest_idx = [int(np.lexsort((np.arange(len(depots)), table.minutes[:, j]))[0]) for j in range(len(ids))]
+        fastest = [depot_ids[i] for i in fastest_idx]
+        minutes = np.array([table.minutes[i, j] for j, i in enumerate(fastest_idx)])
         if travel_ref is None:
             travel_ref = float(max(minutes[needy].max() if needy.any() else 0.0, 1.0))
         labels = np.array([depot_ids.index(d) for d in fastest])
@@ -600,7 +649,7 @@ def allocate(
         ]
         if best is None or fitness > best["fitness"]:
             best = {"pass": pass_no, "fitness": fitness, "plan": plan, "ctx": ctx, "depots": depots,
-                    "graph": graph, "paths": paths, "fastest": fastest, "minutes": minutes}
+                    "table": table, "fastest": fastest_idx, "minutes": minutes}
 
         lagging = [c for c, u in unmet.items() if u > feedback["unmet_threshold"]]
         if not lagging or pass_no == feedback["max_iterations"] + 1:
@@ -618,18 +667,17 @@ def allocate(
     order = sorted(range(len(zones)), key=lambda i: zones[i]["rank"])
     greedy_plan = greedy_allocation(order, demand, stock)
     nearest = [
-        min(best["depots"], key=lambda d, z=z: (haversine_km(z["latitude"], z["longitude"], d["latitude"], d["longitude"]), d["id"]))["id"]
+        min(range(len(best["depots"])), key=lambda i, z=z: (haversine_km(z["latitude"], z["longitude"], best["depots"][i]["latitude"], best["depots"][i]["longitude"]), i))
         for z in zones
     ]
     greedy_ms = (time.perf_counter() - greedy_started) * 1000
 
-    ctx, plan, graph, paths = best["ctx"], best["plan"], best["graph"], best["paths"]
-    speed = roads["speed_kmh"]
-    greedy_minutes = np.array([paths[d][0][z] / speed * 60 for d, z in zip(nearest, ids)])
+    ctx, plan, table = best["ctx"], best["plan"], best["table"]
+    greedy_minutes = np.array([table.minutes[d, j] for j, d in enumerate(nearest)])
     engine_cov = dict(zip(np.flatnonzero(ctx.active), zone_coverage(plan, ctx))) if ctx.active.any() else {}
     greedy_cov = dict(zip(np.flatnonzero(ctx.active), zone_coverage(greedy_plan, ctx))) if ctx.active.any() else {}
 
-    def zone_plan(i: int, row: np.ndarray, cov: dict, depot: str) -> dict[str, Any]:
+    def zone_plan(i: int, row: np.ndarray, cov: dict, depot: int) -> dict[str, Any]:
         return {
             "allocated": {r: int(v) for r, v in zip(RESOURCE_TYPES, row)},
             "coverage_pct": round(float(cov[i]) * 100, 1) if i in cov else None,
@@ -637,7 +685,7 @@ def allocate(
                 r: (round(min(int(v), int(n)) / int(n) * 100, 1) if n > 0 else None)
                 for r, v, n in zip(RESOURCE_TYPES, row, demand[i])
             },
-            **describe_route(graph, paths, depot, ids[i], speed),
+            **table.describe(depot, i),
         }
 
     zone_results = []
@@ -655,7 +703,7 @@ def allocate(
 
     depots_out = []
     for d in best["depots"]:
-        served = [i for i, f in enumerate(best["fastest"]) if f == d["id"]]
+        served = [i for i, f in enumerate(best["fastest"]) if depot_ids[f] == d["id"]]
         closest = min(zones, key=lambda z: haversine_km(z["latitude"], z["longitude"], d["latitude"], d["longitude"]))
         depots_out.append({
             **d,
@@ -673,10 +721,8 @@ def allocate(
         "weights": priority_settings["weights"],
         "resources": {r: int(s) for r, s in zip(RESOURCE_TYPES, stock)},
         "depots": depots_out,
-        "roads": [
-            {"from": a, "to": b, "distance_km": round(e["distance_km"], 2), "travel_time_min": round(e["weight"] / speed * 60, 1)}
-            for a, b, e in graph.edges(data=True)
-        ],
+        "roads": table.roads_for_map(),
+        "road_source": "OpenStreetMap" if network is not None else "synthetic",
         "zones": zone_results,
         "engine": {"metrics": plan_metrics(plan, ctx, best["minutes"], engine_ms)},
         "greedy": {"metrics": plan_metrics(greedy_plan, ctx, greedy_minutes, greedy_ms)},

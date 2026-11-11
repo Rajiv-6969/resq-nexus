@@ -24,3 +24,7 @@ Thumbs.db
 
 # Netlify CLI link
 frontend/.netlify/
+
+# WorldPop raster (download with backend/scripts/download_worldpop.py) and OSMnx scratch cache
+data/geo/worldpop/
+backend/cache/

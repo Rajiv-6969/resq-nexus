@@ -263,6 +263,8 @@ class ResourceOut(BaseModel):
     unit: str
     status: ResourceStatus
     provider: ResourceProvider | None
+    source: Literal["seed", "osm", "user"] = "seed"  # seed = synthetic demo, osm = OpenStreetMap facility, user = created in the app
+    osm_id: str | None = None
     updated_at: datetime
     distance_km: float | None = None
 

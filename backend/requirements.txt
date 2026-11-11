@@ -48,3 +48,4 @@ Mako==1.4.3
 MarkupSafe==3.0.4
 # PostgreSQL driver (PostGIS); SQLite needs nothing extra
 psycopg[binary]==3.3.8
+h3==4.5.0

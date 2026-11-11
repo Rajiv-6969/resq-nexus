@@ -21,7 +21,7 @@ from services.scenarios import SEVERITY_LABELS
 
 log = logging.getLogger(__name__)
 
-BATCH_SIZE = 10  # 19 zones -> 2 requests
+BATCH_SIZE = 40  # a 280-zone scenario -> 7 requests
 TIMEOUT_MS = 25_000
 MAX_CHARS = 700
 
@@ -36,6 +36,7 @@ DAMAGE_PHRASES = {
     "flood": {1: "minor flooding", 2: "major flood damage", 3: "severe flooding that destroyed most homes"},
     "earthquake": {1: "minor earthquake damage", 2: "major earthquake damage", 3: "an earthquake that destroyed most buildings"},
     "wildfire": {1: "minor fire damage", 2: "major fire damage", 3: "a wildfire that destroyed most homes"},
+    "cyclone": {1: "minor storm damage", 2: "major wind and storm-surge damage", 3: "a cyclone that destroyed most homes"},
 }
 
 
