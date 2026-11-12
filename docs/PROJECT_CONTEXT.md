@@ -3,6 +3,24 @@
 Standing rules for every change to this repository. Read this before touching code, copy,
 docs or data. If a rule here conflicts with an older comment or README line, this file wins.
 
+## Project scope (approved project diary)
+
+ResQ Nexus fuses satellite-based damage assessment and official alerts with citizen ground
+reports into a single verified incident feed, where every incident carries a confidence score.
+Satellite assessment uses a deep-learning damage model following the base paper
+*DisasterReliefGPT*, trained and validated on real xBD imagery; Indian scenarios use simulated
+satellite input through the same pipeline. A priority-weighted, fairness-aware Allocation Engine
+plans resources across zones on real road networks, and a dispatcher sends the nearest compatible
+resource (ambulances, rescue boats, shelters, medical teams, supplies) to each verified incident,
+with an explanation for every decision. Also required: tracked alerts with acknowledgment and
+automatic escalation, one-tap SOS, an offline rule-based first-aid guide, and a bilingual
+English/Hindi interface. Demonstrated on South Indian scenarios (Aluva, Bengaluru, Visakhapatnam,
+Coimbatore) and on real xBD satellite imagery, on PostgreSQL/PostGIS. Evaluation metrics:
+dispatch time, allocation accuracy, alert acknowledgment rate, allocation coverage and fairness,
+and damage-model accuracy.
+
+Every change must stay aligned with this scope.
+
 ## What the project is
 
 ResQ Nexus is an **Intelligent Disaster Response and Resource Allocation System**: a web
@@ -81,6 +99,17 @@ reworded.
   - **OpenStreetMap** — places, boundaries, map tiles (© OpenStreetMap contributors, ODbL).
   - **WorldPop** — population.
 - All four, plus the base paper, are **credited on the About page**, with licences.
+
+## Damage assessment pipeline
+
+- One building -> zone code path for every source: `backend/services/damage/aggregate.py`
+  turns `BuildingAssessment` records (model, label or simulated) into H3 `ZoneAssessment`s.
+  xBD tiles and the Indian scenarios both go through it; never aggregate elsewhere.
+- Model assets (`resq_damage.onnx`, xBD samples, geotransforms, `test_results.json`) live in
+  `data/assets/` (git-ignored; `backend/scripts/download_assets.py`). Without the model the app
+  uses ground-truth labels and says so in the UI; without samples it says how to install them.
+- The backend runs on a 512 MB server: inference must stay under 400 MB peak (tiled mode).
+- All new UI text goes through react-i18next translation keys (English now, Hindi later).
 
 ## Secrets
 

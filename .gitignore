@@ -28,3 +28,6 @@ frontend/.netlify/
 # WorldPop raster (download with backend/scripts/download_worldpop.py) and OSMnx scratch cache
 data/geo/worldpop/
 backend/cache/
+
+# Damage-model assets (backend/scripts/download_assets.py): model, xBD samples, geotransforms
+data/assets/
