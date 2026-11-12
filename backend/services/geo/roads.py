@@ -15,6 +15,7 @@ from __future__ import annotations
 import gzip
 import json
 import math
+import pickle
 import sys
 import time
 from collections.abc import Callable, Iterable, Sequence
@@ -128,8 +129,24 @@ def save_graph(graph: nx.Graph, path: Path) -> Path:
 
 
 def read_graph(path: Path) -> nx.Graph:
+    """Parse the GraphML (slow, seconds for a city) or load the pickle written next to it last time."""
+    sidecar = path.with_suffix(".pickle")
+    if sidecar.is_file() and sidecar.stat().st_mtime >= path.stat().st_mtime:
+        try:
+            with sidecar.open("rb") as handle:
+                return pickle.load(handle)
+        except Exception:  # noqa: BLE001 - a stale or truncated sidecar is simply rebuilt
+            pass
     with gzip.open(path, "rb") as handle:
-        return nx.read_graphml(handle, node_type=int)
+        graph = nx.read_graphml(handle, node_type=int)
+    try:
+        tmp = sidecar.with_suffix(".pickle.tmp")
+        with tmp.open("wb") as handle:
+            pickle.dump(graph, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        tmp.replace(sidecar)
+    except OSError:  # read-only deployment: just skip the side-cache
+        pass
+    return graph
 
 
 _MEMORY: dict[tuple[str, float], nx.Graph] = {}
@@ -142,9 +159,10 @@ def load_road_graph(bbox: Any, cache_dir: Path | None = None, download: bool = T
     path = graph_path(bbox, cache_dir)
     if path.is_file():
         key = (str(path), path.stat().st_mtime)
-        if key not in _MEMORY:
-            _MEMORY.clear()
-            _MEMORY[key] = read_graph(path)
+        if key not in _MEMORY:  # every scenario's graph stays in memory (a few tens of MB each)
+            graph = read_graph(path)
+            graph.graph["cache_key"] = f"{key[0]}@{key[1]}"
+            _MEMORY[key] = graph
         return _MEMORY[key]
     if not download:
         raise FileNotFoundError(f"no cached road graph at {path}; run build_scenario.py with network access")

@@ -243,21 +243,63 @@ def test_metrics_for_both_methods():
 
 @pytest.mark.parametrize("scenario_id", DEMO_IDS)
 def test_engine_coverage_follows_priority_levels(demo_results, scenario_id):
-    """Critical zones are covered at least as well as High zones and as the scenario overall.
-
-    Strict Critical > High > Medium > Low is not a design guarantee: the fitness has an equity
-    term, and on a 300-hexagon city a handful of Low zones with a few units of demand can be
-    fully covered for almost nothing, which lifts that level's mean.
-    """
+    """Critical >= High >= Medium >= Low mean coverage, on every demo scenario."""
     result, _ = demo_results[scenario_id]
-    means = {}
+    means = []
     for level in ("Critical", "High", "Medium", "Low"):
         values = [z["engine"]["coverage_pct"] for z in result["zones"]
                   if z["priority_level"] == level and z["engine"]["coverage_pct"] is not None]
         if values:
-            means[level] = sum(values) / len(values)
-    assert "Critical" in means and means["Critical"] >= means["High"]
-    assert means["Critical"] >= result["engine"]["metrics"]["coverage_pct"]
+            means.append(round(sum(values) / len(values), 6))
+    assert len(means) >= 2 and means == sorted(means, reverse=True)
+    by_level = result["engine"]["metrics"]["coverage_by_level"]
+    assert list(by_level.values()) == sorted(by_level.values(), reverse=True)
+
+
+# --------------------------------------------------------------------------- priority-level ordering
+def level_context(levels, demand=None, stock=(4, 0, 0, 0, 0)):
+    levels = np.asarray(levels)
+    n = levels.size
+    demand = np.zeros((n, 5), dtype=int) if demand is None else np.asarray(demand)
+    if demand.sum() == 0:
+        demand[:, 0] = 2  # every zone needs two rescue teams
+    return engine.make_context(demand, np.array(stock), priority=np.linspace(1, 0.1, n), travel_norm=np.zeros(n),
+                               labels=np.zeros(n, int), levels=levels)
+
+
+def test_level_order_violation_measures_positive_gaps_only():
+    ctx = level_context([0, 0, 1, 1])
+    ordered = np.array([[2, 0, 0, 0, 0], [2, 0, 0, 0, 0], [0] * 5, [0] * 5])
+    inverted = np.array([[0] * 5, [0] * 5, [2, 0, 0, 0, 0], [2, 0, 0, 0, 0]])
+    assert engine.level_order_violation(engine.zone_coverage(ordered, ctx), ctx) == 0
+    assert engine.level_order_violation(engine.zone_coverage(inverted, ctx), ctx) == pytest.approx(1.0)
+    assert engine.fitness_batch(ordered, ctx)[0] > engine.fitness_batch(inverted, ctx)[0]
+
+
+def test_repair_moves_units_up_until_levels_are_ordered():
+    ctx = level_context([0, 0, 1, 1, 2, 2], stock=(4, 0, 0, 0, 0))
+    plan = np.array([[0] * 5, [0] * 5, [1, 0, 0, 0, 0], [1, 0, 0, 0, 0], [1, 0, 0, 0, 0], [1, 0, 0, 0, 0]])
+    fixed = engine.repair(plan, ctx)
+    means = engine.level_coverage(engine.zone_coverage(fixed, ctx), ctx)
+    assert fixed.sum() == 4 and (fixed <= ctx.demand).all()
+    assert means[0] >= means[1] >= means[2]
+    assert means[0] > 0  # the Critical level actually received units
+
+
+def test_within_level_gini_ignores_differences_between_levels():
+    ctx = level_context([0, 0, 1, 1])
+    plan = np.array([[2, 0, 0, 0, 0], [2, 0, 0, 0, 0], [0] * 5, [0] * 5])  # perfectly even inside each level
+    cov = engine.zone_coverage(plan, ctx)
+    assert engine.within_level_gini(cov, ctx) == 0 and engine.gini(cov) > 0
+    uneven = np.array([[2, 0, 0, 0, 0], [0] * 5, [2, 0, 0, 0, 0], [0] * 5])
+    assert engine.within_level_gini(engine.zone_coverage(uneven, ctx), ctx) > 0
+
+
+def test_context_without_levels_behaves_as_one_level():
+    ctx = engine.make_context(np.full((3, 5), 2), np.array([3, 0, 0, 0, 0]), priority=np.ones(3), travel_norm=np.zeros(3), labels=np.zeros(3, int))
+    assert ctx.level_ids == [0]
+    plan = engine.repair(np.zeros((3, 5), int), ctx)
+    assert engine.level_order_violation(engine.zone_coverage(plan, ctx), ctx) == 0 and plan.sum() == 3
 
 
 @pytest.mark.parametrize("scenario_id", DEMO_IDS)

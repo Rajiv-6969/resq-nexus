@@ -546,6 +546,8 @@ Both methods are measured with the same metrics:
 | `demand_met_pct` | share of demand units met, weighted by zone priority and averaged over resource types |
 | `unmet_demand` / `unmet_demand_pct` | units still needed per resource, and the unmet share of the need averaged over resource types |
 | `gini` | Gini coefficient of coverage across zones in need (0 = every zone equally covered) |
+| `gini_within_level` | the same Gini, computed inside each priority level and averaged (the fairness term the engine optimises) |
+| `coverage_by_level` | mean zone coverage % per priority level; always Critical ≥ High ≥ Medium ≥ Low |
 | `computation_ms` | wall-clock time to produce the plan |
 | `zones_served` / `zones_in_need` | zones in need that receive at least some relief |
 
@@ -553,19 +555,34 @@ Results for the demo scenarios (default weights):
 
 | Scenario | Method | Avg response | Weighted coverage | Demand met | Unmet demand | Gini | Zones reached | Time |
 |---|---|---|---|---|---|---|---|---|
-| `flood-assam` | Allocation Engine | 17.7 min | 62.5 % | 60.5 % | 40.9 % | 0.077 | 13 / 13 | 2.7 s |
-| | Greedy | 22.0 min | 46.3 % | 65.5 % | 40.9 % | 0.625 | 6 / 13 | 0.3 ms |
-| `earthquake-kutch` | Allocation Engine | 22.4 min | 65.2 % | 63.9 % | 40.2 % | 0.088 | 15 / 15 | 2.6 s |
-| | Greedy | 23.6 min | 48.3 % | 67.9 % | 40.2 % | 0.552 | 9 / 15 | 0.2 ms |
-| `wildfire-kumaon` | Allocation Engine | 13.7 min | 52.4 % | 59.0 % | 43.9 % | 0.140 | 11 / 11 | 2.2 s |
-| | Greedy | 12.6 min | 40.7 % | 62.5 % | 43.9 % | 0.670 | 5 / 11 | 0.2 ms |
+| `flood-aluva` | Allocation Engine | 13.2 min | 58.7 % | 61.8 % | 39.8 % | 0.084 | 218 / 218 | 5–7 s |
+| | Greedy | 15.6 min | 56.7 % | 63.6 % | 39.8 % | 0.113 | 218 / 218 | 3 ms |
+| `flood-bengaluru` | Allocation Engine | 17.0 min | 54.7 % | 56.8 % | 43.8 % | 0.097 | 304 / 304 | 6–9 s |
+| | Greedy | 20.6 min | 47.3 % | 59.1 % | 43.8 % | 0.108 | 304 / 304 | 3 ms |
+| `cyclone-visakhapatnam` | Allocation Engine | 8.7 min | 58.3 % | 62.4 % | 39.5 % | 0.084 | 229 / 229 | 6–8 s |
+| | Greedy | 12.1 min | 52.2 % | 64.3 % | 39.5 % | 0.110 | 229 / 229 | 3 ms |
+| `earthquake-coimbatore` | Allocation Engine | 9.2 min | 75.6 % | 72.9 % | 28.4 % | 0.042 | 285 / 285 | 5–7 s |
+| | Greedy | 9.9 min | 75.7 % | 73.4 % | 28.4 % | 0.058 | 285 / 285 | 3 ms |
+
+Coverage by priority level (Allocation Engine, mean zone coverage %):
+
+| Scenario | Critical | High | Medium | Low |
+|---|---|---|---|---|
+| `flood-aluva` | 66.4 | 62.3 | 50.1 | 50.0 |
+| `flood-bengaluru` | 58.0 | 55.3 | 50.5 | 50.0 |
+| `cyclone-visakhapatnam` | 70.9 | 60.5 | 50.4 | 50.0 |
+| `earthquake-coimbatore` | 90.0 | 75.2 | 75.0 | 75.0 |
 
 How to read it: the stock is deliberately smaller than the need, so both methods hand out everything
-and leave the same total unmet. The greedy baseline fully supplies the top few zones and leaves the
-rest with nothing. That gives it slightly more raw demand met, but much lower weighted coverage, a
-far less even spread (higher Gini) and fewer zones reached. The Allocation Engine reaches every zone
-in need and gives the most urgent ones the highest coverage. Its response time is lower in two of
-the scenarios.
+and leave the same total unmet. Medical kits and food packets exceed the demand in every scenario,
+so every zone gets those in full; rescue teams, shelters and vehicles are scarce. The Allocation
+Engine guarantees **Critical ≥ High ≥ Medium ≥ Low** mean coverage (an ordering penalty in the
+fitness plus a repair step that moves units up a level until the order holds) and spreads the
+scarce units evenly *within* each level (the Gini term is computed per level), which is why Medium
+and Low sit at the "plentiful resources only" floor while the scarce stock goes to the urgent zones.
+Against the greedy baseline it gives higher weighted coverage, a more even spread (lower Gini) and
+shorter response times. Times are from a laptop with the road graph already in memory; the first
+request after start-up also parses the cached road graph (a few seconds, done in the background).
 
 ## Priority model
 

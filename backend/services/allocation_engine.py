@@ -26,6 +26,7 @@ from deap import base, creator, tools
 from sklearn.cluster import KMeans
 
 from services import priority as priority_service
+from services.priority import LEVEL_ORDER
 from services.demand import zone_demand
 from services.geo import haversine_km
 from services.geo.roads import RoadNetwork, load_road_graph
@@ -53,7 +54,7 @@ ENGINE_SETTINGS: dict[str, Any] = {
         "seeded_share": 0.5,
         "same_cluster_prob": 0.8,
     },
-    "fitness": {"coverage": 1.0, "travel_time": 0.3, "gini": 0.15, "over_allocation_penalty": 10.0},
+    "fitness": {"coverage": 1.0, "travel_time": 0.3, "gini": 0.15, "level_order": 2.0, "over_allocation_penalty": 10.0},
     "feedback": {"unmet_threshold": 0.40, "max_iterations": 3, "upweight": 1.5, "generations": 40, "carry_over": 20},
 }
 
@@ -190,11 +191,28 @@ def road_network_for(scenario: Scenario) -> RoadNetwork | None:
         graph = load_road_graph(scenario.bbox, download=False)
     except FileNotFoundError:
         return None
-    cache = _NETWORKS.setdefault(id(graph), RoadNetwork(graph))
-    return cache
+    key = graph.graph.get("cache_key") or str(id(graph))
+    if key not in _NETWORKS:
+        _NETWORKS[key] = RoadNetwork(graph)
+    return _NETWORKS[key]
 
 
-_NETWORKS: dict[int, RoadNetwork] = {}
+_NETWORKS: dict[str, RoadNetwork] = {}
+
+
+def warm_road_networks(scenario_ids: Sequence[str] | None = None) -> int:
+    """Parse and index the cached road graphs now, so no request pays for it. Returns how many loaded."""
+    from services.scenarios import get_scenario, list_scenarios
+
+    ids = list(scenario_ids) if scenario_ids is not None else [s.id for s in list_scenarios()]
+    loaded = 0
+    for scenario_id in ids:
+        try:
+            if road_network_for(get_scenario(scenario_id)) is not None:
+                loaded += 1
+        except Exception:  # noqa: BLE001 - a broken cache must not stop the app from starting
+            continue
+    return loaded
 
 
 def make_route_table(scenario: Scenario, zones, depots, roads: Mapping[str, Any], network: RoadNetwork | None):
@@ -216,6 +234,7 @@ class GAContext:
     labels: np.ndarray  # (zones,) cluster of each zone
     fitness_weights: Mapping[str, float] = field(default_factory=lambda: dict(ENGINE_SETTINGS["fitness"]))
     same_cluster_prob: float = ENGINE_SETTINGS["ga"]["same_cluster_prob"]
+    levels: np.ndarray | None = None  # (zones,) priority level index, 0 = Critical ... 3 = Low (None: one level)
 
     def __post_init__(self) -> None:
         self.demand = np.asarray(self.demand, dtype=np.int64)
@@ -235,14 +254,23 @@ class GAContext:
         self.demand_cols = self.weighted_demand > 0
         self.tau_active = self.travel_norm[self.active]
         self.cluster_members = {int(c): np.flatnonzero(self.labels == c) for c in np.unique(self.labels)}
+        # Priority levels: which needy zones belong to each level (most urgent first), for the
+        # within-level fairness term and the Critical >= High >= Medium >= Low ordering.
+        self.levels = np.zeros(self.demand.shape[0], dtype=np.int64) if self.levels is None else np.asarray(self.levels, dtype=np.int64)
+        level_active = self.levels[self.active]
+        self.level_ids = [int(v) for v in np.unique(level_active)]  # ascending = most urgent first
+        self.level_rows = [np.flatnonzero(self.active & (self.levels == v)) for v in self.level_ids]  # zone indices
+        self.level_matrix = (np.stack([(level_active == v) / max(int((level_active == v).sum()), 1) for v in self.level_ids])
+                             if self.level_ids else np.zeros((0, 0)))
 
 
-def make_context(demand, stock, priority, travel_norm, labels, fitness_weights=None, same_cluster_prob=None) -> GAContext:
+def make_context(demand, stock, priority, travel_norm, labels, fitness_weights=None, same_cluster_prob=None, levels=None) -> GAContext:
     """Build a :class:`GAContext` (defaults from ``ENGINE_SETTINGS``)."""
     return GAContext(
         demand, stock, priority, travel_norm, labels,
-        dict(fitness_weights or ENGINE_SETTINGS["fitness"]),
+        {**ENGINE_SETTINGS["fitness"], **(fitness_weights or {})},
         ENGINE_SETTINGS["ga"]["same_cluster_prob"] if same_cluster_prob is None else same_cluster_prob,
+        levels,
     )
 
 
@@ -264,6 +292,28 @@ def zone_coverage(plans: np.ndarray, ctx: GAContext) -> np.ndarray:
     return covered.sum(axis=-1)[..., ctx.active] / ctx.needs_count[ctx.active]
 
 
+def level_coverage(cov: np.ndarray, ctx: GAContext) -> np.ndarray:
+    """Mean zone coverage of each priority level present, (..., levels), most urgent first."""
+    return cov @ ctx.level_matrix.T
+
+
+def level_order_violation(cov: np.ndarray, ctx: GAContext) -> np.ndarray:
+    """How far the plan breaks Critical >= High >= Medium >= Low: summed positive gaps (0 when ordered)."""
+    if len(ctx.level_ids) < 2:
+        return np.zeros(cov.shape[:-1])
+    means = level_coverage(cov, ctx)
+    return np.maximum(means[..., 1:] - means[..., :-1], 0).sum(axis=-1)
+
+
+def within_level_gini(cov: np.ndarray, ctx: GAContext) -> np.ndarray:
+    """Gini of zone coverage computed inside each priority level, averaged over the levels present."""
+    if not ctx.level_ids:
+        return np.zeros(cov.shape[:-1])
+    level_active = ctx.levels[ctx.active]
+    parts = [np.asarray(gini(cov[..., level_active == v]), dtype=float) for v in ctx.level_ids]
+    return np.mean(np.stack(parts), axis=0)
+
+
 def demand_coverage(plans: np.ndarray, ctx: GAContext) -> np.ndarray:
     """Priority-weighted share of demand met (0-1), averaged over resource types."""
     met = (ctx.priority[:, None] * np.minimum(plans, ctx.demand)).sum(axis=-2)
@@ -280,7 +330,9 @@ def fitness_batch(plans: np.ndarray, ctx: GAContext) -> np.ndarray:
     """Fitness of one plan (zones x resources) or a stack of plans (maximised).
 
     priority-weighted demand coverage - priority-weighted travel time
-    - Gini coefficient of zone coverage - heavy penalty for exceeding the stock.
+    - Gini coefficient of zone coverage within each priority level
+    - penalty when a level is covered worse than a less urgent level
+    - heavy penalty for exceeding the stock.
     """
     plans = np.asarray(plans)
     if plans.ndim == 2:
@@ -290,10 +342,12 @@ def fitness_batch(plans: np.ndarray, ctx: GAContext) -> np.ndarray:
     penalty = w["over_allocation_penalty"] * excess
     if not ctx.active.any():
         return -penalty
+    cov = zone_coverage(plans, ctx)
     return (
         w["coverage"] * demand_coverage(plans, ctx)
         - w["travel_time"] * relief_travel_time(plans, ctx)
-        - w["gini"] * gini(zone_coverage(plans, ctx))
+        - w["gini"] * within_level_gini(cov, ctx)
+        - w.get("level_order", 0.0) * level_order_violation(cov, ctx)
         - penalty
     )
 
@@ -320,12 +374,69 @@ def _fill(cols: np.ndarray, demand: np.ndarray, target: np.ndarray) -> np.ndarra
     return cols + floor + (rank < (short - floor.sum(axis=0)))
 
 
-def repair(plan: np.ndarray, ctx: GAContext) -> np.ndarray:
+def _rows_mean_coverage(x: np.ndarray, rows: np.ndarray, ctx: GAContext) -> float:
+    """Mean zone coverage of the (needy) zones in ``rows`` - a cheap slice of :func:`zone_coverage`."""
+    covered = np.minimum(x[rows], ctx.demand[rows]) / ctx.safe_demand[rows] * ctx.mask[rows]
+    return float((covered.sum(axis=1) / ctx.needs_count[rows]).mean())
+
+
+def _pair_ordered(x: np.ndarray, hi: np.ndarray, lo: np.ndarray, ctx: GAContext) -> bool:
+    return _rows_mean_coverage(x, hi, ctx) + 1e-9 >= _rows_mean_coverage(x, lo, ctx)
+
+
+def _shift_between_levels(x: np.ndarray, hi: np.ndarray, lo: np.ndarray, ctx: GAContext, fraction: float) -> np.ndarray:
+    """Copy of ``x`` with ``fraction`` of the lower level's units moved to unmet need in the higher level."""
+    y = x.copy()
+    take = np.floor(fraction * x[lo]).astype(np.int64)
+    y[lo] -= take
+    freed = take.sum(axis=0)
+    room = (ctx.demand[hi] - y[hi]).sum(axis=0)
+    given = np.minimum(freed, room)
+    if given.any():
+        y[hi] = _fill(y[hi], ctx.demand[hi], y[hi].sum(axis=0) + given)
+    back = freed - given
+    if back.any():  # nothing in the higher level can use these units: hand them back
+        y[lo] = _fill(y[lo], ctx.demand[lo], y[lo].sum(axis=0) + back)
+    return y
+
+
+def enforce_level_order(x: np.ndarray, ctx: GAContext, passes: int = 2, steps: int = 4) -> np.ndarray:
+    """Move units from less urgent levels until Critical >= High >= Medium >= Low holds.
+
+    For each adjacent pair the smallest fraction of the lower level's allocation that restores
+    the order is found by bisection; moving everything always restores it (the higher level is
+    then full or the lower one empty), so the loop terminates.
+    """
+    if len(ctx.level_ids) < 2:
+        return x
+    for _ in range(passes):
+        changed = False
+        for i in range(len(ctx.level_ids) - 1):
+            hi, lo = ctx.level_rows[i], ctx.level_rows[i + 1]
+            if _pair_ordered(x, hi, lo, ctx):
+                continue
+            good, lo_f, hi_f = None, 0.0, 1.0
+            for _ in range(steps):
+                mid = (lo_f + hi_f) / 2
+                candidate = _shift_between_levels(x, hi, lo, ctx, mid)
+                if _pair_ordered(candidate, hi, lo, ctx):
+                    good, hi_f = candidate, mid
+                else:
+                    lo_f = mid
+            if good is None:
+                good = _shift_between_levels(x, hi, lo, ctx, 1.0)
+            x, changed = good, True
+        if not changed:
+            break
+    return x
+
+
+def repair(plan: np.ndarray, ctx: GAContext, order_levels: bool = True) -> np.ndarray:
     """Return a feasible copy of ``plan``.
 
     No zone gets more than it needs or less than zero, column totals never
-    exceed the available stock, and stock left over while demand remains is
-    handed out.
+    exceed the available stock, stock left over while demand remains is
+    handed out, and no priority level is covered worse than a less urgent one.
     """
     x = np.clip(np.asarray(plan, dtype=np.int64), 0, ctx.demand)
     over = np.flatnonzero(x.sum(axis=0) > ctx.target)
@@ -337,6 +448,8 @@ def repair(plan: np.ndarray, ctx: GAContext) -> np.ndarray:
     for r in np.flatnonzero(x.sum(axis=0) > ctx.target):  # floating-point safety net
         while x[:, r].sum() > ctx.target[r]:
             x[np.argmax(x[:, r]), r] -= 1
+    if order_levels and ctx.active.any():
+        x = enforce_level_order(x, ctx)
     return x
 
 
@@ -374,7 +487,9 @@ def mutate_matrix(x: np.ndarray, ctx: GAContext, rng: random.Random, moves: int 
 
 def crossover_matrices(a: np.ndarray, b: np.ndarray, rng: random.Random) -> None:
     """Uniform crossover of whole zone rows, in place."""
-    rows = np.array([rng.random() < 0.5 for _ in range(a.shape[0])])
+    n = a.shape[0]
+    bits = np.unpackbits(np.frombuffer(rng.getrandbits(n).to_bytes((n + 7) // 8, "little"), dtype=np.uint8))
+    rows = bits[:n].astype(bool)
     if rows.any():
         swap = a[rows].copy()
         a[rows] = b[rows]
@@ -513,6 +628,8 @@ def plan_metrics(plan: np.ndarray, ctx: GAContext, minutes: np.ndarray, computat
     * demand_met_pct - share of demand units met, weighted by priority score
     * unmet_demand / unmet_demand_pct - units still needed (and % of total need)
     * gini - Gini coefficient of zone coverage (0 = every zone equally covered)
+    * gini_within_level - the same, computed inside each priority level and averaged
+    * coverage_by_level - mean zone coverage % per priority level present
     * computation_ms - wall-clock time to produce the plan
     """
     need = ctx.demand.sum(axis=0)
@@ -536,6 +653,8 @@ def plan_metrics(plan: np.ndarray, ctx: GAContext, minutes: np.ndarray, computat
         metrics["coverage_pct"] = round(float(cov @ ctx.p_active / ctx.p_sum * 100), 1)
         metrics["demand_met_pct"] = round(float(demand_coverage(plan, ctx)) * 100, 1)
         metrics["gini"] = round(float(gini(cov)), 3)
+        metrics["gini_within_level"] = round(float(within_level_gini(cov, ctx)), 3)
+        metrics["coverage_by_level"] = {LEVEL_ORDER[v]: round(float(m) * 100, 1) for v, m in zip(ctx.level_ids, level_coverage(cov, ctx))}
     return metrics
 
 
@@ -597,6 +716,7 @@ def allocate(
             demand[i] += np.array([int(extra.get(r, 0)) for r in RESOURCE_TYPES], dtype=np.int64)
     stock = np.array([getattr(scenario.resources, r) for r in RESOURCE_TYPES], dtype=np.int64)
     scores = np.array([z["priority_score"] for z in zones], dtype=float)
+    levels = np.array([LEVEL_ORDER.index(z["priority_level"]) for z in zones], dtype=np.int64)
     coords = np.array([[z["latitude"], z["longitude"]] for z in zones], dtype=float)
     needy = demand.sum(axis=1) > 0
 
@@ -626,7 +746,7 @@ def allocate(
         if travel_ref is None:
             travel_ref = float(max(minutes[needy].max() if needy.any() else 0.0, 1.0))
         labels = np.array([depot_ids.index(d) for d in fastest])
-        ctx = make_context(demand, stock, scores, minutes / travel_ref, labels, settings["fitness"], ga["same_cluster_prob"])
+        ctx = make_context(demand, stock, scores, minutes / travel_ref, labels, settings["fitness"], ga["same_cluster_prob"], levels)
 
         generations = ga["generations"] if pass_no == 1 else feedback["generations"]
         if ctx.active_cols.size:

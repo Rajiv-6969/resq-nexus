@@ -50,6 +50,8 @@ app.add_middleware(
 
 # Tables are created (and the demo data loaded into an empty database) on start-up.
 init_db()
+if os.getenv("WARM_ROAD_GRAPHS", "1") != "0":  # parse the cached OpenStreetMap graphs in the background
+    threading.Thread(target=allocation_engine.warm_road_networks, name="warm-road-graphs", daemon=True).start()
 app.include_router(auth.router)
 app.include_router(sos.router)
 app.include_router(resources.router)
