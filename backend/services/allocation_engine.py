@@ -262,6 +262,10 @@ class GAContext:
         self.level_rows = [np.flatnonzero(self.active & (self.levels == v)) for v in self.level_ids]  # zone indices
         self.level_matrix = (np.stack([(level_active == v) / max(int((level_active == v).sum()), 1) for v in self.level_ids])
                              if self.level_ids else np.zeros((0, 0)))
+        # (levels, zones) 0/1 membership and (levels, resources) demand per level, for the per-type ordering
+        self.level_members = np.stack([(self.levels == v) & self.active for v in self.level_ids]).astype(float) \
+            if self.level_ids else np.zeros((0, self.demand.shape[0]))
+        self.level_demand = self.level_members @ self.demand  # (levels, resources)
 
 
 def make_context(demand, stock, priority, travel_norm, labels, fitness_weights=None, same_cluster_prob=None, levels=None) -> GAContext:
@@ -297,12 +301,30 @@ def level_coverage(cov: np.ndarray, ctx: GAContext) -> np.ndarray:
     return cov @ ctx.level_matrix.T
 
 
-def level_order_violation(cov: np.ndarray, ctx: GAContext) -> np.ndarray:
-    """How far the plan breaks Critical >= High >= Medium >= Low: summed positive gaps (0 when ordered)."""
+def level_type_coverage(plans: np.ndarray, ctx: GAContext) -> np.ndarray:
+    """Share of each level's demand met, per resource type: (..., levels, resources); 1 where a level needs none."""
+    met = ctx.level_members @ np.minimum(plans, ctx.demand)  # (..., levels, resources)
+    return np.where(ctx.level_demand > 0, met / np.maximum(ctx.level_demand, 1), 1.0)
+
+
+def level_order_violation(plans: np.ndarray, ctx: GAContext) -> np.ndarray:
+    """Share of the stock held by a level while a more urgent level still needs that resource type.
+
+    Per resource type: units sitting in a lower level that a higher level could have used
+    (``min(lower's allocation, higher's unmet need)``), summed over every pair of levels and
+    divided by the units handed out. 0 when, for every type, a lower level only holds units
+    once every higher level's need for that type is met (Critical >= High >= Medium >= Low).
+    """
+    plans = np.asarray(plans)
     if len(ctx.level_ids) < 2:
-        return np.zeros(cov.shape[:-1])
-    means = level_coverage(cov, ctx)
-    return np.maximum(means[..., 1:] - means[..., :-1], 0).sum(axis=-1)
+        return np.zeros(plans.shape[:-2])
+    met = ctx.level_members @ np.minimum(plans, ctx.demand)  # (..., levels, resources)
+    unmet = ctx.level_demand - met
+    misplaced = np.zeros(plans.shape[:-2])
+    for i in range(len(ctx.level_ids) - 1):
+        for j in range(i + 1, len(ctx.level_ids)):
+            misplaced = misplaced + np.minimum(met[..., j, :], unmet[..., i, :]).sum(axis=-1)
+    return misplaced / max(float(ctx.target.sum()), 1.0)
 
 
 def within_level_gini(cov: np.ndarray, ctx: GAContext) -> np.ndarray:
@@ -347,7 +369,7 @@ def fitness_batch(plans: np.ndarray, ctx: GAContext) -> np.ndarray:
         w["coverage"] * demand_coverage(plans, ctx)
         - w["travel_time"] * relief_travel_time(plans, ctx)
         - w["gini"] * within_level_gini(cov, ctx)
-        - w.get("level_order", 0.0) * level_order_violation(cov, ctx)
+        - w.get("level_order", 0.0) * level_order_violation(plans, ctx)
         - penalty
     )
 
@@ -374,60 +396,34 @@ def _fill(cols: np.ndarray, demand: np.ndarray, target: np.ndarray) -> np.ndarra
     return cols + floor + (rank < (short - floor.sum(axis=0)))
 
 
-def _rows_mean_coverage(x: np.ndarray, rows: np.ndarray, ctx: GAContext) -> float:
-    """Mean zone coverage of the (needy) zones in ``rows`` - a cheap slice of :func:`zone_coverage`."""
-    covered = np.minimum(x[rows], ctx.demand[rows]) / ctx.safe_demand[rows] * ctx.mask[rows]
-    return float((covered.sum(axis=1) / ctx.needs_count[rows]).mean())
+def enforce_level_order(x: np.ndarray, ctx: GAContext) -> np.ndarray:
+    """Per resource type, move units up to any more urgent level that still has unmet need for it.
 
-
-def _pair_ordered(x: np.ndarray, hi: np.ndarray, lo: np.ndarray, ctx: GAContext) -> bool:
-    return _rows_mean_coverage(x, hi, ctx) + 1e-9 >= _rows_mean_coverage(x, lo, ctx)
-
-
-def _shift_between_levels(x: np.ndarray, hi: np.ndarray, lo: np.ndarray, ctx: GAContext, fraction: float) -> np.ndarray:
-    """Copy of ``x`` with ``fraction`` of the lower level's units moved to unmet need in the higher level."""
-    y = x.copy()
-    take = np.floor(fraction * x[lo]).astype(np.int64)
-    y[lo] -= take
-    freed = take.sum(axis=0)
-    room = (ctx.demand[hi] - y[hi]).sum(axis=0)
-    given = np.minimum(freed, room)
-    if given.any():
-        y[hi] = _fill(y[hi], ctx.demand[hi], y[hi].sum(axis=0) + given)
-    back = freed - given
-    if back.any():  # nothing in the higher level can use these units: hand them back
-        y[lo] = _fill(y[lo], ctx.demand[lo], y[lo].sum(axis=0) + back)
-    return y
-
-
-def enforce_level_order(x: np.ndarray, ctx: GAContext, passes: int = 2, steps: int = 4) -> np.ndarray:
-    """Move units from less urgent levels until Critical >= High >= Medium >= Low holds.
-
-    For each adjacent pair the smallest fraction of the lower level's allocation that restores
-    the order is found by bisection; moving everything always restores it (the higher level is
-    then full or the lower one empty), so the loop terminates.
+    Working from Critical downwards, each level pulls the units it still needs of a type from the
+    levels below it (nearest level first): taken from the lower level's zones in proportion to
+    what they hold, handed to the higher level's zones in proportion to their unmet need. A level
+    whose need for a type is already met pulls nothing, so a lower level keeps those units and
+    no unit is ever left idle. Afterwards, for every type, Critical >= High >= Medium >= Low.
     """
     if len(ctx.level_ids) < 2:
         return x
-    for _ in range(passes):
-        changed = False
-        for i in range(len(ctx.level_ids) - 1):
-            hi, lo = ctx.level_rows[i], ctx.level_rows[i + 1]
-            if _pair_ordered(x, hi, lo, ctx):
-                continue
-            good, lo_f, hi_f = None, 0.0, 1.0
-            for _ in range(steps):
-                mid = (lo_f + hi_f) / 2
-                candidate = _shift_between_levels(x, hi, lo, ctx, mid)
-                if _pair_ordered(candidate, hi, lo, ctx):
-                    good, hi_f = candidate, mid
-                else:
-                    lo_f = mid
-            if good is None:
-                good = _shift_between_levels(x, hi, lo, ctx, 1.0)
-            x, changed = good, True
-        if not changed:
-            break
+    x = x.copy()
+    n = len(ctx.level_ids)
+    for r in ctx.active_cols:
+        for i in range(n - 1):
+            hi = ctx.level_rows[i]
+            short = int(ctx.level_demand[i, r]) - int(x[hi, r].sum())
+            for j in range(i + 1, n):
+                if short <= 0:
+                    break
+                lo = ctx.level_rows[j]
+                have = int(x[lo, r].sum())
+                m = min(short, have)
+                if m <= 0:
+                    continue
+                x[lo, r] = _shrink(x[lo, r][:, None], np.array([have - m]))[:, 0]
+                x[hi, r] = _fill(x[hi, r][:, None], ctx.demand[hi, r][:, None], np.array([int(x[hi, r].sum()) + m]))[:, 0]
+                short -= m
     return x
 
 
@@ -436,7 +432,8 @@ def repair(plan: np.ndarray, ctx: GAContext, order_levels: bool = True) -> np.nd
 
     No zone gets more than it needs or less than zero, column totals never
     exceed the available stock, stock left over while demand remains is
-    handed out, and no priority level is covered worse than a less urgent one.
+    handed out, and for every resource type no priority level is covered worse than a less
+    urgent one while it still has unmet need (:func:`enforce_level_order`).
     """
     x = np.clip(np.asarray(plan, dtype=np.int64), 0, ctx.demand)
     over = np.flatnonzero(x.sum(axis=0) > ctx.target)
@@ -594,7 +591,10 @@ def run_ga(ctx: GAContext, generations: int, seed: int, carry: Sequence[np.ndarr
         population = elites + offspring
         hall_of_fame.update(population)
         logbook.record(gen=generation, **stats.compile(population))
-    return hall_of_fame[0], logbook, population
+    winner = _clone(hall_of_fame[0])
+    winner[...] = repair(np.asarray(winner), ctx)  # mutation does not repair, so the winner is ordered here
+    winner.fitness.values = (float(fitness_batch(np.asarray(winner), ctx)[0]),)
+    return winner, logbook, population
 
 
 def unmet_by_cluster(plan: np.ndarray, ctx: GAContext) -> dict[int, float]:
@@ -630,6 +630,8 @@ def plan_metrics(plan: np.ndarray, ctx: GAContext, minutes: np.ndarray, computat
     * gini - Gini coefficient of zone coverage (0 = every zone equally covered)
     * gini_within_level - the same, computed inside each priority level and averaged
     * coverage_by_level - mean zone coverage % per priority level present
+    * coverage_by_level_and_type - share of each level's demand met, per resource type
+    * utilisation - allocated / available / demanded units per resource type
     * computation_ms - wall-clock time to produce the plan
     """
     need = ctx.demand.sum(axis=0)
@@ -655,6 +657,13 @@ def plan_metrics(plan: np.ndarray, ctx: GAContext, minutes: np.ndarray, computat
         metrics["gini"] = round(float(gini(cov)), 3)
         metrics["gini_within_level"] = round(float(within_level_gini(cov, ctx)), 3)
         metrics["coverage_by_level"] = {LEVEL_ORDER[v]: round(float(m) * 100, 1) for v, m in zip(ctx.level_ids, level_coverage(cov, ctx))}
+        by_type = level_type_coverage(plan, ctx)
+        metrics["coverage_by_level_and_type"] = {
+            LEVEL_ORDER[v]: {r: (round(float(by_type[i, j]) * 100, 1) if ctx.level_demand[i, j] > 0 else None) for j, r in enumerate(RESOURCE_TYPES)}
+            for i, v in enumerate(ctx.level_ids)
+        }
+        metrics["utilisation"] = {r: {"allocated": int(a), "available": int(s), "demand": int(d)}
+                                  for r, a, s, d in zip(RESOURCE_TYPES, plan.sum(axis=0), ctx.stock, need)}
     return metrics
 
 

@@ -547,42 +547,68 @@ Both methods are measured with the same metrics:
 | `unmet_demand` / `unmet_demand_pct` | units still needed per resource, and the unmet share of the need averaged over resource types |
 | `gini` | Gini coefficient of coverage across zones in need (0 = every zone equally covered) |
 | `gini_within_level` | the same Gini, computed inside each priority level and averaged (the fairness term the engine optimises) |
-| `coverage_by_level` | mean zone coverage % per priority level; always Critical ≥ High ≥ Medium ≥ Low |
+| `coverage_by_level` | mean zone coverage % per priority level |
+| `coverage_by_level_and_type` | share of each level's demand met per resource type; Critical ≥ High ≥ Medium ≥ Low for every type |
+| `utilisation` | allocated / available / demanded units per resource type (allocated = min(available, demanded)) |
 | `computation_ms` | wall-clock time to produce the plan |
 | `zones_served` / `zones_in_need` | zones in need that receive at least some relief |
 
 Results for the demo scenarios (default weights):
 
-| Scenario | Method | Avg response | Weighted coverage | Demand met | Unmet demand | Gini | Zones reached | Time |
-|---|---|---|---|---|---|---|---|---|
-| `flood-aluva` | Allocation Engine | 13.2 min | 58.7 % | 61.8 % | 39.8 % | 0.084 | 218 / 218 | 5–7 s |
-| | Greedy | 15.6 min | 56.7 % | 63.6 % | 39.8 % | 0.113 | 218 / 218 | 3 ms |
-| `flood-bengaluru` | Allocation Engine | 17.0 min | 54.7 % | 56.8 % | 43.8 % | 0.097 | 304 / 304 | 6–9 s |
-| | Greedy | 20.6 min | 47.3 % | 59.1 % | 43.8 % | 0.108 | 304 / 304 | 3 ms |
-| `cyclone-visakhapatnam` | Allocation Engine | 8.7 min | 58.3 % | 62.4 % | 39.5 % | 0.084 | 229 / 229 | 6–8 s |
-| | Greedy | 12.1 min | 52.2 % | 64.3 % | 39.5 % | 0.110 | 229 / 229 | 3 ms |
-| `earthquake-coimbatore` | Allocation Engine | 9.2 min | 75.6 % | 72.9 % | 28.4 % | 0.042 | 285 / 285 | 5–7 s |
-| | Greedy | 9.9 min | 75.7 % | 73.4 % | 28.4 % | 0.058 | 285 / 285 | 3 ms |
+| Scenario | Method | Avg response | Weighted coverage | Demand met | Unmet demand | Gini (all zones) | Gini within level | Zones reached | Time |
+|---|---|---|---|---|---|---|---|---|---|
+| `flood-aluva` | Allocation Engine | 16.7 min | 57.3 % | 63.1 % | 39.8 % | 0.082 | 0.018 | 218 / 218 | 5–6 s |
+| | Greedy | 18.4 min | 56.7 % | 63.6 % | 39.8 % | 0.113 | 0.052 | 218 / 218 | 2 ms |
+| `flood-bengaluru` | Allocation Engine | 17.3 min | 47.8 % | 58.3 % | 43.8 % | 0.112 | 0.036 | 304 / 304 | 5–7 s |
+| | Greedy | 19.2 min | 47.3 % | 59.1 % | 43.8 % | 0.108 | 0.063 | 304 / 304 | 3 ms |
+| `cyclone-visakhapatnam` | Allocation Engine | 10.0 min | 52.5 % | 63.9 % | 39.5 % | 0.114 | 0.035 | 229 / 229 | 5–7 s |
+| | Greedy | 12.6 min | 52.2 % | 64.3 % | 39.5 % | 0.110 | 0.040 | 229 / 229 | 2 ms |
+| `earthquake-coimbatore` | Allocation Engine | 9.1 min | 75.5 % | 73.0 % | 28.4 % | 0.044 | 0.026 | 285 / 285 | 2–3 s |
+| | Greedy | 9.9 min | 75.7 % | 73.4 % | 28.4 % | 0.058 | 0.031 | 285 / 285 | 3 ms |
 
-Coverage by priority level (Allocation Engine, mean zone coverage %):
+Utilisation (units allocated / available): every scarce type is handed out completely in every
+scenario - rescue teams 26/26, 36/36, 27/27, 34/34; vehicles 44/44, 61/61, 46/46, 57/57; shelters
+509/509, 1993/1993, 1178/1178 and 895/1007 (Coimbatore needs only 895). Medical kits and food
+packets exceed the need everywhere, so their leftovers are the only "unallocated" units.
 
-| Scenario | Critical | High | Medium | Low |
-|---|---|---|---|---|
-| `flood-aluva` | 66.4 | 62.3 | 50.1 | 50.0 |
-| `flood-bengaluru` | 58.0 | 55.3 | 50.5 | 50.0 |
-| `cyclone-visakhapatnam` | 70.9 | 60.5 | 50.4 | 50.0 |
-| `earthquake-coimbatore` | 90.0 | 75.2 | 75.0 | 75.0 |
+Coverage by priority level and resource type (Allocation Engine; share of the level's demand met,
+% - "–" = the level needs none of that type):
+
+| Scenario | Level | Rescue teams | Medical kits | Food packets | Shelters | Vehicles | **Average** |
+|---|---|---|---|---|---|---|---|
+| `flood-aluva` | Critical | 59.1 | 100 | 100 | 100 | 66.7 | **85.1** |
+| | High | 0 | 100 | 100 | 70.1 | 0 | **54.4** |
+| | Medium | 0 | 100 | 100 | 0 | 0 | **49.6** |
+| | Low | – | 100 | 100 | 0 | 0 | **50.0** |
+| `flood-bengaluru` | Critical | 46.2 | 100 | 100 | 80.1 | 48.4 | **73.1** |
+| | High | 0 | 100 | 100 | 0 | 0 | **40.1** |
+| | Medium | 0 | 100 | 100 | 0 | 0 | **41.7** |
+| | Low | – | 100 | 100 | 0 | 0 | **50.0** |
+| `cyclone-visakhapatnam` | Critical | 61.4 | 100 | 100 | 100 | 65.7 | **85.0** |
+| | High | 0 | 100 | 100 | 0.2 | 0 | **41.6** |
+| | Medium | 0 | 100 | 100 | 0 | 0 | **49.5** |
+| | Low | – | 100 | 100 | 0 | 0 | **50.0** |
+| `earthquake-coimbatore` | Critical | 100 | 100 | 100 | 100 | 100 | **100** |
+| | High | 40.5 | 100 | 100 | 100 | 31.8 | **74.8** |
+| | Medium | 0 | 100 | 100 | 100 | 0 | **74.8** |
+| | Low | – | 100 | 100 | 100 | 0 | **75.0** |
 
 How to read it: the stock is deliberately smaller than the need, so both methods hand out everything
-and leave the same total unmet. Medical kits and food packets exceed the demand in every scenario,
-so every zone gets those in full; rescue teams, shelters and vehicles are scarce. The Allocation
-Engine guarantees **Critical ≥ High ≥ Medium ≥ Low** mean coverage (an ordering penalty in the
-fitness plus a repair step that moves units up a level until the order holds) and spreads the
-scarce units evenly *within* each level (the Gini term is computed per level), which is why Medium
-and Low sit at the "plentiful resources only" floor while the scarce stock goes to the urgent zones.
-Against the greedy baseline it gives higher weighted coverage, a more even spread (lower Gini) and
-shorter response times. Times are from a laptop with the road graph already in memory; the first
-request after start-up also parses the cached road graph (a few seconds, done in the background).
+and leave the same total unmet. Two resource types (medical kits, food packets) exceed the demand,
+so every zone gets them in full; rescue teams, shelters and vehicles are scarce. The Allocation
+Engine's ordering rule works **per resource type**: a level holds units of a type only once every
+more urgent level's need for that type is met (an ordering penalty in the fitness, and a repair
+step that pulls units up a level while the level above still has unmet need - never further, so
+nothing is left idle and a fully supplied level never takes from the one below). Hence
+Critical ≥ High ≥ Medium ≥ Low for every type, and the **average** column shows the familiar
+pattern: lower levels sit at the "plentiful types only" floor (two of four or five needed types
+met = 40–50 %), and a Low level whose zones need fewer types can even average higher than Medium
+without holding a single scarce unit. Within each level the scarce units are spread evenly (the
+Gini term is computed per level). Against the greedy baseline the engine gives equal or higher
+weighted coverage, a more even spread within levels and shorter response times; its Gini
+across *all* zones is similar to greedy's because concentrating scarce stock on the urgent levels
+is now intended. Times are from a laptop with the road graph in memory; the first request after
+start-up also parses the cached road graph (a few seconds, done in the background).
 
 ## Priority model
 

@@ -35,6 +35,9 @@ def totals(zones, method):
     return {r: sum(z[method]["allocated"][r] for z in zones) for r in RESOURCE_TYPES}
 
 
+totals_of = totals
+
+
 # --------------------------------------------------------------------------- demand
 def test_demand_is_zero_without_damage():
     assert set(zone_demand(0, 50_000).values()) == {0}
@@ -243,17 +246,34 @@ def test_metrics_for_both_methods():
 
 @pytest.mark.parametrize("scenario_id", DEMO_IDS)
 def test_engine_coverage_follows_priority_levels(demo_results, scenario_id):
-    """Critical >= High >= Medium >= Low mean coverage, on every demo scenario."""
+    """Per resource type: a level holds units only once every more urgent level's need for that type is met.
+
+    Hence Critical >= High >= Medium >= Low coverage for every type, checked wherever the higher
+    level still has unmet need (a fully supplied level cannot use more, so the comparison is moot).
+    """
     result, _ = demo_results[scenario_id]
-    means = []
-    for level in ("Critical", "High", "Medium", "Low"):
-        values = [z["engine"]["coverage_pct"] for z in result["zones"]
-                  if z["priority_level"] == level and z["engine"]["coverage_pct"] is not None]
-        if values:
-            means.append(round(sum(values) / len(values), 6))
-    assert len(means) >= 2 and means == sorted(means, reverse=True)
-    by_level = result["engine"]["metrics"]["coverage_by_level"]
-    assert list(by_level.values()) == sorted(by_level.values(), reverse=True)
+    by_level = result["engine"]["metrics"]["coverage_by_level_and_type"]
+    levels = [lv for lv in ("Critical", "High", "Medium", "Low") if lv in by_level]
+    checked = 0
+    for r in RESOURCE_TYPES:
+        for hi, lo in zip(levels, levels[1:]):
+            c_hi, c_lo = by_level[hi][r], by_level[lo][r]
+            if c_hi is None or c_lo is None or c_hi >= 100.0:
+                continue
+            checked += 1
+            assert c_hi >= c_lo, (scenario_id, r, hi, c_hi, lo, c_lo)
+            assert c_lo == 0.0, (scenario_id, r, hi, c_hi, lo, c_lo)  # strict: nothing stays below while above still needs it
+    assert checked > 0
+
+
+@pytest.mark.parametrize("scenario_id", DEMO_IDS)
+def test_no_resource_is_idle_while_demand_remains(demo_results, scenario_id):
+    """Work-conserving: every unit of a type is handed out while any zone still needs that type."""
+    result, _ = demo_results[scenario_id]
+    for r, u in result["engine"]["metrics"]["utilisation"].items():
+        assert u["allocated"] == min(u["available"], u["demand"]), (scenario_id, r, u)
+    totals = totals_of(result["zones"], "engine")
+    assert totals == {r: result["engine"]["metrics"]["utilisation"][r]["allocated"] for r in RESOURCE_TYPES}
 
 
 # --------------------------------------------------------------------------- priority-level ordering
@@ -267,13 +287,25 @@ def level_context(levels, demand=None, stock=(4, 0, 0, 0, 0)):
                                labels=np.zeros(n, int), levels=levels)
 
 
-def test_level_order_violation_measures_positive_gaps_only():
+def test_level_order_violation_counts_units_held_below_an_unmet_level():
     ctx = level_context([0, 0, 1, 1])
     ordered = np.array([[2, 0, 0, 0, 0], [2, 0, 0, 0, 0], [0] * 5, [0] * 5])
     inverted = np.array([[0] * 5, [0] * 5, [2, 0, 0, 0, 0], [2, 0, 0, 0, 0]])
-    assert engine.level_order_violation(engine.zone_coverage(ordered, ctx), ctx) == 0
-    assert engine.level_order_violation(engine.zone_coverage(inverted, ctx), ctx) == pytest.approx(1.0)
-    assert engine.fitness_batch(ordered, ctx)[0] > engine.fitness_batch(inverted, ctx)[0]
+    half = np.array([[2, 0, 0, 0, 0], [0] * 5, [2, 0, 0, 0, 0], [0] * 5])
+    assert engine.level_order_violation(ordered, ctx) == 0
+    assert engine.level_order_violation(inverted, ctx) == pytest.approx(1.0)  # all 4 units misplaced
+    assert engine.level_order_violation(half, ctx) == pytest.approx(0.5)
+    assert engine.fitness_batch(ordered, ctx)[0] > engine.fitness_batch(half, ctx)[0] > engine.fitness_batch(inverted, ctx)[0]
+
+
+def test_a_fully_supplied_level_does_not_pull_from_below():
+    demand = np.zeros((4, 5), dtype=int)
+    demand[:, 0] = [1, 1, 3, 3]  # Critical needs 2 teams in total, Medium needs 6
+    ctx = level_context([0, 0, 2, 2], demand=demand, stock=(5, 0, 0, 0, 0))
+    plan = np.array([[1, 0, 0, 0, 0], [1, 0, 0, 0, 0], [2, 0, 0, 0, 0], [1, 0, 0, 0, 0]])
+    fixed = engine.repair(plan, ctx)
+    assert fixed[:2, 0].tolist() == [1, 1] and fixed[2:, 0].sum() == 3  # Critical met; Medium keeps its 3 (none idle)
+    assert engine.level_order_violation(fixed, ctx) == 0
 
 
 def test_repair_moves_units_up_until_levels_are_ordered():
@@ -307,7 +339,9 @@ def test_engine_reaches_every_zone_in_need_and_is_fairer_than_greedy(demo_result
     result, _ = demo_results[scenario_id]
     engine_m, greedy_m = result["engine"]["metrics"], result["greedy"]["metrics"]
     assert engine_m["zones_served"] == engine_m["zones_in_need"]
-    assert engine_m["gini"] < greedy_m["gini"]
+    # Fairness is optimised inside each priority level (scarce stock deliberately goes to the
+    # urgent levels first, so the Gini across *all* zones is not the engine's target).
+    assert engine_m["gini_within_level"] < greedy_m["gini_within_level"]
     assert engine_m["unmet_demand"] == greedy_m["unmet_demand"]  # same stock, all of it handed out
 
 
