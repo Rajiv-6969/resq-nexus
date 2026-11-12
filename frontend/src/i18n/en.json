@@ -1,0 +1,55 @@
+{
+  "nav": {
+    "sos": "SOS",
+    "requests": "Requests",
+    "resources": "Resources",
+    "command": "Command Centre",
+    "damage": "Damage",
+    "analytics": "Analytics",
+    "about": "About",
+    "login": "Log in",
+    "logout": "Log out"
+  },
+  "damage": {
+    "title": "Damage Assessment",
+    "subtitle": "Satellite building damage footprints & H3 zone damage aggregation",
+    "stage": "Stage 01 of 04",
+    "assess": "Assess",
+    "model_active": "ONNX Model Active",
+    "model_active_desc": "ResNet34 FPN object-level majority voting is running inference on satellite imagery.",
+    "model_fallback": "Model Weights Pending",
+    "model_fallback_desc": "Using ground-truth / simulated satellite labels.",
+    "select_scenario": "Select Scenario",
+    "select_sample": "Select Sample Tile",
+    "run_inference": "Run AI Assessment",
+    "send_to_allocation": "Send to Allocation Engine",
+    "classes": {
+      "none": "No Damage",
+      "minor": "Minor Damage",
+      "major": "Major Damage",
+      "destroyed": "Destroyed"
+    },
+    "metrics": {
+      "buildings": "Buildings Assessed",
+      "damaged_pct": "Damaged Share",
+      "severity": "Mean Severity",
+      "confidence": "Mean Confidence"
+    }
+  },
+  "admin": {
+    "new_incident": "New Satellite Incident",
+    "search_satellite": "Search Satellite Imagery",
+    "vantor_events": "Latest Vantor Disaster Events",
+    "upload_geotiff": "Upload GeoTIFF / Images",
+    "pre_image": "Pre-Disaster Image",
+    "post_image": "Post-Disaster Image",
+    "bounds": "Geographic Bounding Box",
+    "cloud_cover": "Cloud Cover",
+    "capture_date": "Capture Date"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "prototype_notice": "PROTOTYPE — not connected to emergency services. In a real emergency, call 112."
+  }
+}

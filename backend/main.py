@@ -25,7 +25,7 @@ load_dotenv(Path(__file__).resolve().parent / ".env")
 from db.database import get_db, init_db  # noqa: E402
 from db.models import SosRequest  # noqa: E402
 from deps import require_admin  # noqa: E402
-from routers import admin, auth, provider, resources, sos  # noqa: E402
+from routers import admin, auth, damage, provider, resources, scenarios_damage, sos  # noqa: E402
 from services import allocation_engine, explain, gemini_client, priority, scenarios, sos_demand  # noqa: E402
 from services.sos import ACTIVE_STATUSES  # noqa: E402
 from services.scenarios import Scenario, ScenarioNotFoundError, ScenarioSummary, Zone  # noqa: E402
@@ -57,6 +57,9 @@ app.include_router(sos.router)
 app.include_router(resources.router)
 app.include_router(provider.router)
 app.include_router(admin.router)
+app.include_router(damage.router)
+app.include_router(damage.admin_incident_router)
+app.include_router(scenarios_damage.router)
 
 
 def _scenario_or_404(scenario_id: str) -> Scenario:

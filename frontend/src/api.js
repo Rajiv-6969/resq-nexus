@@ -120,6 +120,16 @@ export const postAllocate = (id, weights, includeSos, options) =>
 export const postExplain = (id, weights, includeSos, options) =>
   send("POST", `${scenarioPath(id)}/explain`, runBody(weights, includeSos), options);
 
+// ------------------------------------------------------------------ damage assessment & imagery
+export const fetchDamageStatus = (options) => get("/damage/status", options);
+export const fetchDamageSamples = (options) => get("/damage/samples", options);
+export const fetchDamageMetrics = (options) => get("/damage/metrics", options);
+export const postAssessDamage = (body, options) => send("POST", "/damage/assess", body, options);
+export const postAllocateDamage = (body, options) => send("POST", "/damage/allocate", body, options);
+export const fetchScenarioBuildings = (id, options) => get(`/scenarios/${encodeURIComponent(id)}/buildings`, options);
+export const fetchVantorEvents = (limit = 10, options) => get(`/damage/vantor/events?limit=${limit}`, options);
+export const postSearchVantor = (body, options) => send("POST", "/damage/vantor/search", body, options);
+
 // ------------------------------------------------------------------ accounts
 export const postLogin = (email, password) => send("POST", "/auth/login", { email, password }, { auth: false });
 export const postRegister = (body) => send("POST", "/auth/register", body, { auth: false });

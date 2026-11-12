@@ -22,6 +22,7 @@ import "./styles/forms.css";
 import "./styles/accounts.css";
 import "./styles/app.css";
 import "./styles/dashboards.css";
+import "./i18n";
 import App from "./App.jsx";
 
 createRoot(document.getElementById("root")).render(

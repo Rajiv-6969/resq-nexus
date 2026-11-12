@@ -1,0 +1,55 @@
+{
+  "nav": {
+    "sos": "एसओएस (SOS)",
+    "requests": "अनुरोध",
+    "resources": "संसाधन",
+    "command": "कमांड सेंटर",
+    "damage": "क्षति आकलन",
+    "analytics": "एनालिटिक्स",
+    "about": "परिचय",
+    "login": "लॉग इन",
+    "logout": "लॉग आउट"
+  },
+  "damage": {
+    "title": "क्षति आकलन (Damage Assessment)",
+    "subtitle": "उपग्रह भवन क्षति पदचिह्न और H3 क्षेत्र एकत्रीकरण",
+    "stage": "चरण 01 / 04",
+    "assess": "आकलन",
+    "model_active": "ONNX मॉडल सक्रिय",
+    "model_active_desc": "ResNet34 FPN ऑब्जेक्ट-स्तरीय मॉडल उपग्रह चित्रों का विश्लेषण कर रहा है।",
+    "model_fallback": "मॉडल लोड हो रहा है",
+    "model_fallback_desc": "सत्यापित लेबल / सिमुलेटेड उपग्रह डेटा का उपयोग किया जा रहा है।",
+    "select_scenario": "परिदृश्य चुनें",
+    "select_sample": "सैंपल टाइल चुनें",
+    "run_inference": "AI आकलन चलाएं",
+    "send_to_allocation": "आवंटन इंजन को भेजें",
+    "classes": {
+      "none": "कोई क्षति नहीं",
+      "minor": "मामूली क्षति",
+      "major": "गंभीर क्षति",
+      "destroyed": "पूर्णतः नष्ट"
+    },
+    "metrics": {
+      "buildings": "आकलित भवन",
+      "damaged_pct": "क्षतिग्रस्त प्रतिशत",
+      "severity": "औसत गंभीरता",
+      "confidence": "मॉडल सटीकता / विश्वास"
+    }
+  },
+  "admin": {
+    "new_incident": "नई उपग्रह घटना",
+    "search_satellite": "उपग्रह चित्र खोजें",
+    "vantor_events": "नवीनतम वान्टर आपदा घटनाएं",
+    "upload_geotiff": "GeoTIFF / चित्र अपलोड करें",
+    "pre_image": "आपदा-पूर्व चित्र",
+    "post_image": "आपदा-पश्चात चित्र",
+    "bounds": "भौगोलिक सीमा (Bounds)",
+    "cloud_cover": "बादल आवरण",
+    "capture_date": "प्राप्ति तिथि"
+  },
+  "common": {
+    "loading": "लोड हो रहा है...",
+    "error": "त्रुटि हुई",
+    "prototype_notice": "प्रोटोटाइप — आपातकालीन सेवाओं से जुड़ा नहीं है। वास्तविक आपातकाल में 112 पर कॉल करें।"
+  }
+}

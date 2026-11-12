@@ -24,6 +24,8 @@ export const NAV_LINKS = {
   ADMIN: [
     { to: "/admin", label: "SOS Monitor", end: true },
     { to: "/command", label: "Command Centre" },
+    { to: "/damage", label: "Damage" },
+    { to: "/admin/incidents/new", label: "New Incident" },
     { to: "/admin/providers", label: "Providers" },
     { to: "/admin/resources", label: "Resources" },
     { to: "/admin/users", label: "Users" },

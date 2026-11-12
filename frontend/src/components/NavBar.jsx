@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Link, NavLink } from "react-router";
 import { SCENARIO_PAGES } from "../constants";
 import { NAV_LINKS, ROLE_LABELS } from "../lib/roles";
@@ -6,6 +7,7 @@ import { AsteriskMark } from "./icons";
 
 // Thin bordered bar: wordmark on the left, the role's links and the logged-in user on the right.
 export default function NavBar() {
+  const { i18n } = useTranslation();
   const { user } = useAuth();
   const { scenarioId } = useAppData();
   const query = scenarioId ? `?scenario=${encodeURIComponent(scenarioId)}` : "";
@@ -25,6 +27,26 @@ export default function NavBar() {
           </NavLink>
         ))}
       </nav>
+
+      <div className="nav-lang mono" aria-label="Language selector">
+        <button
+          type="button"
+          className={`nav-lang-btn ${i18n.language === "en" ? "active" : ""}`}
+          onClick={() => i18n.changeLanguage("en")}
+          aria-label="English"
+        >
+          EN
+        </button>
+        <span className="nav-lang-sep">/</span>
+        <button
+          type="button"
+          className={`nav-lang-btn ${i18n.language === "hi" ? "active" : ""}`}
+          onClick={() => i18n.changeLanguage("hi")}
+          aria-label="Hindi"
+        >
+          HI
+        </button>
+      </div>
 
       {user && (
         <div className="nav-user">

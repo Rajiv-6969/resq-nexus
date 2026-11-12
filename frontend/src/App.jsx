@@ -30,6 +30,7 @@ const loaders = {
   ProviderResources: () => import("./pages/provider/ProviderResources"),
   SosMonitor: () => import("./pages/admin/SosMonitor"),
   AdminTables: () => import("./pages/admin/AdminTables"),
+  NewIncident: () => import("./pages/admin/NewIncident"),
 };
 const CommandCentre = lazy(loaders.CommandCentre);
 const Analytics = SHOW_ANALYTICS ? lazy(loaders.Analytics) : null;
@@ -46,6 +47,7 @@ const ProviderDashboard = lazy(loaders.ProviderDashboard);
 const ProviderRequests = lazy(loaders.ProviderRequests);
 const ProviderResources = lazy(loaders.ProviderResources);
 const SosMonitor = lazy(loaders.SosMonitor);
+const NewIncident = lazy(loaders.NewIncident);
 const AdminProviders = lazy(() => loaders.AdminTables().then((m) => ({ default: m.AdminProviders })));
 const AdminResources = lazy(() => loaders.AdminTables().then((m) => ({ default: m.AdminResources })));
 const AdminUsers = lazy(() => loaders.AdminTables().then((m) => ({ default: m.AdminUsers })));
@@ -98,6 +100,7 @@ export default function App() {
                     <Route path="/provider/resources" element={guarded(PROVIDER, <ProviderResources />)} />
 
                     <Route path="/admin" element={guarded(ADMIN, <SosMonitor />)} />
+                    <Route path="/admin/incidents/new" element={guarded(ADMIN, <NewIncident />)} />
                     <Route path="/admin/providers" element={guarded(ADMIN, <AdminProviders />)} />
                     <Route path="/admin/resources" element={guarded(ADMIN, <AdminResources />)} />
                     <Route path="/admin/users" element={guarded(ADMIN, <AdminUsers />)} />

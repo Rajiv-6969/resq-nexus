@@ -91,14 +91,14 @@ reworded.
 
 ## Base paper and datasets
 
-- **Base paper:** *DisasterReliefGPT* — Technologies **2026**, 14, 179.
-- **Datasets:**
-  - **xBD** — CC BY-NC-SA 4.0; cite Gupta et al. 2019 (*xBD: A Dataset for Assessing Building
-    Damage from Satellite Imagery*). Non-commercial use only.
-  - **Sen1Floods11** — flood extent (Sentinel-1).
-  - **OpenStreetMap** — places, boundaries, map tiles (© OpenStreetMap contributors, ODbL).
-  - **WorldPop** — population.
-- All four, plus the base paper, are **credited on the About page**, with licences.
+- **Base paper:** *DisasterReliefGPT* (`Technologies 2026, 14, 179` — Reghunath et al., 2026; ResNet34 partial weight-sharing encoder + FPN + MultiCrossEntropyDiceLoss + object-level connected-component majority voting).
+- **Datasets & APIs:**
+  - **xBD** — `CC BY-NC-SA 4.0`; cite Gupta et al. 2019 (*xBD: A Dataset for Assessing Building Damage from Satellite Imagery*). Non-commercial use only.
+  - **Vantor Open Data** (formerly Maxar Open Data) — `CC BY-NC 4.0`; high-resolution pre- and post-event optical imagery via public STAC catalog (`https://vantor-opendata.s3.amazonaws.com/events/catalog.json`).
+  - **Sen1Floods11 & Copernicus Sentinel-1 RTC** — synthetic aperture radar flood extent via Microsoft Planetary Computer STAC.
+  - **OpenStreetMap** — places, boundaries, road networks, facilities (© OpenStreetMap contributors, `ODbL`).
+  - **WorldPop** — gridded population estimates.
+- All credits and licences must appear on the About page and README.
 
 ## Damage assessment pipeline
 
