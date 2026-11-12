@@ -29,11 +29,11 @@ jobs:
       - name: Alembic migration compiles (offline SQL for PostgreSQL)
         run: DATABASE_URL=postgresql+psycopg://u:p@localhost/x python -m alembic upgrade head --sql > /dev/null
       - name: Simulated assessments
-        run: python ../ml/simulate_assessments.py flood-assam > /dev/null
-      - name: Generator smoke test (custom centre, printed to stdout)
-        run: >-
-          python generate_scenario.py --type flood --center 26.15,85.90
-          --region-name "Darbhanga, Bihar" --state Bihar --seed 1 --stdout > /dev/null
+        run: python ../ml/simulate_assessments.py flood-aluva > /dev/null
+      - name: Scenario builder lists presets (no network)
+        run: python scripts/build_scenario.py --list
+      - name: Allocation Engine on every scenario with the network blocked
+        run: python scripts/check_offline.py
 
   frontend:
     name: Frontend (lint + build)

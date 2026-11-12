@@ -15,6 +15,7 @@ from __future__ import annotations
 import gzip
 import json
 import math
+import sys
 import time
 from collections.abc import Callable, Iterable, Sequence
 from pathlib import Path
@@ -91,6 +92,9 @@ def download_graph(bbox: BBox, network_type: str = "drive", retain_all: bool = F
 
     ox.settings.use_cache = False  # our GraphML cache is the only one we keep
     ox.settings.requests_timeout = 300
+    ox.settings.overpass_rate_limit = False  # the /api/status pause can sleep for hours on a busy mirror; we retry instead
+    ox.settings.log_console = True
+    ox.settings.max_query_area_size = 25_000_000  # m2: split dense city boxes into ~25 km2 requests the public servers can serve
     last: Exception | None = None
     for attempt in range(5):
         if attempt:
@@ -103,6 +107,7 @@ def download_graph(bbox: BBox, network_type: str = "drive", retain_all: bool = F
                 break
             except Exception as exc:  # noqa: BLE001 - timeouts, 429/504 from a busy mirror
                 last = exc
+                print(f"  download attempt {attempt + 1} via {mirror} failed: {type(exc).__name__}: {str(exc)[:160]}", file=sys.stderr)
         else:
             continue
         break

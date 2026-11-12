@@ -75,6 +75,7 @@ const ALGORITHMS = [
 const STACK = [
   { group: "Frontend", items: ["React 19", "Vite", "React Router", "React-Leaflet + OpenStreetMap", "Framer Motion"] },
   { group: "Backend", items: ["Python 3.13", "FastAPI", "Pydantic", "NumPy", "scikit-learn", "NetworkX", "DEAP"] },
+  { group: "Geography", items: ["OSMnx road graphs (NetworkX GraphML)", "SciPy Dijkstra", "H3 hexagons", "OpenStreetMap", "WorldPop"] },
   { group: "AI", items: ["Google Gemini API (google-genai)", "Template fallback"] },
   { group: "Quality", items: ["pytest", "oxlint", "GitHub Actions CI"] },
 ];
@@ -160,8 +161,8 @@ export default function About() {
           <p className="about-card-lead">Real geography, simulated damage.</p>
           <p>
             Roads, facilities and population are real: the road network, hospitals, clinics, fire and police stations and shelters come from
-            OpenStreetMap, and zone population from WorldPop (or OSM building counts where the raster is absent). Damage values in the three
-            Indian scenarios (Aluva flood, Joshimath earthquake, Puri cyclone) are simulated by <code>backend/scripts/build_scenario.py</code>
+            OpenStreetMap, and zone population from WorldPop (or OSM building counts where the raster is absent). Damage values in the four
+            South Indian scenarios (Aluva flood, Bengaluru flood, Coimbatore earthquake, Visakhapatnam cyclone) are simulated by <code>backend/scripts/build_scenario.py</code>
             and every zone is marked <code>source: simulated</code>; relief stock, accounts and SOS requests are also synthetic.
           </p>
         </Reveal>

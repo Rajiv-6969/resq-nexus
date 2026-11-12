@@ -67,7 +67,7 @@ It follows a four-stage pipeline: **Assess → Prioritise → Allocate → Expla
 - **Analytics** (hidden for now, see [Feature flags](#feature-flags)): Allocation Engine vs greedy
   cards and charts for every metric, the GA fitness-over-generations chart, resource distribution
   per zone and per depot, a coverage fairness (Lorenz) curve and coverage by zone.
-- **Three demo scenarios in real Indian regions** and a **scenario generator** for new ones.
+- **Four demo scenarios in real South Indian regions** and a **scenario generator** for new ones.
 - Built for presenting in a desktop browser: laptops and 1280×720 projectors up to full HD,
   respects "reduce motion", and the production build splits each page into its own chunk.
 
@@ -125,6 +125,8 @@ They are used inside the **Allocation Engine** (`backend/services/allocation_eng
 |---|---|
 | Frontend | React 19, Vite 8, React Router 8, Framer Motion, React-Leaflet 5 / Leaflet 1.9 with OpenStreetMap tiles, Recharts (Analytics page), self-hosted Google Fonts (Inter Tight, Inter, IBM Plex Mono), oxlint |
 | Backend | Python 3.12+ (tested on 3.13), FastAPI, Pydantic 2, SQLAlchemy 2 + GeoAlchemy2, Alembic, NumPy, scikit-learn, NetworkX, DEAP, Uvicorn, pytest |
+| Geography | Road graphs are built with OSMnx and stored as NetworkX GraphML; shortest paths use SciPy's Dijkstra (`scipy.sparse.csgraph`); H3 hexagon zones; WorldPop raster via rasterio (build time only) |
+| Geography | Road graphs are built with OSMnx and stored as NetworkX GraphML; shortest paths use SciPy's Dijkstra (`scipy.sparse.csgraph`); H3 hexagon zones; Overpass API for facilities; WorldPop raster via rasterio |
 | Database | PostgreSQL 16 + PostGIS 3.4 (docker-compose); locations are PostGIS `POINT` geometry. SQLite fallback for tests and quick local runs |
 | Infra | docker-compose: `db` (postgis), `backend` (FastAPI), `frontend` (nginx serving the Vite build, `/api` proxied to the backend) |
 | AI | Google Gemini API (`google-genai`) for the Explain stage, with a template fallback |
@@ -158,7 +160,7 @@ resq-nexus/
 │   ├── demo_seed.json             SYNTHETIC accounts, resources and SOS requests
 │   ├── geo/                       cached OpenStreetMap data per scenario box (roads, facilities, places, hazard lines);
 │   │                              geo/worldpop/ holds the WorldPop raster (not committed)
-│   └── scenarios/                 flood-aluva.json, earthquake-joshimath.json, cyclone-puri.json
+│   └── scenarios/                 flood-aluva.json, flood-bengaluru.json, cyclone-visakhapatnam.json, earthquake-coimbatore.json
 ├── docs/                          PROJECT_CONTEXT.md (standing rules) and screenshots
 ├── docker-compose.yml             PostgreSQL + PostGIS, backend, frontend
 ├── .env.example                   compose settings (JWT_SECRET, GEMINI_API_KEY, ports)
@@ -287,7 +289,7 @@ The same checks run on GitHub Actions for every push (`.github/workflows/ci.yml`
 
 Command Centre walkthrough:
 
-1. **Landing page:** introduce the project and the three scenarios, then press **Launch Command
+1. **Landing page:** introduce the project and the four scenarios, then press **Launch Command
    Centre** (log in as the admin).
 2. **Command Centre:** pick **Earthquake**. Zones are coloured by priority; Bhachau and Dudhai are
    marked Critical. Press **Run allocation** and watch Assess → Prioritise → Allocate → Explain
@@ -547,7 +549,7 @@ Both methods are measured with the same metrics:
 | `computation_ms` | wall-clock time to produce the plan |
 | `zones_served` / `zones_in_need` | zones in need that receive at least some relief |
 
-Results for the three demo scenarios (default weights):
+Results for the demo scenarios (default weights):
 
 | Scenario | Method | Avg response | Weighted coverage | Demand met | Unmet demand | Gini | Zones reached | Time |
 |---|---|---|---|---|---|---|---|---|
@@ -563,7 +565,7 @@ and leave the same total unmet. The greedy baseline fully supplies the top few z
 rest with nothing. That gives it slightly more raw demand met, but much lower weighted coverage, a
 far less even spread (higher Gini) and fewer zones reached. The Allocation Engine reaches every zone
 in need and gives the most urgent ones the highest coverage. Its response time is lower in two of
-the three scenarios; in the wildfire scenario greedy is about a minute faster.
+the scenarios.
 
 ## Priority model
 
@@ -664,8 +666,9 @@ vehicles (trucks, boats, ambulances); see [Relief demand](#relief-demand) for ho
 | id | Disaster | Region | Real geography | Simulated hazard |
 |---|---|---|---|---|
 | `flood-aluva` | Monsoon flood on the Periyar (pattern of August 2018) | Aluva and Ernakulam, Kerala | OSM roads and facilities, WorldPop population, OSM river line | severity decays 2.2 km from the river |
-| `earthquake-joshimath` | M6.8 earthquake near Joshimath (1999 Chamoli region) | Joshimath, Chamoli, Uttarakhand | OSM roads and facilities, WorldPop population | severity decays 9 km from the epicentre |
-| `cyclone-puri` | Very severe cyclonic storm at Puri (pattern of Fani, 2019) | Puri town and coast, Odisha | OSM roads and facilities, WorldPop population, OSM coastline | severity decays 4 km from the coast |
+| `flood-bengaluru` | Urban flood in the IT corridor (pattern of September 2022) | Bellandur, Mahadevapura and Varthur, Bengaluru, Karnataka | OSM roads and facilities, WorldPop population, OSM lakes and storm-water drains | severity decays 0.9 km from lakes and drains |
+| `cyclone-visakhapatnam` | Very severe cyclonic storm at Visakhapatnam (pattern of Hudhud, 2014) | Visakhapatnam city and coast, Andhra Pradesh | OSM roads and facilities, WorldPop population, OSM coastline | severity decays 4.5 km from the coast |
+| `earthquake-coimbatore` | M6.0 earthquake under the city (pattern of the 1900 Coimbatore earthquake) | Coimbatore city, Tamil Nadu | OSM roads and facilities, WorldPop population | severity decays 7 km from the epicentre |
 
 > **Roads, facilities and population are real** (OpenStreetMap contributors, ODbL; WorldPop,
 > CC BY 4.0). **Damage values are simulated**: severity, accessibility, vulnerability and relief

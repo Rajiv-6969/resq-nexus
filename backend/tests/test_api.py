@@ -9,7 +9,7 @@ from services.scenarios import RESOURCE_TYPES, Scenario, get_scenario
 # The Command Centre endpoints are admin-only, so this client is logged in as the demo admin.
 client = TestClient(main.app, headers=demo_headers(TestClient(main.app), "ADMIN"))
 
-DEMO_SCENARIOS = {"flood-aluva": "flood", "earthquake-joshimath": "earthquake", "cyclone-puri": "cyclone"}
+DEMO_SCENARIOS = {"flood-aluva": "flood", "flood-bengaluru": "flood", "earthquake-coimbatore": "earthquake", "cyclone-visakhapatnam": "cyclone"}
 
 
 def test_health_reports_ok():

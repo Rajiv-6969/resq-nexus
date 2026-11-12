@@ -56,24 +56,33 @@ PRESETS: dict[str, dict[str, Any]] = {
         "hazard": {"model": "river-distance", "feature": 'way["waterway"="river"]["name"~"Periyar|Chalakudy"]', "extent_km": 2.2, "peak": 0.95},
         "seed": 18,
     },
-    "earthquake-joshimath": {
-        "name": "Chamoli earthquake – Joshimath",
-        "disaster_type": "earthquake", "state": "Uttarakhand", "region": "Joshimath and Chamoli, Chamoli district",
-        "bbox": {"south": 30.38, "west": 79.30, "north": 30.63, "east": 79.66},
-        "network_type": "all", "retain_all": True,  # hill district: relief moves on tracks and paths too
-        "description": "Hypothetical M6.8 earthquake near Joshimath (the 1999 Chamoli earthquake region). "
-                       "Shaking is simulated from distance to the epicentre (decay 9 km).",
-        "hazard": {"model": "epicentre", "epicentre": [30.555, 79.565], "magnitude": 6.8, "extent_km": 9.0, "peak": 0.95},
-        "seed": 31,
+    "flood-bengaluru": {
+        "name": "Urban floods – Bellandur and Mahadevapura, Bengaluru",
+        "disaster_type": "flood", "state": "Karnataka", "region": "Bellandur, Mahadevapura and Varthur, Bengaluru Urban district",
+        "bbox": {"south": 12.89, "west": 77.60, "north": 13.01, "east": 77.76},
+        "description": "Hypothetical urban flood in the pattern of September 2022, when Bellandur and Varthur lakes overflowed "
+                       "into the IT corridor. Inundation is simulated from distance to the real lakes and storm-water drains (decay 0.9 km).",
+        "hazard": {"model": "lake-drain-distance", "extent_km": 0.9, "peak": 0.95,
+                   "feature": ['nwr["natural"="water"]["water"!="pond"]', 'way["waterway"~"^(drain|canal|stream|ditch)$"]']},
+        "seed": 22,
     },
-    "cyclone-puri": {
-        "name": "Bay of Bengal cyclone – Puri",
-        "disaster_type": "cyclone", "state": "Odisha", "region": "Puri town and coast, Puri district",
-        "bbox": {"south": 19.76, "west": 85.74, "north": 19.90, "east": 85.92},
-        "description": "Hypothetical very severe cyclonic storm making landfall at Puri, in the pattern of Fani (2019). "
-                       "Wind and surge damage is simulated from distance to the real coastline (decay 4 km).",
-        "hazard": {"model": "coast-distance", "feature": 'way["natural"="coastline"]', "extent_km": 4.0, "peak": 0.9},
-        "seed": 7,
+    "cyclone-visakhapatnam": {
+        "name": "Bay of Bengal cyclone – Visakhapatnam",
+        "disaster_type": "cyclone", "state": "Andhra Pradesh", "region": "Visakhapatnam city and coast, Visakhapatnam district",
+        "bbox": {"south": 17.68, "west": 83.20, "north": 17.80, "east": 83.36},
+        "description": "Hypothetical very severe cyclonic storm making landfall at Visakhapatnam, in the pattern of Hudhud (October 2014). "
+                       "Wind and surge damage is simulated from distance to the real coastline (decay 4.5 km).",
+        "hazard": {"model": "coast-distance", "feature": 'way["natural"="coastline"]', "extent_km": 4.5, "peak": 0.95},
+        "seed": 14,
+    },
+    "earthquake-coimbatore": {
+        "name": "Coimbatore earthquake",
+        "disaster_type": "earthquake", "state": "Tamil Nadu", "region": "Coimbatore city, Coimbatore district",
+        "bbox": {"south": 10.92, "west": 76.89, "north": 11.06, "east": 77.02},
+        "description": "Hypothetical M6.0 earthquake under the city, in the pattern of the 8 February 1900 Coimbatore earthquake. "
+                       "Shaking is simulated from distance to the epicentre (decay 7 km).",
+        "hazard": {"model": "epicentre", "epicentre": [10.975, 76.945], "magnitude": 6.0, "extent_km": 7.0, "peak": 0.9},
+        "seed": 9,
     },
 }
 # fmt: on
@@ -87,13 +96,18 @@ def hazard_points(preset: dict[str, Any], bbox: BBox, cache_dir: Path | None, fe
     hazard = preset["hazard"]
     if hazard["model"] == "epicentre":
         return [tuple(hazard["epicentre"])]
-    query = f'[out:json][timeout:120];({hazard["feature"]}({bbox.overpass}););out geom;'
+    features = hazard["feature"] if isinstance(hazard["feature"], list) else [hazard["feature"]]
+    union = "".join(f"{f}({bbox.overpass});" for f in features)
+    query = f"[out:json][timeout:120];({union});out geom;"
     payload = cached_overpass("hazard", f"{preset['disaster_type']}-{bbox.key}", query, cache_dir, fetch)
     points: list[tuple[float, float]] = []
     for element in payload.get("elements", []):
         for node in element.get("geometry") or []:
             points.append((float(node["lat"]), float(node["lon"])))
-        if not element.get("geometry"):
+        for member in element.get("members") or []:  # multipolygon lakes: outline of every member way
+            for node in member.get("geometry") or []:
+                points.append((float(node["lat"]), float(node["lon"])))
+        if not element.get("geometry") and not element.get("members"):
             point = element_point(element)
             if point:
                 points.append(point)

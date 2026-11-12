@@ -18,12 +18,12 @@ def test_health_is_served_under_api():
 def test_scenarios_are_served_under_api():
     response = client.get("/api/scenarios")
     assert response.status_code == 200
-    assert {s["id"] for s in response.json()} == {"flood-aluva", "earthquake-joshimath", "cyclone-puri"}
+    assert {s["id"] for s in response.json()} == {"flood-aluva", "flood-bengaluru", "earthquake-coimbatore", "cyclone-visakhapatnam"}
 
 
 def test_priority_and_allocate_work_under_api():
-    assert client.get("/api/scenarios/earthquake-joshimath/priority").status_code == 200
-    response = client.post("/api/scenarios/earthquake-joshimath/allocate", json={})
+    assert client.get("/api/scenarios/earthquake-coimbatore/priority").status_code == 200
+    response = client.post("/api/scenarios/earthquake-coimbatore/allocate", json={})
     assert response.status_code == 200
     assert response.json()["engine"]["metrics"]["zones_served"] > 0
 

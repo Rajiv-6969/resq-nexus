@@ -10,7 +10,7 @@ from services.priority import PRIORITY_SETTINGS
 client = TestClient(main.app, headers=demo_headers(TestClient(main.app), "ADMIN"))
 
 
-@pytest.mark.parametrize("scenario_id", ["flood-aluva", "earthquake-joshimath", "cyclone-puri"])
+@pytest.mark.parametrize("scenario_id", ["flood-aluva", "flood-bengaluru", "earthquake-coimbatore", "cyclone-visakhapatnam"])
 def test_priority_returns_zones_sorted_with_levels(scenario_id):
     response = client.get(f"/scenarios/{scenario_id}/priority")
     assert response.status_code == 200

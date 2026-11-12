@@ -15,7 +15,7 @@ from paths import DATA_DIR
 GEO_DIR = DATA_DIR / "geo"
 OVERPASS_URL = "https://overpass-api.de/api/interpreter"
 OVERPASS_TIMEOUT_S = 180
-OVERPASS_MIRRORS = (OVERPASS_URL, "https://lz4.overpass-api.de/api/interpreter")  # same data; osm.ch etc. are regional
+OVERPASS_MIRRORS = (OVERPASS_URL, "https://maps.mail.ru/osm/tools/overpass/api/interpreter", "https://lz4.overpass-api.de/api/interpreter")  # global mirrors only (osm.ch etc. are regional)
 
 
 class BBox(tuple):

@@ -55,8 +55,8 @@ def test_allocate_accepts_priority_weights():
 
 
 def test_allocate_is_repeatable():
-    a = client.post("/scenarios/cyclone-puri/allocate").json()
-    b = client.post("/scenarios/cyclone-puri/allocate").json()
+    a = client.post("/scenarios/cyclone-visakhapatnam/allocate").json()
+    b = client.post("/scenarios/cyclone-visakhapatnam/allocate").json()
     assert a["zones"] == b["zones"] and a["depots"] == b["depots"]
 
 
@@ -93,13 +93,13 @@ def test_priority_rejects_all_zero_weights():
 
 # --------------------------------------------------------------------------- explain
 def test_explain_without_key_uses_templates(no_gemini_key):
-    response = client.post("/scenarios/earthquake-joshimath/explain")
+    response = client.post("/scenarios/earthquake-coimbatore/explain")
     assert response.status_code == 200
     body = response.json()
     assert body["source"] == "template" and body["model"] is None
     assert "GEMINI_API_KEY" in body["notice"]
     ids = [e["zone_id"] for e in body["explanations"]]
-    expected = len(get_scenario("earthquake-joshimath").zones)
+    expected = len(get_scenario("earthquake-coimbatore").zones)
     assert len(ids) == expected and len(set(ids)) == expected
     for item in body["explanations"]:
         text = item["text"]
@@ -141,9 +141,9 @@ def test_explain_fills_zones_gemini_skipped(fake_gemini_key, monkeypatch):
         return json.dumps([{"zone_id": zones[0]["zone_id"], "explanation": "Only one."}, {"zone_id": "nope", "explanation": "x"}])
 
     monkeypatch.setattr(explain, "_generate", partial)
-    body = client.post("/scenarios/cyclone-puri/explain").json()
+    body = client.post("/scenarios/cyclone-visakhapatnam/explain").json()
     assert body["source"] == "mixed"
-    batches = math.ceil(len(get_scenario("cyclone-puri").zones) / explain.BATCH_SIZE)
+    batches = math.ceil(len(get_scenario("cyclone-visakhapatnam").zones) / explain.BATCH_SIZE)
     assert sum(e["source"] == "gemini" for e in body["explanations"]) == batches  # one accepted zone per batch
     assert "template" in body["notice"]
 

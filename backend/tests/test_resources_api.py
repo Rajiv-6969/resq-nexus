@@ -85,7 +85,10 @@ def test_type_filter_keeps_only_the_chosen_types(citizen):
 
 
 def test_each_resource_shows_availability_status_contact_and_update_time(citizen):
-    hospital = next(r for r in nearby(citizen, radius_km=25).json()["resources"] if r["resource_type"] == "HOSPITAL")
+    resources = nearby(citizen, radius_km=25, types="HOSPITAL", limit=500).json()["resources"]
+    assert {r["source"] for r in resources} >= {"seed", "osm"}  # synthetic seed plus real OpenStreetMap facilities
+    assert all(r["osm_id"] for r in resources if r["source"] == "osm")
+    hospital = next(r for r in resources if r["resource_type"] == "HOSPITAL" and r["source"] == "seed")
     assert hospital["unit"] == "beds"
     assert 0 <= hospital["capacity_available"] <= hospital["capacity_total"]
     assert hospital["status"] in {"OPEN", "FULL", "CLOSED"}
@@ -94,9 +97,9 @@ def test_each_resource_shows_availability_status_contact_and_update_time(citizen
 
 
 def test_scenario_regions_have_resources_too(citizen):
-    tapovan = nearby(citizen, lat=30.49, lon=79.63, radius_km=50).json()["resources"]
+    tapovan = nearby(citizen, lat=10.97, lon=76.98, radius_km=50).json()["resources"]
     assert {"HOSPITAL", "SHELTER", "FIRE_STATION"} <= {r["resource_type"] for r in tapovan}
-    assert any(r["name"] == "Tapovan Field Hospital" and r["status"] == "FULL" for r in tapovan)
+    assert any(r["name"] == "Podanur Field Hospital" and r["status"] == "FULL" for r in tapovan)
     assert any(r["source"] == "osm" and r["osm_id"] for r in tapovan)  # real OpenStreetMap facilities sit next to the seed
 
 
