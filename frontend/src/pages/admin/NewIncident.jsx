@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import AnimatedNumber from "../../components/AnimatedNumber";
-import { apiGet, apiPost } from "../../lib/api";
+import { fetchDamageSamples, fetchVantorEvents, postAllocateDamage, postAssessDamage, postSearchVantor } from "../../api";
 import { useToast } from "../../state/contexts";
 
 export default function NewIncident() {
@@ -34,7 +34,7 @@ export default function NewIncident() {
 
   useEffect(() => {
     // Load Vantor events
-    apiGet("/damage/vantor/events?limit=8")
+    fetchVantorEvents(8)
       .then((data) => {
         if (data?.events) {
           setEvents(data.events);
@@ -44,7 +44,7 @@ export default function NewIncident() {
       .catch(() => {});
 
     // Load xBD samples
-    apiGet("/damage/samples")
+    fetchDamageSamples()
       .then((data) => {
         if (data?.events) {
           const allTiles = data.events.flatMap((e) =>
@@ -62,7 +62,7 @@ export default function NewIncident() {
     setLoading(true);
     setImageryResult(null);
     try {
-      const data = await apiPost("/damage/vantor/search", {
+      const data = await postSearchVantor({
         event_id: selectedEvent.id,
         bbox: bounds,
       });
@@ -109,7 +109,7 @@ export default function NewIncident() {
       } else {
         // xBD sample or Vantor mode
         const tileId = selectedSample?.tile_id || "palu-tsunami_0000001";
-        data = await apiPost("/damage/assess", {
+        data = await postAssessDamage({
           tile_id: tileId,
           bounds: bounds,
         });
@@ -126,7 +126,7 @@ export default function NewIncident() {
   const handleSendToAllocation = async () => {
     if (!assessment) return;
     try {
-      await apiPost("/damage/allocate", {
+      await postAllocateDamage({
         assessment_id: assessment.assessment_id,
       });
       showToast("Incident sent to Allocation Engine", "success");
