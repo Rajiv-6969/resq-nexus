@@ -188,3 +188,6 @@ export const fetchDetailedZoneExplanation = (scenarioId, zoneId, lang = "en", op
   get(`/reports/${encodeURIComponent(scenarioId)}/zones/${encodeURIComponent(zoneId)}/explain${query({ lang })}`, options);
 export const runPollJob = (indiaOnly = true, options) =>
   send("POST", `/jobs/poll${query({ india_only: indiaOnly })}`, {}, options);
+
+// ------------------------------------------------------------------ Phase 6: Evaluation & Benchmarks
+export const fetchEvaluationResults = (options) => get("/eval/results", options);

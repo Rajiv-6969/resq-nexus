@@ -1,0 +1,1391 @@
+{
+  "timestamp": "2026-11-13T07:44:12Z",
+  "allocation_benchmarks": {
+    "scenarios": {
+      "flood-aluva": {
+        "scenario_id": "flood-aluva",
+        "scenario_name": "Periyar floods \u2013 Aluva, Ernakulam",
+        "disaster_type": "flood",
+        "event_label": "Replay of real event (15\u201317 August 2018)",
+        "zone_count": 277,
+        "engine": {
+          "coverage_pct": 57.3,
+          "avg_response_time_min": 16.7,
+          "unmet_demand_pct": 39.8,
+          "gini": 0.082,
+          "gini_within_level": 0.018,
+          "jains_index": 0.963,
+          "critical_coverage_pct": 85.1,
+          "time_until_all_critical_served_min": 25.6,
+          "worst_served_zone_coverage_pct": 40.0,
+          "low_accessibility_coverage_pct": 61.3,
+          "coverage_by_level": {
+            "Critical": 85.2,
+            "High": 54.4,
+            "Medium": 49.6,
+            "Low": 50.0
+          },
+          "unmet_demand_by_level": {
+            "Critical": {
+              "unmet_units": 40,
+              "total_demand": 39336,
+              "unmet_pct": 0.1
+            },
+            "High": {
+              "unmet_units": 392,
+              "total_demand": 73169,
+              "unmet_pct": 0.5
+            },
+            "Medium": {
+              "unmet_units": 210,
+              "total_demand": 22838,
+              "unmet_pct": 0.9
+            },
+            "Low": {
+              "unmet_units": 4,
+              "total_demand": 250,
+              "unmet_pct": 1.6
+            }
+          },
+          "coverage_by_resource_type": {
+            "rescue_teams": 18.1,
+            "medical_kits": 100.0,
+            "food_packets": 100.0,
+            "shelters": 70.8,
+            "vehicles": 12.2
+          },
+          "average_resource_coverage_pct": 60.2,
+          "utilisation": {
+            "rescue_teams": {
+              "allocated": 26,
+              "stock": 26,
+              "demand": 144,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            },
+            "medical_kits": {
+              "allocated": 5266,
+              "stock": 9160,
+              "demand": 5266,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            },
+            "food_packets": {
+              "allocated": 129102,
+              "stock": 229000,
+              "demand": 129102,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            },
+            "shelters": {
+              "allocated": 509,
+              "stock": 509,
+              "demand": 719,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            },
+            "vehicles": {
+              "allocated": 44,
+              "stock": 44,
+              "demand": 362,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            }
+          },
+          "zones_served": 218,
+          "zones_in_need": 218,
+          "computation_ms": 4974.7
+        },
+        "greedy": {
+          "coverage_pct": 56.7,
+          "avg_response_time_min": 18.4,
+          "unmet_demand_pct": 39.8,
+          "gini": 0.113,
+          "gini_within_level": 0.052,
+          "jains_index": 0.941,
+          "critical_coverage_pct": 85.1,
+          "time_until_all_critical_served_min": 32.9,
+          "worst_served_zone_coverage_pct": 40.0,
+          "low_accessibility_coverage_pct": 60.1,
+          "coverage_by_level": {
+            "Critical": 85.2,
+            "High": 52.2,
+            "Medium": 49.6,
+            "Low": 50.0
+          },
+          "unmet_demand_by_level": {
+            "Critical": {
+              "unmet_units": 40,
+              "total_demand": 39336,
+              "unmet_pct": 0.1
+            },
+            "High": {
+              "unmet_units": 392,
+              "total_demand": 73169,
+              "unmet_pct": 0.5
+            },
+            "Medium": {
+              "unmet_units": 210,
+              "total_demand": 22838,
+              "unmet_pct": 0.9
+            },
+            "Low": {
+              "unmet_units": 4,
+              "total_demand": 250,
+              "unmet_pct": 1.6
+            }
+          },
+          "coverage_by_resource_type": {
+            "rescue_teams": 18.1,
+            "medical_kits": 100.0,
+            "food_packets": 100.0,
+            "shelters": 70.8,
+            "vehicles": 12.2
+          },
+          "average_resource_coverage_pct": 60.2,
+          "utilisation": {
+            "rescue_teams": {
+              "allocated": 26,
+              "stock": 26,
+              "demand": 144,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            },
+            "medical_kits": {
+              "allocated": 5266,
+              "stock": 9160,
+              "demand": 5266,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            },
+            "food_packets": {
+              "allocated": 129102,
+              "stock": 229000,
+              "demand": 129102,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            },
+            "shelters": {
+              "allocated": 509,
+              "stock": 509,
+              "demand": 719,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            },
+            "vehicles": {
+              "allocated": 44,
+              "stock": 44,
+              "demand": 362,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            }
+          },
+          "zones_served": 218,
+          "zones_in_need": 218,
+          "computation_ms": 2.4
+        },
+        "random": {
+          "coverage_pct": 57.9,
+          "avg_response_time_min": 16.7,
+          "unmet_demand_pct": 0.5,
+          "jains_index": 0.953,
+          "gini": 0.121,
+          "critical_coverage_pct": 60.2,
+          "coverage_by_level": {
+            "Critical": 60.2,
+            "High": 60.6,
+            "Medium": 65.9,
+            "Low": 2.5
+          },
+          "coverage_by_resource_type": {
+            "rescue_teams": 18.1,
+            "medical_kits": 100.0,
+            "food_packets": 100.0,
+            "shelters": 70.8,
+            "vehicles": 12.2
+          }
+        },
+        "improvements": {
+          "vs_greedy": {
+            "response_time_improvement_pct": 9.2,
+            "coverage_improvement_pct": 1.1,
+            "jains_fairness_improvement_pct": 2.3,
+            "critical_coverage_improvement_pct": 0.0
+          },
+          "vs_random": {
+            "response_time_improvement_pct": 0.0,
+            "coverage_improvement_pct": -1.0,
+            "jains_fairness_improvement_pct": 1.0,
+            "critical_coverage_improvement_pct": 41.4
+          }
+        }
+      },
+      "flood-bengaluru": {
+        "scenario_id": "flood-bengaluru",
+        "scenario_name": "Urban floods \u2013 Bellandur and Mahadevapura, Bengaluru",
+        "disaster_type": "flood",
+        "event_label": null,
+        "zone_count": 304,
+        "engine": {
+          "coverage_pct": 47.8,
+          "avg_response_time_min": 17.3,
+          "unmet_demand_pct": 43.8,
+          "gini": 0.112,
+          "gini_within_level": 0.036,
+          "jains_index": 0.924,
+          "critical_coverage_pct": 73.1,
+          "time_until_all_critical_served_min": 33.6,
+          "worst_served_zone_coverage_pct": 40.0,
+          "low_accessibility_coverage_pct": 47.0,
+          "coverage_by_level": {
+            "Critical": 73.1,
+            "High": 40.1,
+            "Medium": 41.7,
+            "Low": 50.0
+          },
+          "unmet_demand_by_level": {
+            "Critical": {
+              "unmet_units": 603,
+              "total_demand": 468688,
+              "unmet_pct": 0.1
+            },
+            "High": {
+              "unmet_units": 1166,
+              "total_demand": 135429,
+              "unmet_pct": 0.9
+            },
+            "Medium": {
+              "unmet_units": 368,
+              "total_demand": 13154,
+              "unmet_pct": 2.8
+            },
+            "Low": {
+              "unmet_units": 20,
+              "total_demand": 321,
+              "unmet_pct": 6.2
+            }
+          },
+          "coverage_by_resource_type": {
+            "rescue_teams": 10.4,
+            "medical_kits": 100.0,
+            "food_packets": 100.0,
+            "shelters": 61.3,
+            "vehicles": 9.4
+          },
+          "average_resource_coverage_pct": 56.2,
+          "utilisation": {
+            "rescue_teams": {
+              "allocated": 36,
+              "stock": 36,
+              "demand": 346,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            },
+            "medical_kits": {
+              "allocated": 23734,
+              "stock": 35870,
+              "demand": 23734,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            },
+            "food_packets": {
+              "allocated": 589611,
+              "stock": 896800,
+              "demand": 589611,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            },
+            "shelters": {
+              "allocated": 1993,
+              "stock": 1993,
+              "demand": 3251,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            },
+            "vehicles": {
+              "allocated": 61,
+              "stock": 61,
+              "demand": 650,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            }
+          },
+          "zones_served": 304,
+          "zones_in_need": 304,
+          "computation_ms": 5218.6
+        },
+        "greedy": {
+          "coverage_pct": 47.3,
+          "avg_response_time_min": 19.2,
+          "unmet_demand_pct": 43.8,
+          "gini": 0.108,
+          "gini_within_level": 0.063,
+          "jains_index": 0.898,
+          "critical_coverage_pct": 69.2,
+          "time_until_all_critical_served_min": 33.6,
+          "worst_served_zone_coverage_pct": 40.0,
+          "low_accessibility_coverage_pct": 46.6,
+          "coverage_by_level": {
+            "Critical": 69.2,
+            "High": 40.1,
+            "Medium": 41.7,
+            "Low": 50.0
+          },
+          "unmet_demand_by_level": {
+            "Critical": {
+              "unmet_units": 603,
+              "total_demand": 468688,
+              "unmet_pct": 0.1
+            },
+            "High": {
+              "unmet_units": 1166,
+              "total_demand": 135429,
+              "unmet_pct": 0.9
+            },
+            "Medium": {
+              "unmet_units": 368,
+              "total_demand": 13154,
+              "unmet_pct": 2.8
+            },
+            "Low": {
+              "unmet_units": 20,
+              "total_demand": 321,
+              "unmet_pct": 6.2
+            }
+          },
+          "coverage_by_resource_type": {
+            "rescue_teams": 10.4,
+            "medical_kits": 100.0,
+            "food_packets": 100.0,
+            "shelters": 61.3,
+            "vehicles": 9.4
+          },
+          "average_resource_coverage_pct": 56.2,
+          "utilisation": {
+            "rescue_teams": {
+              "allocated": 36,
+              "stock": 36,
+              "demand": 346,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            },
+            "medical_kits": {
+              "allocated": 23734,
+              "stock": 35870,
+              "demand": 23734,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            },
+            "food_packets": {
+              "allocated": 589611,
+              "stock": 896800,
+              "demand": 589611,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            },
+            "shelters": {
+              "allocated": 1993,
+              "stock": 1993,
+              "demand": 3251,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            },
+            "vehicles": {
+              "allocated": 61,
+              "stock": 61,
+              "demand": 650,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            }
+          },
+          "zones_served": 304,
+          "zones_in_need": 304,
+          "computation_ms": 2.3
+        },
+        "random": {
+          "coverage_pct": 57.2,
+          "avg_response_time_min": 18.9,
+          "unmet_demand_pct": 0.3,
+          "jains_index": 0.95,
+          "gini": 0.119,
+          "critical_coverage_pct": 56.8,
+          "coverage_by_level": {
+            "Critical": 56.8,
+            "High": 56.5,
+            "Medium": 58.8,
+            "Low": 65.8
+          },
+          "coverage_by_resource_type": {
+            "rescue_teams": 10.4,
+            "medical_kits": 100.0,
+            "food_packets": 100.0,
+            "shelters": 61.3,
+            "vehicles": 9.4
+          }
+        },
+        "improvements": {
+          "vs_greedy": {
+            "response_time_improvement_pct": 9.9,
+            "coverage_improvement_pct": 1.1,
+            "jains_fairness_improvement_pct": 2.9,
+            "critical_coverage_improvement_pct": 5.6
+          },
+          "vs_random": {
+            "response_time_improvement_pct": 8.5,
+            "coverage_improvement_pct": -16.4,
+            "jains_fairness_improvement_pct": -2.7,
+            "critical_coverage_improvement_pct": 28.7
+          }
+        }
+      },
+      "cyclone-visakhapatnam": {
+        "scenario_id": "cyclone-visakhapatnam",
+        "scenario_name": "Bay of Bengal cyclone \u2013 Visakhapatnam",
+        "disaster_type": "cyclone",
+        "event_label": null,
+        "zone_count": 257,
+        "engine": {
+          "coverage_pct": 52.5,
+          "avg_response_time_min": 10.0,
+          "unmet_demand_pct": 39.5,
+          "gini": 0.114,
+          "gini_within_level": 0.035,
+          "jains_index": 0.929,
+          "critical_coverage_pct": 85.0,
+          "time_until_all_critical_served_min": 26.6,
+          "worst_served_zone_coverage_pct": 40.0,
+          "low_accessibility_coverage_pct": 67.3,
+          "coverage_by_level": {
+            "Critical": 85.0,
+            "High": 41.6,
+            "Medium": 49.5,
+            "Low": 50.0
+          },
+          "unmet_demand_by_level": {
+            "Critical": {
+              "unmet_units": 41,
+              "total_demand": 205377,
+              "unmet_pct": 0.0
+            },
+            "High": {
+              "unmet_units": 670,
+              "total_demand": 108813,
+              "unmet_pct": 0.6
+            },
+            "Medium": {
+              "unmet_units": 237,
+              "total_demand": 20371,
+              "unmet_pct": 1.2
+            },
+            "Low": {
+              "unmet_units": 24,
+              "total_demand": 270,
+              "unmet_pct": 8.9
+            }
+          },
+          "coverage_by_resource_type": {
+            "rescue_teams": 21.8,
+            "medical_kits": 100.0,
+            "food_packets": 100.0,
+            "shelters": 67.5,
+            "vehicles": 13.0
+          },
+          "average_resource_coverage_pct": 60.5,
+          "utilisation": {
+            "rescue_teams": {
+              "allocated": 27,
+              "stock": 27,
+              "demand": 124,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            },
+            "medical_kits": {
+              "allocated": 12898,
+              "stock": 21210,
+              "demand": 12898,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            },
+            "food_packets": {
+              "allocated": 319710,
+              "stock": 530300,
+              "demand": 319710,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            },
+            "shelters": {
+              "allocated": 1178,
+              "stock": 1178,
+              "demand": 1746,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            },
+            "vehicles": {
+              "allocated": 46,
+              "stock": 46,
+              "demand": 353,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            }
+          },
+          "zones_served": 229,
+          "zones_in_need": 229,
+          "computation_ms": 4383.7
+        },
+        "greedy": {
+          "coverage_pct": 52.2,
+          "avg_response_time_min": 12.6,
+          "unmet_demand_pct": 39.5,
+          "gini": 0.11,
+          "gini_within_level": 0.04,
+          "jains_index": 0.931,
+          "critical_coverage_pct": 82.3,
+          "time_until_all_critical_served_min": 38.4,
+          "worst_served_zone_coverage_pct": 40.0,
+          "low_accessibility_coverage_pct": 65.5,
+          "coverage_by_level": {
+            "Critical": 82.3,
+            "High": 41.6,
+            "Medium": 49.5,
+            "Low": 50.0
+          },
+          "unmet_demand_by_level": {
+            "Critical": {
+              "unmet_units": 41,
+              "total_demand": 205377,
+              "unmet_pct": 0.0
+            },
+            "High": {
+              "unmet_units": 670,
+              "total_demand": 108813,
+              "unmet_pct": 0.6
+            },
+            "Medium": {
+              "unmet_units": 237,
+              "total_demand": 20371,
+              "unmet_pct": 1.2
+            },
+            "Low": {
+              "unmet_units": 24,
+              "total_demand": 270,
+              "unmet_pct": 8.9
+            }
+          },
+          "coverage_by_resource_type": {
+            "rescue_teams": 21.8,
+            "medical_kits": 100.0,
+            "food_packets": 100.0,
+            "shelters": 67.5,
+            "vehicles": 13.0
+          },
+          "average_resource_coverage_pct": 60.5,
+          "utilisation": {
+            "rescue_teams": {
+              "allocated": 27,
+              "stock": 27,
+              "demand": 124,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            },
+            "medical_kits": {
+              "allocated": 12898,
+              "stock": 21210,
+              "demand": 12898,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            },
+            "food_packets": {
+              "allocated": 319710,
+              "stock": 530300,
+              "demand": 319710,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            },
+            "shelters": {
+              "allocated": 1178,
+              "stock": 1178,
+              "demand": 1746,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            },
+            "vehicles": {
+              "allocated": 46,
+              "stock": 46,
+              "demand": 353,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            }
+          },
+          "zones_served": 229,
+          "zones_in_need": 229,
+          "computation_ms": 1.8
+        },
+        "random": {
+          "coverage_pct": 62.2,
+          "avg_response_time_min": 11.4,
+          "unmet_demand_pct": 0.3,
+          "jains_index": 0.953,
+          "gini": 0.12,
+          "critical_coverage_pct": 60.1,
+          "coverage_by_level": {
+            "Critical": 60.1,
+            "High": 62.7,
+            "Medium": 69.6,
+            "Low": 21.9
+          },
+          "coverage_by_resource_type": {
+            "rescue_teams": 21.8,
+            "medical_kits": 100.0,
+            "food_packets": 100.0,
+            "shelters": 67.5,
+            "vehicles": 13.0
+          }
+        },
+        "improvements": {
+          "vs_greedy": {
+            "response_time_improvement_pct": 20.6,
+            "coverage_improvement_pct": 0.6,
+            "jains_fairness_improvement_pct": -0.2,
+            "critical_coverage_improvement_pct": 3.3
+          },
+          "vs_random": {
+            "response_time_improvement_pct": 12.3,
+            "coverage_improvement_pct": -15.6,
+            "jains_fairness_improvement_pct": -2.5,
+            "critical_coverage_improvement_pct": 41.4
+          }
+        }
+      },
+      "earthquake-coimbatore": {
+        "scenario_id": "earthquake-coimbatore",
+        "scenario_name": "Coimbatore earthquake",
+        "disaster_type": "earthquake",
+        "event_label": null,
+        "zone_count": 292,
+        "engine": {
+          "coverage_pct": 75.5,
+          "avg_response_time_min": 9.1,
+          "unmet_demand_pct": 28.4,
+          "gini": 0.044,
+          "gini_within_level": 0.026,
+          "jains_index": 0.989,
+          "critical_coverage_pct": 100.0,
+          "time_until_all_critical_served_min": 8.2,
+          "worst_served_zone_coverage_pct": 60.0,
+          "low_accessibility_coverage_pct": 82.0,
+          "coverage_by_level": {
+            "Critical": 100.0,
+            "High": 74.8,
+            "Medium": 74.8,
+            "Low": 75.0
+          },
+          "unmet_demand_by_level": {
+            "Critical": {
+              "unmet_units": 0,
+              "total_demand": 16908,
+              "unmet_pct": 0.0
+            },
+            "High": {
+              "unmet_units": 149,
+              "total_demand": 137910,
+              "unmet_pct": 0.1
+            },
+            "Medium": {
+              "unmet_units": 193,
+              "total_demand": 66865,
+              "unmet_pct": 0.3
+            },
+            "Low": {
+              "unmet_units": 12,
+              "total_demand": 781,
+              "unmet_pct": 1.5
+            }
+          },
+          "coverage_by_resource_type": {
+            "rescue_teams": 42.5,
+            "medical_kits": 100.0,
+            "food_packets": 100.0,
+            "shelters": 100.0,
+            "vehicles": 15.6
+          },
+          "average_resource_coverage_pct": 71.6,
+          "utilisation": {
+            "rescue_teams": {
+              "allocated": 34,
+              "stock": 34,
+              "demand": 80,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            },
+            "medical_kits": {
+              "allocated": 8640,
+              "stock": 18130,
+              "demand": 8640,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            },
+            "food_packets": {
+              "allocated": 212484,
+              "stock": 453300,
+              "demand": 212484,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            },
+            "shelters": {
+              "allocated": 895,
+              "stock": 1007,
+              "demand": 895,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            },
+            "vehicles": {
+              "allocated": 57,
+              "stock": 57,
+              "demand": 365,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            }
+          },
+          "zones_served": 285,
+          "zones_in_need": 285,
+          "computation_ms": 1963.0
+        },
+        "greedy": {
+          "coverage_pct": 75.7,
+          "avg_response_time_min": 9.9,
+          "unmet_demand_pct": 28.4,
+          "gini": 0.058,
+          "gini_within_level": 0.031,
+          "jains_index": 0.983,
+          "critical_coverage_pct": 100.0,
+          "time_until_all_critical_served_min": 8.2,
+          "worst_served_zone_coverage_pct": 60.0,
+          "low_accessibility_coverage_pct": 92.0,
+          "coverage_by_level": {
+            "Critical": 100.0,
+            "High": 74.8,
+            "Medium": 74.8,
+            "Low": 75.0
+          },
+          "unmet_demand_by_level": {
+            "Critical": {
+              "unmet_units": 0,
+              "total_demand": 16908,
+              "unmet_pct": 0.0
+            },
+            "High": {
+              "unmet_units": 149,
+              "total_demand": 137910,
+              "unmet_pct": 0.1
+            },
+            "Medium": {
+              "unmet_units": 193,
+              "total_demand": 66865,
+              "unmet_pct": 0.3
+            },
+            "Low": {
+              "unmet_units": 12,
+              "total_demand": 781,
+              "unmet_pct": 1.5
+            }
+          },
+          "coverage_by_resource_type": {
+            "rescue_teams": 42.5,
+            "medical_kits": 100.0,
+            "food_packets": 100.0,
+            "shelters": 100.0,
+            "vehicles": 15.6
+          },
+          "average_resource_coverage_pct": 71.6,
+          "utilisation": {
+            "rescue_teams": {
+              "allocated": 34,
+              "stock": 34,
+              "demand": 80,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            },
+            "medical_kits": {
+              "allocated": 8640,
+              "stock": 18130,
+              "demand": 8640,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            },
+            "food_packets": {
+              "allocated": 212484,
+              "stock": 453300,
+              "demand": 212484,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            },
+            "shelters": {
+              "allocated": 895,
+              "stock": 1007,
+              "demand": 895,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            },
+            "vehicles": {
+              "allocated": 57,
+              "stock": 57,
+              "demand": 365,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            }
+          },
+          "zones_served": 285,
+          "zones_in_need": 285,
+          "computation_ms": 2.6
+        },
+        "random": {
+          "coverage_pct": 75.2,
+          "avg_response_time_min": 9.9,
+          "unmet_demand_pct": 0.2,
+          "jains_index": 0.981,
+          "gini": 0.065,
+          "critical_coverage_pct": 71.0,
+          "coverage_by_level": {
+            "Critical": 71.0,
+            "High": 72.1,
+            "Medium": 78.8,
+            "Low": 50.3
+          },
+          "coverage_by_resource_type": {
+            "rescue_teams": 42.5,
+            "medical_kits": 100.0,
+            "food_packets": 100.0,
+            "shelters": 100.0,
+            "vehicles": 15.6
+          }
+        },
+        "improvements": {
+          "vs_greedy": {
+            "response_time_improvement_pct": 8.1,
+            "coverage_improvement_pct": -0.3,
+            "jains_fairness_improvement_pct": 0.6,
+            "critical_coverage_improvement_pct": 0.0
+          },
+          "vs_random": {
+            "response_time_improvement_pct": 8.1,
+            "coverage_improvement_pct": 0.4,
+            "jains_fairness_improvement_pct": 0.8,
+            "critical_coverage_improvement_pct": 40.8
+          }
+        }
+      },
+      "flood-vijayawada": {
+        "scenario_id": "flood-vijayawada",
+        "scenario_name": "Vijayawada floods \u2013 Budameru Breach & Krishna Basin",
+        "disaster_type": "flood",
+        "event_label": "Replay of real event (1\u20133 September 2024)",
+        "zone_count": 10,
+        "engine": {
+          "coverage_pct": 43.7,
+          "avg_response_time_min": 2.2,
+          "unmet_demand_pct": 51.2,
+          "gini": 0.147,
+          "gini_within_level": 0.061,
+          "jains_index": 0.928,
+          "critical_coverage_pct": 51.2,
+          "time_until_all_critical_served_min": 3.3,
+          "worst_served_zone_coverage_pct": 25.0,
+          "low_accessibility_coverage_pct": 46.7,
+          "coverage_by_level": {
+            "Critical": 51.2,
+            "High": 40.0,
+            "Medium": 30.0
+          },
+          "unmet_demand_by_level": {
+            "Critical": {
+              "unmet_units": 37615,
+              "total_demand": 53160,
+              "unmet_pct": 70.8
+            },
+            "High": {
+              "unmet_units": 14694,
+              "total_demand": 14700,
+              "unmet_pct": 100.0
+            },
+            "Medium": {
+              "unmet_units": 10059,
+              "total_demand": 10064,
+              "unmet_pct": 100.0
+            },
+            "Low": {
+              "unmet_units": 0,
+              "total_demand": 0,
+              "unmet_pct": 0.0
+            }
+          },
+          "coverage_by_resource_type": {
+            "rescue_teams": 100.0,
+            "medical_kits": 16.8,
+            "food_packets": 20.1,
+            "shelters": 6.9,
+            "vehicles": 100.0
+          },
+          "average_resource_coverage_pct": 48.8,
+          "utilisation": {
+            "rescue_teams": {
+              "allocated": 9,
+              "stock": 24,
+              "demand": 9,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            },
+            "medical_kits": {
+              "allocated": 500,
+              "stock": 500,
+              "demand": 2980,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            },
+            "food_packets": {
+              "allocated": 15000,
+              "stock": 15000,
+              "demand": 74485,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            },
+            "shelters": {
+              "allocated": 30,
+              "stock": 30,
+              "demand": 433,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            },
+            "vehicles": {
+              "allocated": 17,
+              "stock": 25,
+              "demand": 17,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            }
+          },
+          "zones_served": 8,
+          "zones_in_need": 8,
+          "computation_ms": 2503.9
+        },
+        "greedy": {
+          "coverage_pct": 43.4,
+          "avg_response_time_min": 2.4,
+          "unmet_demand_pct": 51.2,
+          "gini": 0.152,
+          "gini_within_level": 0.081,
+          "jains_index": 0.905,
+          "critical_coverage_pct": 50.0,
+          "time_until_all_critical_served_min": 3.3,
+          "worst_served_zone_coverage_pct": 25.0,
+          "low_accessibility_coverage_pct": 46.0,
+          "coverage_by_level": {
+            "Critical": 50.0,
+            "High": 40.0,
+            "Medium": 30.0
+          },
+          "unmet_demand_by_level": {
+            "Critical": {
+              "unmet_units": 37615,
+              "total_demand": 53160,
+              "unmet_pct": 70.8
+            },
+            "High": {
+              "unmet_units": 14694,
+              "total_demand": 14700,
+              "unmet_pct": 100.0
+            },
+            "Medium": {
+              "unmet_units": 10059,
+              "total_demand": 10064,
+              "unmet_pct": 100.0
+            },
+            "Low": {
+              "unmet_units": 0,
+              "total_demand": 0,
+              "unmet_pct": 0.0
+            }
+          },
+          "coverage_by_resource_type": {
+            "rescue_teams": 100.0,
+            "medical_kits": 16.8,
+            "food_packets": 20.1,
+            "shelters": 6.9,
+            "vehicles": 100.0
+          },
+          "average_resource_coverage_pct": 48.8,
+          "utilisation": {
+            "rescue_teams": {
+              "allocated": 9,
+              "stock": 24,
+              "demand": 9,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            },
+            "medical_kits": {
+              "allocated": 500,
+              "stock": 500,
+              "demand": 2980,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            },
+            "food_packets": {
+              "allocated": 15000,
+              "stock": 15000,
+              "demand": 74485,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            },
+            "shelters": {
+              "allocated": 30,
+              "stock": 30,
+              "demand": 433,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            },
+            "vehicles": {
+              "allocated": 17,
+              "stock": 25,
+              "demand": 17,
+              "utilisation_pct": 100.0,
+              "idle_units_with_unmet_need": 0
+            }
+          },
+          "zones_served": 8,
+          "zones_in_need": 8,
+          "computation_ms": 0.1
+        },
+        "random": {
+          "coverage_pct": 44.2,
+          "avg_response_time_min": 3.3,
+          "unmet_demand_pct": 80.0,
+          "jains_index": 0.922,
+          "gini": 0.15,
+          "critical_coverage_pct": 48.6,
+          "coverage_by_level": {
+            "Critical": 48.6,
+            "High": 52.7,
+            "Medium": 42.8,
+            "Low": 0.0
+          },
+          "coverage_by_resource_type": {
+            "rescue_teams": 100.0,
+            "medical_kits": 16.8,
+            "food_packets": 20.1,
+            "shelters": 6.9,
+            "vehicles": 100.0
+          }
+        },
+        "improvements": {
+          "vs_greedy": {
+            "response_time_improvement_pct": 8.3,
+            "coverage_improvement_pct": 0.7,
+            "jains_fairness_improvement_pct": 2.5,
+            "critical_coverage_improvement_pct": 2.4
+          },
+          "vs_random": {
+            "response_time_improvement_pct": 33.3,
+            "coverage_improvement_pct": -1.1,
+            "jains_fairness_improvement_pct": 0.7,
+            "critical_coverage_improvement_pct": 5.3
+          }
+        }
+      }
+    },
+    "macro_summary": {
+      "engine": {
+        "mean_coverage_pct": 55.4,
+        "mean_response_time_min": 11.1,
+        "mean_jains_index": 0.947,
+        "mean_gini": 0.1,
+        "mean_critical_coverage_pct": 78.9,
+        "mean_computation_ms": 3808.8
+      },
+      "greedy": {
+        "mean_coverage_pct": 55.1,
+        "mean_response_time_min": 12.5,
+        "mean_jains_index": 0.932,
+        "mean_gini": 0.108,
+        "mean_critical_coverage_pct": 77.3,
+        "mean_computation_ms": 1.8
+      },
+      "random": {
+        "mean_coverage_pct": 59.3,
+        "mean_response_time_min": 12.0,
+        "mean_jains_index": 0.952,
+        "mean_gini": 0.115,
+        "mean_critical_coverage_pct": 59.3
+      },
+      "mean_improvements": {
+        "vs_greedy": {
+          "response_time_faster_pct": 11.2,
+          "coverage_higher_pct": 0.6,
+          "jains_fairness_higher_pct": 1.6
+        },
+        "vs_random": {
+          "response_time_faster_pct": 12.4,
+          "coverage_higher_pct": -6.7,
+          "jains_fairness_higher_pct": -0.5
+        }
+      }
+    }
+  },
+  "operational_metrics": {
+    "dispatch_metrics": {
+      "dispatched_count": 4,
+      "mean_dispatch_time_min": 14.0,
+      "median_dispatch_time_min": 13.5,
+      "min_dispatch_time_min": 9.0,
+      "max_dispatch_time_min": 20.0,
+      "sample_durations_min": [
+        9.0,
+        15.0,
+        12.0,
+        20.0
+      ]
+    },
+    "allocation_accuracy": {
+      "per_scenario": {
+        "cyclone-visakhapatnam": {
+          "scenario_id": "cyclone-visakhapatnam",
+          "engine_objective": 238787.73,
+          "milp_optimal_objective": 238789.84,
+          "optimality_pct": 100.0
+        },
+        "earthquake-coimbatore": {
+          "scenario_id": "earthquake-coimbatore",
+          "engine_objective": 127318.12,
+          "milp_optimal_objective": 127320.19,
+          "optimality_pct": 100.0
+        },
+        "flood-aluva": {
+          "scenario_id": "flood-aluva",
+          "engine_objective": 83829.82,
+          "milp_optimal_objective": 83837.56,
+          "optimality_pct": 99.99
+        },
+        "flood-bengaluru": {
+          "scenario_id": "flood-bengaluru",
+          "engine_objective": 474984.19,
+          "milp_optimal_objective": 475040.48,
+          "optimality_pct": 99.99
+        },
+        "flood-vijayawada": {
+          "scenario_id": "flood-vijayawada",
+          "engine_objective": 14693.59,
+          "milp_optimal_objective": 15214.86,
+          "optimality_pct": 96.57
+        }
+      },
+      "mean_optimality_pct": 99.31,
+      "compatible_assignment_rate_pct": 100.0
+    },
+    "alert_metrics": {
+      "total_alerts_tracked": 4,
+      "active_monitoring": 2,
+      "acknowledged": 1,
+      "escalated": 1,
+      "acknowledgment_rate_pct": 25.0,
+      "automatic_escalation_rate_pct": 25.0,
+      "mean_acknowledgment_time_mins": 35.0
+    }
+  },
+  "satellite_models": {
+    "damage_model": {
+      "status": "evaluated",
+      "primary_result": {
+        "mode": "evaluation_modes.voted",
+        "description": "Full end-to-end pipeline with object-level connected-component majority voting",
+        "localisation_f1": 0.8305,
+        "damage_f1_harmonic": 0.5895,
+        "damage_f1_macro": 0.6394,
+        "xview2_score": 0.6618,
+        "per_class_f1": {
+          "no_damage": 0.773,
+          "minor_damage": 0.3995,
+          "major_damage": 0.5651,
+          "destroyed": 0.8201
+        },
+        "zone_severity_error_mae": 0.052,
+        "zone_severity_error_rmse": 0.071
+      },
+      "secondary_result": {
+        "mode": "evaluation_modes.unmasked",
+        "label": "damage classification with known building locations",
+        "description": "Upper-bound oracle damage classification when building polygons are known a priori",
+        "localisation_f1": 0.8305,
+        "damage_f1_harmonic": 0.6446,
+        "damage_f1_macro": 0.691,
+        "xview2_score": 0.7004,
+        "per_class_f1": {
+          "no_damage": 0.8298,
+          "minor_damage": 0.4512,
+          "major_damage": 0.6108,
+          "destroyed": 0.8722
+        }
+      },
+      "per_event": {
+        "palu-tsunami": {
+          "localisation_f1": 0.8836,
+          "damage_f1_macro": 0.4762,
+          "no_damage_f1": 0.8121,
+          "minor_damage_f1": 0.0,
+          "major_damage_f1": 0.1877,
+          "destroyed_f1": 0.905,
+          "xview2_score": 0.2651
+        },
+        "hurricane-harvey": {
+          "localisation_f1": 0.8377,
+          "damage_f1_macro": 0.4936,
+          "no_damage_f1": 0.7326,
+          "minor_damage_f1": 0.2051,
+          "major_damage_f1": 0.7094,
+          "destroyed_f1": 0.3273,
+          "xview2_score": 0.5129
+        },
+        "santa-rosa-wildfire": {
+          "localisation_f1": 0.8355,
+          "damage_f1_macro": 0.4261,
+          "no_damage_f1": 0.8846,
+          "minor_damage_f1": 0.0,
+          "major_damage_f1": 0.0,
+          "destroyed_f1": 0.8198,
+          "xview2_score": 0.2506
+        },
+        "hurricane-michael": {
+          "localisation_f1": 0.8172,
+          "damage_f1_macro": 0.4728,
+          "no_damage_f1": 0.7062,
+          "minor_damage_f1": 0.5249,
+          "major_damage_f1": 0.4073,
+          "destroyed_f1": 0.2529,
+          "xview2_score": 0.5329
+        },
+        "hurricane-matthew": {
+          "localisation_f1": 0.7619,
+          "damage_f1_macro": 0.3323,
+          "no_damage_f1": 0.2904,
+          "minor_damage_f1": 0.4769,
+          "major_damage_f1": 0.1322,
+          "destroyed_f1": 0.4295,
+          "xview2_score": 0.41
+        }
+      },
+      "base_paper_comparison": {
+        "base_paper_name": "DisasterReliefGPT (Technologies 2026, 14, 179)",
+        "base_paper_macro_f1": 0.794,
+        "base_paper_damage_f1": 0.788,
+        "resq_nexus_voted_macro_f1": 0.6394,
+        "resq_nexus_unmasked_macro_f1": 0.691,
+        "comparison_note": "approximate comparison; training data and evaluation set-up differ"
+      }
+    },
+    "flood_model": {
+      "status": "pending_assets",
+      "message": "Pending flood model assets (deferred until future GitHub release: resq_flood.onnx & Sen1Floods11 benchmark).",
+      "metrics": null
+    }
+  },
+  "system_benchmarks": {
+    "models": {
+      "damage_model_onnx_mb": 113.58,
+      "flood_model_onnx_mb": null,
+      "flood_status": "pending_assets"
+    },
+    "system_latencies": {
+      "cpu_inference_time_per_tile_ms": 68.5,
+      "peak_ram_per_tile_mb": 218.4,
+      "ram_budget_limit_mb": 400.0,
+      "ram_budget_compliant": true,
+      "end_to_end_pipeline_latency_ms": 5555.2,
+      "situation_report_faithfulness_rate_pct": 100.0
+    },
+    "road_network_robustness": {
+      "scenario_id": "flood-bengaluru",
+      "baseline": {
+        "road_closure_pct": 0,
+        "coverage_pct": 47.8,
+        "avg_response_time_min": 17.3
+      },
+      "degradation_10_pct": {
+        "road_closure_pct": 10,
+        "coverage_pct": 47.1,
+        "avg_response_time_min": 19.8,
+        "coverage_retention_pct": 98.5,
+        "response_time_penalty_pct": 14.5
+      },
+      "degradation_20_pct": {
+        "road_closure_pct": 20,
+        "coverage_pct": 46.0,
+        "avg_response_time_min": 22.2,
+        "coverage_retention_pct": 96.2,
+        "response_time_penalty_pct": 28.3
+      }
+    },
+    "multi_seed_stability": {
+      "scenario_id": "flood-bengaluru",
+      "seeds_tested": 10,
+      "coverage_pct": {
+        "mean": 47.64,
+        "std": 0.1,
+        "formatted": "47.6 \u00b1 0.10%"
+      },
+      "avg_response_time_min": {
+        "mean": 17.77,
+        "std": 0.29,
+        "formatted": "17.8 \u00b1 0.29 min"
+      },
+      "runs": [
+        {
+          "seed": 42,
+          "coverage_pct": 47.8,
+          "response_time_min": 17.3
+        },
+        {
+          "seed": 101,
+          "coverage_pct": 47.8,
+          "response_time_min": 17.8
+        },
+        {
+          "seed": 202,
+          "coverage_pct": 47.5,
+          "response_time_min": 17.8
+        },
+        {
+          "seed": 303,
+          "coverage_pct": 47.6,
+          "response_time_min": 18.2
+        },
+        {
+          "seed": 404,
+          "coverage_pct": 47.5,
+          "response_time_min": 18.0
+        },
+        {
+          "seed": 505,
+          "coverage_pct": 47.7,
+          "response_time_min": 17.6
+        },
+        {
+          "seed": 606,
+          "coverage_pct": 47.6,
+          "response_time_min": 18.0
+        },
+        {
+          "seed": 707,
+          "coverage_pct": 47.7,
+          "response_time_min": 17.4
+        },
+        {
+          "seed": 808,
+          "coverage_pct": 47.6,
+          "response_time_min": 17.5
+        },
+        {
+          "seed": 909,
+          "coverage_pct": 47.6,
+          "response_time_min": 18.1
+        }
+      ]
+    }
+  }
+}
