@@ -1,0 +1,546 @@
+{
+ "scenario_id": "flood-vijayawada",
+ "event": "Vijayawada floods (Budameru breach)",
+ "event_dates": [
+  "2024-09-01",
+  "2024-09-03"
+ ],
+ "date": "2024-09-01",
+ "bounds": {
+  "south": 16.48,
+  "west": 80.58,
+  "north": 16.58,
+  "east": 80.7
+ },
+ "event_date": "2024-09-01",
+ "acquired": "2024-09-01",
+ "days_from_event": 0,
+ "items": [
+  "S1A_IW_GRDH_1SDV_20240901T003107_20240901T003132_055464_06C415_rtc"
+ ],
+ "orbit_state": "descending",
+ "reference": {
+  "acquired": "2024-07-27",
+  "items": [
+   "S1A_IW_GRDH_1SDV_20240727T003106_20240727T003131_054939_06B127_rtc"
+  ],
+  "orbit_state": "descending"
+ },
+ "method": "resq_flood.onnx (Sen1Floods11-trained), 512x512 tiles",
+ "model_installed": true,
+ "calibration": {
+  "vv_gain": 1.0946,
+  "vv_db": -0.275,
+  "vh_gain": 1.2627,
+  "vh_db": 2.157,
+  "fitted": true
+ },
+ "grid": {
+  "crs": "EPSG:4326",
+  "pixel_deg": 8.983152841195215e-05,
+  "width": 1336,
+  "height": 1113
+ },
+ "valid_pct": 1.0,
+ "water_area_km2": 24.64,
+ "permanent_water_area_km2": 9.13,
+ "flooded_area_km2": 16.07,
+ "total_area_km2": 141.6,
+ "zones": [
+  {
+   "zone_id": "VJY-Z01",
+   "name": "Ajit Singh Nagar (Budameru Breach Epicenter)",
+   "latitude": 16.5425,
+   "longitude": 80.6425,
+   "population": 28500,
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       77.660972,
+       12.915875
+      ],
+      [
+       77.661057,
+       12.920865
+      ],
+      [
+       77.656885,
+       12.923376
+      ],
+      [
+       77.652628,
+       12.920898
+      ],
+      [
+       77.652543,
+       12.915908
+      ],
+      [
+       77.656715,
+       12.913396
+      ],
+      [
+       77.660972,
+       12.915875
+      ]
+     ]
+    ]
+   },
+   "pixels": 0,
+   "valid_coverage": 0.0,
+   "water_pct": null,
+   "permanent_water_pct": null,
+   "flooded_pct": null,
+   "severity": 0.0,
+   "source": "sentinel1-sar-model"
+  },
+  {
+   "zone_id": "VJY-Z02",
+   "name": "Payakapuram Low-Lying Wards",
+   "latitude": 16.5518,
+   "longitude": 80.6415,
+   "population": 22400,
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       77.652543,
+       12.915908
+      ],
+      [
+       77.652628,
+       12.920898
+      ],
+      [
+       77.648456,
+       12.923409
+      ],
+      [
+       77.644199,
+       12.920931
+      ],
+      [
+       77.644115,
+       12.915941
+      ],
+      [
+       77.648286,
+       12.91343
+      ],
+      [
+       77.652543,
+       12.915908
+      ]
+     ]
+    ]
+   },
+   "pixels": 0,
+   "valid_coverage": 0.0,
+   "water_pct": null,
+   "permanent_water_pct": null,
+   "flooded_pct": null,
+   "severity": 0.0,
+   "source": "sentinel1-sar-model"
+  },
+  {
+   "zone_id": "VJY-Z03",
+   "name": "Kandrika Colony & Canal Inundation Zone",
+   "latitude": 16.5592,
+   "longitude": 80.6334,
+   "population": 16800,
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       77.656885,
+       12.923376
+      ],
+      [
+       77.65697,
+       12.928366
+      ],
+      [
+       77.652798,
+       12.930877
+      ],
+      [
+       77.648541,
+       12.928399
+      ],
+      [
+       77.648456,
+       12.923409
+      ],
+      [
+       77.652628,
+       12.920898
+      ],
+      [
+       77.656885,
+       12.923376
+      ]
+     ]
+    ]
+   },
+   "pixels": 0,
+   "valid_coverage": 0.0,
+   "water_pct": null,
+   "permanent_water_pct": null,
+   "flooded_pct": null,
+   "severity": 0.0,
+   "source": "sentinel1-sar-model"
+  },
+  {
+   "zone_id": "VJY-Z04",
+   "name": "Vambay Colony & Rajiv Nagar",
+   "latitude": 16.5471,
+   "longitude": 80.6275,
+   "population": 19200,
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       77.665315,
+       12.923343
+      ],
+      [
+       77.6654,
+       12.928333
+      ],
+      [
+       77.661227,
+       12.930845
+      ],
+      [
+       77.65697,
+       12.928366
+      ],
+      [
+       77.656885,
+       12.923376
+      ],
+      [
+       77.661057,
+       12.920865
+      ],
+      [
+       77.665315,
+       12.923343
+      ]
+     ]
+    ]
+   },
+   "pixels": 0,
+   "valid_coverage": 0.0,
+   "water_pct": null,
+   "permanent_water_pct": null,
+   "flooded_pct": null,
+   "severity": 0.0,
+   "source": "sentinel1-sar-model"
+  },
+  {
+   "zone_id": "VJY-Z05",
+   "name": "Pipula Road & Shanti Nagar",
+   "latitude": 16.5368,
+   "longitude": 80.6382,
+   "population": 15400,
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       77.677833,
+       12.915807
+      ],
+      [
+       77.677918,
+       12.920798
+      ],
+      [
+       77.673745,
+       12.92331
+      ],
+      [
+       77.669487,
+       12.920831
+      ],
+      [
+       77.669402,
+       12.915841
+      ],
+      [
+       77.673575,
+       12.913329
+      ],
+      [
+       77.677833,
+       12.915807
+      ]
+     ]
+    ]
+   },
+   "pixels": 0,
+   "valid_coverage": 0.0,
+   "water_pct": null,
+   "permanent_water_pct": null,
+   "flooded_pct": null,
+   "severity": 0.0,
+   "source": "sentinel1-sar-model"
+  },
+  {
+   "zone_id": "VJY-Z06",
+   "name": "Bhavanipuram & Milk Project Area",
+   "latitude": 16.5215,
+   "longitude": 80.6012,
+   "population": 21000,
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       77.661482,
+       12.945815
+      ],
+      [
+       77.661567,
+       12.950804
+      ],
+      [
+       77.657395,
+       12.953315
+      ],
+      [
+       77.653137,
+       12.950836
+      ],
+      [
+       77.653052,
+       12.945847
+      ],
+      [
+       77.657225,
+       12.943336
+      ],
+      [
+       77.661482,
+       12.945815
+      ]
+     ]
+    ]
+   },
+   "pixels": 0,
+   "valid_coverage": 0.0,
+   "water_pct": null,
+   "permanent_water_pct": null,
+   "flooded_pct": null,
+   "severity": 0.0,
+   "source": "sentinel1-sar-model"
+  },
+  {
+   "zone_id": "VJY-Z07",
+   "name": "Vidyadharapuram Transport Hub",
+   "latitude": 16.5284,
+   "longitude": 80.6125,
+   "population": 18500,
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       77.66557,
+       12.938313
+      ],
+      [
+       77.665655,
+       12.943304
+      ],
+      [
+       77.661482,
+       12.945815
+      ],
+      [
+       77.657225,
+       12.943336
+      ],
+      [
+       77.65714,
+       12.938346
+      ],
+      [
+       77.661312,
+       12.935835
+      ],
+      [
+       77.66557,
+       12.938313
+      ]
+     ]
+    ]
+   },
+   "pixels": 0,
+   "valid_coverage": 0.0,
+   "water_pct": null,
+   "permanent_water_pct": null,
+   "flooded_pct": null,
+   "severity": 0.0,
+   "source": "sentinel1-sar-model"
+  },
+  {
+   "zone_id": "VJY-Z08",
+   "name": "Governorpet & Commercial Center",
+   "latitude": 16.5105,
+   "longitude": 80.648,
+   "population": 24000,
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       77.682177,
+       12.923276
+      ],
+      [
+       77.682262,
+       12.928267
+      ],
+      [
+       77.678089,
+       12.930779
+      ],
+      [
+       77.673831,
+       12.9283
+      ],
+      [
+       77.673745,
+       12.92331
+      ],
+      [
+       77.677918,
+       12.920798
+      ],
+      [
+       77.682177,
+       12.923276
+      ]
+     ]
+    ]
+   },
+   "pixels": 0,
+   "valid_coverage": 0.0,
+   "water_pct": null,
+   "permanent_water_pct": null,
+   "flooded_pct": null,
+   "severity": 0.0,
+   "source": "sentinel1-sar-model"
+  },
+  {
+   "zone_id": "VJY-Z09",
+   "name": "Gunadala High Ground",
+   "latitude": 16.5182,
+   "longitude": 80.6655,
+   "population": 17500,
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       77.690865,
+       12.938214
+      ],
+      [
+       77.690951,
+       12.943205
+      ],
+      [
+       77.686777,
+       12.945717
+      ],
+      [
+       77.682518,
+       12.943238
+      ],
+      [
+       77.682433,
+       12.938248
+      ],
+      [
+       77.686606,
+       12.935736
+      ],
+      [
+       77.690865,
+       12.938214
+      ]
+     ]
+    ]
+   },
+   "pixels": 0,
+   "valid_coverage": 0.0,
+   "water_pct": null,
+   "permanent_water_pct": null,
+   "flooded_pct": null,
+   "severity": 0.0,
+   "source": "sentinel1-sar-model"
+  },
+  {
+   "zone_id": "VJY-Z10",
+   "name": "Benz Circle & Patamata",
+   "latitude": 16.4985,
+   "longitude": 80.6558,
+   "population": 26000,
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       77.678089,
+       12.930779
+      ],
+      [
+       77.678174,
+       12.935769
+      ],
+      [
+       77.674001,
+       12.938281
+      ],
+      [
+       77.669743,
+       12.935802
+      ],
+      [
+       77.669658,
+       12.930812
+      ],
+      [
+       77.673831,
+       12.9283
+      ],
+      [
+       77.678089,
+       12.930779
+      ]
+     ]
+    ]
+   },
+   "pixels": 0,
+   "valid_coverage": 0.0,
+   "water_pct": null,
+   "permanent_water_pct": null,
+   "flooded_pct": null,
+   "severity": 0.0,
+   "source": "sentinel1-sar-model"
+  }
+ ],
+ "timing_s": {
+  "total": 247.4,
+  "inference": 6.8
+ },
+ "created_at": "2026-11-13T14:48:36"
+}

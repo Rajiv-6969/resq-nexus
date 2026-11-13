@@ -13,6 +13,7 @@ geometry along the real roads.
 from __future__ import annotations
 
 import gzip
+from collections import OrderedDict
 import json
 import math
 import pickle
@@ -149,7 +150,15 @@ def read_graph(path: Path) -> nx.Graph:
     return graph
 
 
-_MEMORY: dict[tuple[str, float], nx.Graph] = {}
+_MEMORY: "OrderedDict[tuple[str, float], nx.Graph]" = OrderedDict()
+
+
+_EVICT_HOOKS: list[Callable[[str], None]] = []
+
+
+def _evicted(key: tuple[str, float]) -> None:
+    for hook in _EVICT_HOOKS:
+        hook(f"{key[0]}@{key[1]}")
 
 
 def load_road_graph(bbox: Any, cache_dir: Path | None = None, download: bool = True,
@@ -159,10 +168,13 @@ def load_road_graph(bbox: Any, cache_dir: Path | None = None, download: bool = T
     path = graph_path(bbox, cache_dir)
     if path.is_file():
         key = (str(path), path.stat().st_mtime)
-        if key not in _MEMORY:  # every scenario's graph stays in memory (a few tens of MB each)
+        if key not in _MEMORY:  # parsed graphs stay in memory, up to ROAD_GRAPH_CACHE of them (0 = all)
+            from services.memory import lru_put, road_graph_cache_size
+
             graph = read_graph(path)
             graph.graph["cache_key"] = f"{key[0]}@{key[1]}"
-            _MEMORY[key] = graph
+            lru_put(_MEMORY, key, graph, road_graph_cache_size(), on_evict=_evicted)
+        _MEMORY.move_to_end(key)
         return _MEMORY[key]
     if not download:
         raise FileNotFoundError(f"no cached road graph at {path}; run build_scenario.py with network access")

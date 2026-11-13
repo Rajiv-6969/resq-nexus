@@ -33,7 +33,15 @@ from paths import DATA_DIR  # noqa: E402
 ASSET_DIR = DATA_DIR / "assets"
 REPO = "Rajiv-6969/resq-nexus"
 TAG = "v0.5-demo"
-ASSETS = ("resq_damage.onnx", "test_results.json", "xbd_sample.zip", "xview_geotransforms.json.tgz", "resq_flood.onnx")
+ASSETS = (
+    "resq_damage.onnx",
+    "test_results.json",
+    "xbd_sample.zip",
+    "xview_geotransforms.json.tgz",
+    "resq_flood.onnx",
+    "flood_results.json",
+    "flood_sample.zip",
+)
 
 
 def _gh() -> str | None:
@@ -103,8 +111,14 @@ def main(argv: list[str] | None = None) -> int:
         path = download(name, args.force)
         if path is None:
             missing.append(name)
-        elif name.endswith((".zip", ".tgz")):
-            unpack(path)
+        else:
+            if name == "resq_flood.onnx":
+                ml_target = Path(__file__).resolve().parent.parent.parent / "ml" / "resq_flood.onnx"
+                if ml_target.parent.is_dir() and not ml_target.is_file():
+                    shutil.copy2(path, ml_target)
+                    print(f"synced   {name} -> {ml_target}")
+            if name.endswith((".zip", ".tgz")):
+                unpack(path)
     if missing:
         print(f"{len(missing)} asset(s) missing: {', '.join(missing)} - the app falls back where it can")
     return 0

@@ -1,0 +1,246 @@
+{
+ "status": "evaluated",
+ "chip_date": "2016-08-12",
+ "chips_matched": [
+  "India_118868",
+  "India_207862",
+  "India_391908",
+  "India_533192",
+  "India_70352",
+  "India_764946",
+  "India_833266",
+  "India_952728"
+ ],
+ "rtc_items": [
+  "S1A_IW_GRDH_1SDV_20160812T234622_20160812T234651_012574_013B43_rtc",
+  "S1A_IW_GRDH_1SDV_20160812T234651_20160812T234716_012574_013B43_rtc"
+ ],
+ "overlap": {
+  "India_118868": 0.608,
+  "India_207862": 1.0,
+  "India_391908": 1.0,
+  "India_533192": 0.598,
+  "India_70352": 1.0,
+  "India_764946": 1.0,
+  "India_833266": 1.0,
+  "India_952728": 1.0
+ },
+ "scored_on": "pixels valid in both Sen1Floods11 S1Hand and Planetary Computer RTC (label -1 elsewhere)",
+ "original_chips": {
+  "water_iou": 0.3958,
+  "water_f1": 0.5671,
+  "chips": 8,
+  "tp": 69870,
+  "fp": 35156,
+  "fn": 71520
+ },
+ "rtc_uncalibrated": {
+  "water_iou": 0.0532,
+  "water_f1": 0.1011,
+  "chips": 8,
+  "tp": 7567,
+  "fp": 732,
+  "fn": 133823
+ },
+ "rtc_offset_only_leave_one_out": {
+  "water_iou": 0.0759,
+  "water_f1": 0.141,
+  "chips": 8,
+  "tp": 10882,
+  "fp": 2056,
+  "fn": 130508
+ },
+ "rtc_calibrated_leave_one_out": {
+  "water_iou": 0.2614,
+  "water_f1": 0.4144,
+  "chips": 8,
+  "tp": 43996,
+  "fp": 26947,
+  "fn": 97394
+ },
+ "delta_uncalibrated": {
+  "water_iou": -0.3426,
+  "water_f1": -0.466
+ },
+ "delta_calibrated": {
+  "water_iou": -0.1344,
+  "water_f1": -0.1527
+ },
+ "pixel_correlation_db": {
+  "vv": 0.714,
+  "vh": 0.704
+ },
+ "calibration": {
+  "vv_gain": 1.0946,
+  "vv_db": -0.275,
+  "vh_gain": 1.2627,
+  "vh_db": 2.157,
+  "adopted": true,
+  "iou_drop_uncalibrated": 0.3426,
+  "offset_only": {
+   "vv_gain": 1.0,
+   "vv_db": -1.053,
+   "vh_gain": 1.0,
+   "vh_db": -1.438
+  },
+  "rule": "adopted when the RTC IoU drops by more than 0.05 and the leave-one-out calibrated IoU is higher",
+  "method": "per-band linear map in dB (gain * dB + offset), least squares on matched 1-99th percentiles of S1Hand vs RTC over co-valid pixels (label-free), applied before normalisation"
+ },
+ "per_chip": {
+  "original": {
+   "India_118868": {
+    "water_iou": 0.0143,
+    "water_f1": 0.0282
+   },
+   "India_207862": {
+    "water_iou": 0.2867,
+    "water_f1": 0.4456
+   },
+   "India_391908": {
+    "water_iou": 0.3896,
+    "water_f1": 0.5608
+   },
+   "India_533192": {
+    "water_iou": 0.6384,
+    "water_f1": 0.7793
+   },
+   "India_70352": {
+    "water_iou": 0.6189,
+    "water_f1": 0.7646
+   },
+   "India_764946": {
+    "water_iou": 0.3446,
+    "water_f1": 0.5126
+   },
+   "India_833266": {
+    "water_iou": 0.0905,
+    "water_f1": 0.166
+   },
+   "India_952728": {
+    "water_iou": 0.1994,
+    "water_f1": 0.3325
+   }
+  },
+  "rtc_uncalibrated": {
+   "India_118868": {
+    "water_iou": 0.0,
+    "water_f1": 0.0
+   },
+   "India_207862": {
+    "water_iou": 0.0326,
+    "water_f1": 0.0632
+   },
+   "India_391908": {
+    "water_iou": 0.2284,
+    "water_f1": 0.3719
+   },
+   "India_533192": {
+    "water_iou": 0.0006,
+    "water_f1": 0.0012
+   },
+   "India_70352": {
+    "water_iou": 0.0311,
+    "water_f1": 0.0604
+   },
+   "India_764946": {
+    "water_iou": 0.0641,
+    "water_f1": 0.1204
+   },
+   "India_833266": {
+    "water_iou": 0.0029,
+    "water_f1": 0.0058
+   },
+   "India_952728": {
+    "water_iou": 0.0346,
+    "water_f1": 0.0669
+   }
+  },
+  "rtc_calibrated_leave_one_out": {
+   "India_118868": {
+    "water_iou": 0.001,
+    "water_f1": 0.002
+   },
+   "India_207862": {
+    "water_iou": 0.3063,
+    "water_f1": 0.469
+   },
+   "India_391908": {
+    "water_iou": 0.4174,
+    "water_f1": 0.589
+   },
+   "India_533192": {
+    "water_iou": 0.2577,
+    "water_f1": 0.4098
+   },
+   "India_70352": {
+    "water_iou": 0.3405,
+    "water_f1": 0.508
+   },
+   "India_764946": {
+    "water_iou": 0.3272,
+    "water_f1": 0.4931
+   },
+   "India_833266": {
+    "water_iou": 0.0399,
+    "water_f1": 0.0768
+   },
+   "India_952728": {
+    "water_iou": 0.1635,
+    "water_f1": 0.2811
+   }
+  }
+ },
+ "all_chips_original": {
+  "per_chip": {
+   "India_118868": {
+    "water_iou": 0.0141,
+    "water_f1": 0.0279
+   },
+   "India_207862": {
+    "water_iou": 0.2867,
+    "water_f1": 0.4456
+   },
+   "India_391908": {
+    "water_iou": 0.3896,
+    "water_f1": 0.5608
+   },
+   "India_533192": {
+    "water_iou": 0.5736,
+    "water_f1": 0.729
+   },
+   "India_70352": {
+    "water_iou": 0.6189,
+    "water_f1": 0.7646
+   },
+   "India_764946": {
+    "water_iou": 0.3446,
+    "water_f1": 0.5126
+   },
+   "India_833266": {
+    "water_iou": 0.0905,
+    "water_f1": 0.166
+   },
+   "India_952728": {
+    "water_iou": 0.1994,
+    "water_f1": 0.3325
+   }
+  },
+  "pooled": {
+   "water_iou": 0.3829,
+   "water_f1": 0.5538,
+   "chips": 8,
+   "tp": 69870,
+   "fp": 35163,
+   "fn": 77443
+  },
+  "threshold_vv_lt_-16db": {
+   "water_iou": 0.3386,
+   "water_f1": 0.5059,
+   "chips": 8,
+   "tp": 54346,
+   "fp": 13186,
+   "fn": 92967
+  },
+  "mean_seconds_per_chip": 0.734
+ }
+}

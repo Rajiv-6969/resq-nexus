@@ -70,7 +70,7 @@ flowchart TD
 - **Deep-Learning Building Damage Model:** Tiled optical satellite damage evaluation based on the *DisasterReliefGPT* architecture running locally via ONNX Runtime (`resq_damage.onnx`, 113.58 MB).
 - **Sub-512 MB Memory Optimization:** Zero-arena, single-threaded sequential inference requiring only ~181 MB peak RSS, fitting smoothly inside free-tier cloud containers (Render 512 MB ceiling).
 - **Object-Level Connected-Component Voting:** Building mask localization followed by damage classification with connected-component majority voting across 4 damage levels (No Damage, Minor, Major, Destroyed).
-- **Synthetic Aperture Radar (SAR) Flood Extent:** Sentinel-1 RTC dual-pol change detection pipeline with Sen1Floods11 benchmark readiness.
+- **Synthetic Aperture Radar (SAR) Flood Extent:** Sentinel-1 RTC dual-pol UNet segmentation model (`resq_flood.onnx`, 93.42 MB) evaluated on the Sen1Floods11 benchmark (0.7506 global water IoU, 0.8575 F1) with automated fallback to radiometric thresholding.
 
 ### Official Alerts & Ingestion Automation
 - **Multi-Source Polling:** Automated ingestion from GDACS (cyclones, floods, earthquakes) and USGS Earthquake Hazards feeds filtered to the Indian subcontinent.
@@ -150,6 +150,16 @@ Evaluated on the xBD benchmark following *DisasterReliefGPT*:
 
 *Per-Class F1 (Primary Mode):* No Damage: `0.7730` | Minor: `0.3995` | Major: `0.5651` | Destroyed: `0.8201`.  
 *Base Paper Reference (DisasterReliefGPT):* Localisation F1 `0.852`, Damage Macro F1 `0.794` (*approximate comparison; training data and evaluation set-up differ*).
+
+### Satellite Flood Inundation Model Metrics (Sen1Floods11 Benchmark)
+Evaluated on the Sen1Floods11 dual-pol SAR benchmark across global and Indian subcontinent regimes:
+
+| Training Regime | India Test Water IoU | India Test Water F1 | Global Val Water IoU | Global Val Water F1 | Domain Shift Impact |
+|---|---|---|---|---|---|
+| **Experiment A (Global Only, No Indian Training)** | **0.2416** | 0.3892 | 0.7506 | 0.8575 | Baseline cross-domain transfer |
+| **Experiment B (With Indian Training Scenes)** | **0.3209** | **0.4859** | 0.7486 | 0.8562 | **+32.8% IoU / +24.8% F1 gain** |
+
+*Partitions:* 41 Indian train / 27 Indian test scenes &middot; 321 Global train / 57 Global val scenes (446 hand-labeled 10m SAR tiles).
 
 ---
 
@@ -247,7 +257,7 @@ ResQ Nexus adheres to a strict editorial brutalist visual language optimized for
 
 ## 10. Limitations & Future Work
 
-- **Compute & Model Constraints:** Satellite damage inference is optimized for a 512 MB RAM footprint by running tiled sequential inference. While effective for localized disaster perimeters, regional-scale processing requires asynchronous distributed workers (e.g. Celery / AWS Batch).
-- **Deferred Flood Model Assets:** The Sentinel-1 SAR flood segmentation weights (`resq_flood.onnx`) are scheduled for the subsequent asset release; the current pipeline provides seamless architectural fallback to official flood alerts and elevation-weighted hydrology extents.
+- **Compute & Model Constraints:** Satellite damage and flood inferences are optimized for a 512 MB RAM footprint by running low-arena, single-threaded tiled sequential inference (~328 MB combined peak RSS). While effective for local disaster perimeters, regional-scale processing requires asynchronous distributed workers (e.g. Celery / AWS Batch).
+- **All-Weather Flood Inundation:** Full UNet flood weights (`resq_flood.onnx`, 93.42 MB) are integrated with Sen1Floods11 validation metrics and automated fallback to SAR backscatter thresholding (VV < -16 dB). Future releases will incorporate multi-temporal coherence change detection.
 - **Offline Mesh Networking:** In severe infrastructure failures where cellular data collapses, ground SOS reports rely on local offline storage until connectivity is restored. Future releases will integrate Bluetooth Low Energy (BLE) peer mesh routing and LoRa gateway forwarders.
 - **Real-Time Edge Drone Feeds:** Extending the ONNX inference pipeline to accept low-altitude uncrewed aerial vehicle (UAV) video streams for near-instant casualty and road blockage validation.

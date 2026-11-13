@@ -61,9 +61,16 @@ class DamageModelSession:
     def is_available(self) -> bool:
         return self.model_path.is_file()
 
+    def release(self) -> None:
+        self._session = None
+
     def get_session(self):
         if self._session is None and self.is_available:
             import onnxruntime as ort
+
+            from services.memory import model_loading
+
+            model_loading("damage", self.release)
 
             opts = ort.SessionOptions()
             # Low-memory footprint configuration for Render 512 MB RAM ceiling

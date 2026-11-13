@@ -110,16 +110,31 @@ def test_alert_auto_escalation():
     assert data["escalated_at"] is not None
 
 
-def test_sentinel_status_deferred_fallback():
+def test_sentinel_status():
     resp = client.get("/sentinel/status")
     assert resp.status_code == 200
     data = resp.json()
     assert data["service"] == "Copernicus Sentinel-1 SAR Flood Mapping"
     assert "weights_deferred" in data
-    # Deep learning weights resq_flood_unet.onnx are intentionally deferred/absent
-    assert data["weights_deferred"] is True
-    assert data["active_mode"] == "sar_backscatter_thresholding"
-    assert "Deferred weights fallback" in data["notice"]
+    assert "model_installed" in data
+    # When resq_flood.onnx is present, model_installed is True and weights_deferred is False
+    if data["model_installed"]:
+        assert data["weights_deferred"] is False
+        assert data["active_mode"] == "unet_segmentation"
+        assert "UNet weights loaded" in data["notice"]
+    else:
+        assert data["weights_deferred"] is True
+        assert data["active_mode"] == "sar_backscatter_thresholding"
+
+
+def test_sentinel_status_deferred_fallback_mocked():
+    with patch("services.imagery.sentinel.is_flood_model_available", return_value=False):
+        resp = client.get("/sentinel/status")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["weights_deferred"] is True
+        assert data["active_mode"] == "sar_backscatter_thresholding"
+        assert "Deferred weights fallback" in data["notice"]
 
 
 def test_sentinel_search_offline_fixture():
@@ -141,7 +156,7 @@ def test_sentinel_search_offline_fixture():
         assert "vv" in scene["assets"]
 
 
-def test_sentinel_assess_flood_with_deferred_weights():
+def test_sentinel_assess_flood_active_or_fallback():
     resp = client.post(
         "/sentinel/assess",
         json={
@@ -153,8 +168,6 @@ def test_sentinel_assess_flood_with_deferred_weights():
     assert resp.status_code == 200
     data = resp.json()
     assert data["assessment_id"].startswith("SAR-")
-    assert data["weights_deferred"] is True
-    assert data["deferred_fallback_active"] is True
     assert "Sen1Floods11" in data["method"]
     assert "total_area_km2" in data
     assert "flooded_area_km2" in data
@@ -164,6 +177,30 @@ def test_sentinel_assess_flood_with_deferred_weights():
     assert "flooded_pct" in first_zone
     assert "severity" in first_zone
     assert "mean_backscatter_vv_db" in first_zone
+
+
+def test_sentinel_assess_flood_with_deferred_weights():
+    with patch("services.imagery.sentinel.is_flood_model_available", return_value=False):
+        resp = client.post(
+            "/sentinel/assess",
+            json={
+                "bbox": {"south": 12.92, "west": 77.62, "north": 12.98, "east": 77.68},
+                "scenario_id": "flood-bengaluru",
+                "water_threshold_db": -16.0,
+            },
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["assessment_id"].startswith("SAR-")
+        assert data["weights_deferred"] is True
+        assert data["deferred_fallback_active"] is True
+        assert "Sen1Floods11" in data["method"]
+        assert "total_area_km2" in data
+        assert "flooded_area_km2" in data
+        assert "zones" in data
+        assert len(data["zones"]) > 0
+        first_zone = data["zones"][0]
+        assert "flooded_pct" in first_zone
 
 
 def test_event_replay_scenarios():

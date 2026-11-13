@@ -200,6 +200,15 @@ def road_network_for(scenario: Scenario) -> RoadNetwork | None:
 _NETWORKS: dict[str, RoadNetwork] = {}
 
 
+def _drop_network(cache_key: str) -> None:
+    _NETWORKS.pop(cache_key, None)
+
+
+_ROADS_MODULE_HOOKS = __import__("services.geo.roads", fromlist=["_EVICT_HOOKS"])._EVICT_HOOKS
+if _drop_network not in _ROADS_MODULE_HOOKS:
+    _ROADS_MODULE_HOOKS.append(_drop_network)
+
+
 def warm_road_networks(scenario_ids: Sequence[str] | None = None) -> int:
     """Parse and index the cached road graphs now, so no request pays for it. Returns how many loaded."""
     from services.scenarios import get_scenario, list_scenarios

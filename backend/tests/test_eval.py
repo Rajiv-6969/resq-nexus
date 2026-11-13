@@ -94,10 +94,17 @@ def test_satellite_damage_and_flood_deferred_assets():
     assert base_comp["base_paper_macro_f1"] == 0.794
     assert "approximate comparison" in base_comp["comparison_note"]
 
-    # Deferred flood assets
-    assert flood["status"] == "pending_assets"
-    assert "Pending flood model assets" in flood["message"]
-    assert flood["metrics"] is None
+    # Flood model evaluation
+    assert flood["status"] in ("evaluated", "pending_assets")
+    if flood["status"] == "evaluated":
+        assert flood["metrics"] is not None
+        assert "experiment_A_no_indian_training" in flood["metrics"]
+        assert "experiment_B_with_indian_training" in flood["metrics"]
+        exp_b = flood["metrics"]["experiment_B_with_indian_training"]
+        assert exp_b["india_test"]["water_iou"] > 0.30
+    else:
+        assert "Pending flood model assets" in flood["message"]
+        assert flood["metrics"] is None
 
 
 def test_system_benchmarks_onnx_models():

@@ -31,3 +31,6 @@ backend/cache/
 
 # Damage-model assets (backend/scripts/download_assets.py): model, xBD samples, geotransforms
 data/assets/
+*.onnx
+*.zip
+*.tgz

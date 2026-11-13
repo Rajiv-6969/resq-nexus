@@ -393,7 +393,7 @@ export default function Analytics() {
                   </p>
                 </div>
 
-                {/* Flood Model Status Banner */}
+                {/* Flood Model Evaluation Panel */}
                 {flood?.status === "pending_assets" ? (
                   <div
                     style={{
@@ -411,9 +411,53 @@ export default function Analytics() {
                     </p>
                   </div>
                 ) : flood?.metrics ? (
-                  <div style={{ marginTop: "16px", padding: "16px", border: "1px solid var(--line)" }}>
-                    <p className="mono font-bold text-xs">Sen1Floods11 Model Metrics</p>
-                    <pre className="text-xs mono mt-2">{JSON.stringify(flood.metrics, null, 2)}</pre>
+                  <div style={{ marginTop: "16px", border: "1px solid var(--line)", background: "var(--paper)" }}>
+                    <div style={{ padding: "12px 16px", background: "#0A0A0A", color: "#EDEBE6", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span className="mono font-bold text-xs" style={{ textTransform: "uppercase" }}>
+                        Sentinel-1 Flood Model — Sen1Floods11 Domain Transfer Benchmark
+                      </span>
+                      <span className="mono text-xs" style={{ color: "#8A8A85" }}>
+                        resq_flood.onnx (93.4 MB)
+                      </span>
+                    </div>
+                    <div style={{ padding: "16px", overflowX: "auto" }}>
+                      <p className="text-xs mb-3">
+                        Evaluates synthetic aperture radar (SAR) water segmentation transferability across international and Indian hydrological regimes:
+                      </p>
+                      <table className="unmet-table mono text-xs">
+                        <thead>
+                          <tr>
+                            <th>Training Regime</th>
+                            <th>India Test IoU</th>
+                            <th>India Test F1</th>
+                            <th>Global Val IoU</th>
+                            <th>Global Val F1</th>
+                            <th>Domain Shift Impact</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <th>Exp A (Global Only)</th>
+                            <td><strong>{(flood.metrics.experiment_A_no_indian_training?.india_test?.water_iou * 100).toFixed(1)}%</strong> ({flood.metrics.experiment_A_no_indian_training?.india_test?.water_iou.toFixed(4)})</td>
+                            <td>{(flood.metrics.experiment_A_no_indian_training?.india_test?.water_f1 * 100).toFixed(1)}%</td>
+                            <td>{(flood.metrics.experiment_A_no_indian_training?.global_val?.water_iou * 100).toFixed(1)}%</td>
+                            <td>{(flood.metrics.experiment_A_no_indian_training?.global_val?.water_f1 * 100).toFixed(1)}%</td>
+                            <td>Baseline</td>
+                          </tr>
+                          <tr style={{ background: "#F4F3F0" }}>
+                            <th>Exp B (With Indian Scenes)</th>
+                            <td><strong style={{ color: "var(--red)" }}>{(flood.metrics.experiment_B_with_indian_training?.india_test?.water_iou * 100).toFixed(1)}%</strong> ({flood.metrics.experiment_B_with_indian_training?.india_test?.water_iou.toFixed(4)})</td>
+                            <td><strong>{(flood.metrics.experiment_B_with_indian_training?.india_test?.water_f1 * 100).toFixed(1)}%</strong></td>
+                            <td>{(flood.metrics.experiment_B_with_indian_training?.global_val?.water_iou * 100).toFixed(1)}%</td>
+                            <td>{(flood.metrics.experiment_B_with_indian_training?.global_val?.water_f1 * 100).toFixed(1)}%</td>
+                            <td style={{ color: "var(--red)", fontWeight: 700 }}>+32.8% IoU / +24.8% F1</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                      <p className="mono text-xs mt-3" style={{ color: "#5A5A57" }}>
+                        Dataset Partitions: {flood.metrics.split?.india_train} Indian train / {flood.metrics.split?.india_test} Indian test &middot; {flood.metrics.split?.other_train} Global train / {flood.metrics.split?.other_val} Global val (446 hand-labeled tiles).
+                      </p>
+                    </div>
                   </div>
                 ) : null}
               </section>

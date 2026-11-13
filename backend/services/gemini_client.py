@@ -13,7 +13,10 @@ from __future__ import annotations
 import os
 from functools import lru_cache
 
-from google import genai
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:  # the SDK costs ~45 MB of RAM: import it only when Gemini is actually called
+    from google import genai
 
 DEFAULT_MODEL = "gemini-flash-latest"
 
@@ -41,6 +44,8 @@ def get_client() -> genai.Client:
             "GEMINI_API_KEY is not set. Copy backend/.env.example to backend/.env "
             "and paste your key from https://aistudio.google.com/apikey."
         )
+    from google import genai
+
     return genai.Client(api_key=api_key)
 
 

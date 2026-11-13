@@ -1,0 +1,17 @@
+{
+ "vv_gain": 1.0946,
+ "vv_db": -0.275,
+ "vh_gain": 1.2627,
+ "vh_db": 2.157,
+ "fitted": true,
+ "fitted_parameters": {
+  "vv_gain": 1.0946,
+  "vv_db": -0.275,
+  "vh_gain": 1.2627,
+  "vh_db": 2.157
+ },
+ "iou_drop_uncalibrated": 0.3426,
+ "source": "python ml/flood_inference.py domain-check (Sen1Floods11 India sample chips vs Planetary Computer sentinel-1-rtc)",
+ "method": "per-band linear map in dB (gain * dB + offset), least squares on matched 1-99th percentiles of S1Hand vs RTC over co-valid pixels (label-free), applied before normalisation",
+ "rule": "adopted when the RTC IoU drops by more than 0.05 and the leave-one-out calibrated IoU is higher"
+}

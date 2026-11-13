@@ -1,4 +1,4 @@
-"""Satellite ML Model evaluation: Damage model metrics (xBD) and Flood model deferred asset handling."""
+"""Satellite ML model evaluation: damage model (xBD) and flood model (Sen1Floods11 / Sentinel-1)."""
 from __future__ import annotations
 
 import json
@@ -138,28 +138,10 @@ def load_damage_metrics() -> dict[str, Any]:
 
 
 def load_flood_metrics() -> dict[str, Any]:
-    """Check for flood_results.json and handle deferred release gracefully."""
-    p = find_flood_results_file()
-    if not p:
-        return {
-            "status": "pending_assets",
-            "message": "Pending flood model assets (deferred until future GitHub release: resq_flood.onnx & Sen1Floods11 benchmark).",
-            "metrics": None,
-        }
+    """Flood model results (see eval/flood_metrics.py); ``pending_assets`` without flood_results.json."""
+    from eval.flood_metrics import load_flood_metrics as _load
 
-    try:
-        data = json.loads(p.read_text(encoding="utf-8"))
-        return {
-            "status": "evaluated",
-            "message": "Flood segmentation model evaluated on Sen1Floods11 validation split",
-            "metrics": data,
-        }
-    except Exception as e:
-        return {
-            "status": "error_reading_assets",
-            "message": f"Failed to parse flood_results.json: {e}",
-            "metrics": None,
-        }
+    return _load()
 
 
 def evaluate_satellite_models() -> dict[str, Any]:
