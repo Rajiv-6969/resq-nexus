@@ -1,0 +1,37 @@
+name: Scheduled Feed Poller
+
+on:
+  schedule:
+    # Trigger every 15 minutes to keep GDACS and USGS official alerts fresh
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+jobs:
+  poll:
+    name: Poll GDACS & USGS Disaster Feeds
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Ingestion Endpoint
+        run: |
+          if [ -z "${{ secrets.BACKEND_URL }}" ]; then
+            echo "BACKEND_URL secret is not set; skipping live poll trigger."
+            exit 0
+          fi
+          echo "Sending poll request to ${{ secrets.BACKEND_URL }}/jobs/poll..."
+          STATUS=$(curl -s -o response.txt -w "%{http_code}" -X POST \
+            "${{ secrets.BACKEND_URL }}/jobs/poll?india_only=true" \
+            -H "X-Cron-Key: ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json" \
+            --max-time 30 || echo "000")
+          
+          echo "Response HTTP Status: $STATUS"
+          cat response.txt || true
+          
+          if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 300 ]; then
+            echo "Feeds polled successfully."
+          elif [ "$STATUS" -eq 401 ] || [ "$STATUS" -eq 403 ]; then
+            echo "::error::Authentication failed: verify CRON_SECRET matches between GitHub Secrets and Render backend."
+            exit 1
+          else
+            echo "Notice: Non-critical poll return code ($STATUS) - backend may be waking up."
+          fi

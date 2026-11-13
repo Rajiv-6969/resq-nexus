@@ -17,6 +17,7 @@ samples the New Incident page shows how to install them.
 from __future__ import annotations
 
 import argparse
+import os
 import shutil
 import subprocess
 import sys
@@ -32,7 +33,7 @@ from paths import DATA_DIR  # noqa: E402
 ASSET_DIR = DATA_DIR / "assets"
 REPO = "Rajiv-6969/resq-nexus"
 TAG = "v0.5-demo"
-ASSETS = ("resq_damage.onnx", "test_results.json", "xbd_sample.zip", "xview_geotransforms.json.tgz")
+ASSETS = ("resq_damage.onnx", "test_results.json", "xbd_sample.zip", "xview_geotransforms.json.tgz", "resq_flood.onnx")
 
 
 def _gh() -> str | None:
@@ -47,24 +48,37 @@ def download(name: str, force: bool = False) -> Path | None:
     if target.is_file() and not force:
         print(f"present  {name}")
         return target
+    if os.getenv("OFFLINE_MODE", "0") == "1":
+        if target.is_file():
+            print(f"present  {name} (offline)")
+            return target
+        print(f"offline  {name} (skipped)")
+        return None
     ASSET_DIR.mkdir(parents=True, exist_ok=True)
     gh = _gh()
     if gh:
-        result = subprocess.run([gh, "release", "download", TAG, "--repo", REPO, "--pattern", name, "--dir", str(ASSET_DIR), "--clobber"],
-                                capture_output=True, text=True)
-        if result.returncode == 0 and target.is_file():
-            print(f"fetched  {name}")
-            return target
+        try:
+            result = subprocess.run([gh, "release", "download", TAG, "--repo", REPO, "--pattern", name, "--dir", str(ASSET_DIR), "--clobber"],
+                                    capture_output=True, text=True, timeout=30)
+            if result.returncode == 0 and target.is_file():
+                print(f"fetched  {name}")
+                return target
+        except Exception:
+            pass
     url = f"https://github.com/{REPO}/releases/download/{TAG}/{name}"
-    with requests.get(url, stream=True, timeout=120) as response:
-        if response.status_code != 200:
-            print(f"MISSING  {name} (HTTP {response.status_code}; private repo needs `gh auth login`)")
-            return None
-        with target.open("wb") as handle:
-            for block in response.iter_content(1 << 20):
-                handle.write(block)
-    print(f"fetched  {name}")
-    return target
+    try:
+        with requests.get(url, stream=True, timeout=15) as response:
+            if response.status_code != 200:
+                print(f"MISSING  {name} (HTTP {response.status_code}; optional or deferred asset)")
+                return None
+            with target.open("wb") as handle:
+                for block in response.iter_content(1 << 20):
+                    handle.write(block)
+        print(f"fetched  {name}")
+        return target
+    except Exception as e:
+        print(f"MISSING  {name} ({e}; optional or deferred asset)")
+        return None
 
 
 def unpack(path: Path) -> None:

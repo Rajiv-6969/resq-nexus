@@ -25,8 +25,10 @@ load_dotenv(Path(__file__).resolve().parent / ".env")
 from db.database import get_db, init_db  # noqa: E402
 from db.models import SosRequest  # noqa: E402
 from deps import require_admin  # noqa: E402
+import paths  # noqa: E402
 from routers import admin, alerts, auth, damage, evaluation, jobs, provider, replay, reports, resources, scenarios_damage, sentinel, sos  # noqa: E402
 from services import allocation_engine, explain, gemini_client, priority, scenarios, sos_demand  # noqa: E402
+from services.rate_limiter import RateLimitMiddleware  # noqa: E402
 from services.sos import ACTIVE_STATUSES  # noqa: E402
 from services.scenarios import Scenario, ScenarioNotFoundError, ScenarioSummary, Zone  # noqa: E402
 
@@ -39,7 +41,8 @@ app = FastAPI(
 )
 
 DEFAULT_CORS_ORIGINS = "http://localhost:5173,http://127.0.0.1:5173"
-cors_origins = [o.strip() for o in os.getenv("CORS_ORIGINS", DEFAULT_CORS_ORIGINS).split(",") if o.strip()]
+raw_origins = os.getenv("FRONTEND_ORIGIN") or os.getenv("CORS_ORIGINS", DEFAULT_CORS_ORIGINS)
+cors_origins = [o.strip() for o in raw_origins.split(",") if o.strip()]
 
 app.add_middleware(
     CORSMiddleware,
@@ -47,6 +50,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(RateLimitMiddleware)
 
 # Tables are created (and the demo data loaded into an empty database) on start-up.
 init_db()
@@ -120,12 +124,23 @@ def root():
 
 
 @app.get("/health")
-def health():
-    """Liveness check; also reports whether a Gemini key is configured."""
+def health(db: Session = Depends(get_db)):
+    """Lightweight health check for Render and pre-demo wake-ups."""
+    db_status = "connected"
+    try:
+        db.execute(select(1)).scalar_one()
+    except Exception:
+        db_status = "unavailable"
+
+    model_path = paths.DATA_DIR / "assets" / "resq_damage.onnx"
+    damage_model_status = "loaded" if model_path.is_file() else "missing"
+
     return {
         "status": "ok",
         "service": "resq-nexus-api",
         "version": API_VERSION,
+        "database": db_status,
+        "damage_model": damage_model_status,
         "gemini_configured": gemini_client.is_configured(),
     }
 

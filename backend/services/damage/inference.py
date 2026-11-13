@@ -66,7 +66,10 @@ class DamageModelSession:
             import onnxruntime as ort
 
             opts = ort.SessionOptions()
-            opts.intra_op_num_threads = 2
+            # Low-memory footprint configuration for Render 512 MB RAM ceiling
+            opts.enable_cpu_mem_arena = False
+            opts.intra_op_num_threads = 1
+            opts.inter_op_num_threads = 1
             opts.execution_mode = ort.ExecutionMode.ORT_SEQUENTIAL
             opts.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
             self._session = ort.InferenceSession(

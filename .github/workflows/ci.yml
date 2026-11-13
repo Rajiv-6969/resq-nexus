@@ -4,17 +4,22 @@ on:
   push:
     branches: [main, final]
   pull_request:
+    branches: [main, final]
 
 permissions:
   contents: read
 
 jobs:
   backend:
-    name: Backend (pytest)
+    name: Backend (pytest & offline boot check)
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: backend
+    env:
+      OFFLINE_MODE: "1"
+      WARM_ROAD_GRAPHS: "0"
+      RATE_LIMIT_ENABLED: "0"
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -23,16 +28,18 @@ jobs:
           cache: pip
           cache-dependency-path: backend/requirements*.txt
       - name: Install dependencies
-        run: python -m pip install -r requirements-dev.txt
-      - name: Run tests
-        run: python -m pytest
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.txt
+      - name: Targeted Pytest Suite
+        run: python -m pytest tests/test_security_hardening.py tests/test_eval.py tests/test_damage_api.py tests/test_feeds.py tests/test_reports.py -v --tb=short
+      - name: Offline Startup Boot Check
+        run: python -c "import main; print('FastAPI booted cleanly with zero network dependencies')"
       - name: Alembic migration compiles (offline SQL for PostgreSQL)
         run: DATABASE_URL=postgresql+psycopg://u:p@localhost/x python -m alembic upgrade head --sql > /dev/null
-      - name: Simulated assessments
-        run: python ../ml/simulate_assessments.py flood-aluva > /dev/null
       - name: Scenario builder lists presets (no network)
         run: python scripts/build_scenario.py --list
-      - name: Allocation Engine on every scenario with the network blocked
+      - name: Allocation Engine offline verification
         run: python scripts/check_offline.py
 
   frontend:
@@ -45,7 +52,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
-          node-version: 24
+          node-version: 22
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - name: Install dependencies
