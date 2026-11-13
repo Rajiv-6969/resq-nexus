@@ -180,3 +180,11 @@ export const searchSentinelImagery = (body, options) => send("POST", "/sentinel/
 export const assessSentinelFlood = (body, options) => send("POST", "/sentinel/assess", body, options);
 export const fetchReplayScenarios = (options) => get("/replay/scenarios", options);
 export const fetchScenarioTimeline = (id, options) => get(`/replay/${encodeURIComponent(id)}`, options);
+
+// ------------------------------------------------------------------ Phase 5: Situation Reports & Decision Explanations
+export const fetchSituationReport = (scenarioId, lang = "en", options) =>
+  get(`/reports/${encodeURIComponent(scenarioId)}${query({ lang })}`, options);
+export const fetchDetailedZoneExplanation = (scenarioId, zoneId, lang = "en", options) =>
+  get(`/reports/${encodeURIComponent(scenarioId)}/zones/${encodeURIComponent(zoneId)}/explain${query({ lang })}`, options);
+export const runPollJob = (indiaOnly = true, options) =>
+  send("POST", `/jobs/poll${query({ india_only: indiaOnly })}`, {}, options);

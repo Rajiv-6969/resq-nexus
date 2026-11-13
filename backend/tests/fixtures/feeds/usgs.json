@@ -1,0 +1,72 @@
+{
+  "type": "FeatureCollection",
+  "metadata": {
+    "generated": 1731475200000,
+    "title": "USGS Earthquakes - Test Fixture",
+    "status": 200,
+    "count": 3
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "id": "usgs_in_001",
+      "properties": {
+        "mag": 5.4,
+        "place": "28 km NE of Coimbatore, Tamil Nadu, India",
+        "time": 1731471600000,
+        "updated": 1731472600000,
+        "tz": null,
+        "url": "https://earthquake.usgs.gov/earthquakes/eventpage/usgs_in_001",
+        "detail": "https://earthquake.usgs.gov/earthquakes/feed/v1.0/detail/usgs_in_001.geojson",
+        "felt": 142,
+        "alert": "yellow",
+        "status": "reviewed",
+        "tsunami": 0,
+        "sig": 450,
+        "net": "us",
+        "code": "in_001",
+        "sources": ",us,",
+        "types": ",origin,phase-data,",
+        "title": "M 5.4 - 28 km NE of Coimbatore, India"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [77.15, 11.18, 10.0]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "usgs_in_002",
+      "properties": {
+        "mag": 4.1,
+        "place": "15 km S of Joshimath, Uttarakhand, India",
+        "time": 1731468000000,
+        "updated": 1731469000000,
+        "alert": "green",
+        "status": "reviewed",
+        "title": "M 4.1 - 15 km S of Joshimath, India"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [79.56, 30.45, 12.0]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "usgs_out_003",
+      "properties": {
+        "mag": 6.2,
+        "place": "120 km W of Tokyo, Japan",
+        "time": 1731460000000,
+        "updated": 1731461000000,
+        "alert": "yellow",
+        "status": "reviewed",
+        "title": "M 6.2 - Japan (Outside India Filter)"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [139.75, 35.68, 30.0]
+      }
+    }
+  ]
+}

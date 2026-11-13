@@ -33,14 +33,29 @@ logger = logging.getLogger(__name__)
 PLANETARY_COMPUTER_STAC = "https://planetarycomputer.microsoft.com/api/stac/v1/search"
 CACHE_DIR = DATA_DIR / "assets" / "cache" / "sentinel"
 FIXTURES_DIR = Path(__file__).resolve().parent.parent.parent / "tests" / "fixtures" / "stac"
-FLOOD_UNET_ONNX_PATH = DATA_DIR / "assets" / "resq_flood_unet.onnx"
+ML_DIR = Path(__file__).resolve().parent.parent.parent.parent / "ml"
+FLOOD_ONNX_CANDIDATE_PATHS = [
+    DATA_DIR / "assets" / "resq_flood.onnx",
+    DATA_DIR / "assets" / "resq_flood_unet.onnx",
+    ML_DIR / "resq_flood.onnx",
+    ML_DIR / "resq_flood_unet.onnx",
+]
+FLOOD_UNET_ONNX_PATH = FLOOD_ONNX_CANDIDATE_PATHS[0]
 
 CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
 
+def find_flood_model_path() -> Path | None:
+    """Find ONNX flood model in data/assets/ or ml/."""
+    for p in FLOOD_ONNX_CANDIDATE_PATHS:
+        if p.is_file():
+            return p
+    return None
+
+
 def is_flood_model_available() -> bool:
     """Check if the ONNX flood segmentation model is present on disk."""
-    return FLOOD_UNET_ONNX_PATH.is_file()
+    return find_flood_model_path() is not None
 
 
 def search_sentinel_scenes(

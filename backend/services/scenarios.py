@@ -60,6 +60,7 @@ class Scenario(BaseModel):
     disaster_type: DisasterType
     region: str
     state: str
+    event_label: str | None = None
     description: str = ""
     synthetic: bool = True
     data_note: str = ""
@@ -98,6 +99,7 @@ class ScenarioSummary(BaseModel):
     zone_count: int
     total_population: int
     synthetic: bool
+    event_label: str | None = None
 
 
 class ScenarioNotFoundError(LookupError):
@@ -133,6 +135,7 @@ def list_scenarios(directory: Path = SCENARIO_DIR) -> list[ScenarioSummary]:
                 zone_count=len(s.zones),
                 total_population=sum(z.population for z in s.zones),
                 synthetic=s.synthetic,
+                event_label=s.event_label,
             )
         )
     return summaries

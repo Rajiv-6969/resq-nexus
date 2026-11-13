@@ -1,0 +1,67 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "eventid": 100234,
+        "eventtype": "FL",
+        "eventname": "Floods in Andhra Pradesh and Telangana",
+        "name": "Floods in Vijayawada (Budameru)",
+        "description": "Severe flooding caused by heavy rainfall and Budameru diversion breach in Vijayawada district.",
+        "htmldescription": "Severe floods in Vijayawada, Krishna River basin.",
+        "severitydata": {
+          "severity": 2.5,
+          "severitytext": "Red",
+          "severityunit": "Class"
+        },
+        "alertlevel": "Red",
+        "country": "India",
+        "fromdate": "2024-09-01T06:00:00",
+        "todate": "2024-09-04T18:00:00",
+        "url": "https://www.gdacs.org/report.aspx?eventid=100234"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [80.648, 16.506]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "eventid": 100567,
+        "eventtype": "TC",
+        "eventname": "Tropical Cyclone Dana",
+        "name": "Severe Cyclonic Storm Dana",
+        "description": "Cyclonic storm approaching North Odisha and West Bengal coast with winds up to 120 km/h.",
+        "severitydata": {
+          "severity": 3.0,
+          "severitytext": "Orange"
+        },
+        "alertlevel": "Orange",
+        "country": "India",
+        "fromdate": "2024-10-24T00:00:00",
+        "url": "https://www.gdacs.org/report.aspx?eventid=100567"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [86.95, 20.75]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "eventid": 100890,
+        "eventtype": "FL",
+        "eventname": "Floods in Central Europe",
+        "country": "Poland",
+        "alertlevel": "Orange",
+        "fromdate": "2024-09-15T00:00:00"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [19.14, 51.91]
+      }
+    }
+  ]
+}

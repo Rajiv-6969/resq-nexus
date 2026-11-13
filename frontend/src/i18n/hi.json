@@ -67,6 +67,13 @@
     "step_forward": "आगे बढ़ें",
     "step_back": "पीछे जाएं"
   },
+  "reports": {
+    "btn": "स्थिति रिपोर्ट",
+    "title": "आधारभूत स्थिति रिपोर्ट",
+    "faithfulness": "तथ्यात्मक सटीकता (Faithfulness)",
+    "silent_areas": "अति-संवेदनशील मौन क्षेत्र",
+    "explain_deep": "विस्तार से समझाएं"
+  },
   "common": {
     "loading": "लोड हो रहा है...",
     "error": "त्रुटि हुई",

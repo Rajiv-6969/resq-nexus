@@ -67,6 +67,13 @@
     "step_forward": "Step Forward",
     "step_back": "Step Back"
   },
+  "reports": {
+    "btn": "Situation Report",
+    "title": "Grounded Situation Report",
+    "faithfulness": "Faithfulness Match",
+    "silent_areas": "High-Risk Silent Sectors",
+    "explain_deep": "Explain in detail"
+  },
   "common": {
     "loading": "Loading...",
     "error": "An error occurred",

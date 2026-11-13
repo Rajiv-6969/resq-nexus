@@ -265,3 +265,97 @@ def explain_allocation(result: Mapping[str, Any], region: str = "") -> dict[str,
         "notice": notice,
         "explanations": explanations,
     }
+
+
+def explain_dispatch(dispatch: Mapping[str, Any], lang: str = "en") -> str:
+    """Fast deterministic short explanation for an emergency dispatch recommendation."""
+    res_type = dispatch.get("resource_type", "relief_unit").replace("_", " ")
+    qty = dispatch.get("quantity", 1)
+    depot = dispatch.get("depot", "Central Depot")
+    target = dispatch.get("target_zone", "Target Sector")
+    time_min = round(dispatch.get("travel_time_min", 15))
+    reason = dispatch.get("reason", "critical priority demand")
+
+    if lang == "hi":
+        return f"{depot} से {target} के लिए {qty} {res_type} रवाना ({time_min} मिनट सड़क यात्रा): {reason}।"
+    return f"Dispatched {qty} {res_type} from {depot} to {target} ({time_min} min road travel): {reason}."
+
+
+def explain_zone_deep(
+    zone_id: str,
+    scenario_id: str,
+    lang: str = "en",
+) -> dict[str, Any]:
+    """Provide on-demand deeper contextual reasoning for a single zone's allocation decision."""
+    from services.scenarios import get_scenario
+    from services import allocation_engine as engine
+
+    scenario = get_scenario(scenario_id)
+    alloc_result = engine.allocate(scenario)
+    target = next((z for z in alloc_result["zones"] if z["id"] == zone_id), None)
+    if not target:
+        return {
+            "zone_id": zone_id,
+            "explanation": f"Zone {zone_id} not found in scenario {scenario_id}.",
+            "source": "template",
+        }
+
+    plan = target["engine"]
+    greedy = target["greedy"]
+    travel = round(plan.get("travel_time_min", 0))
+    dist = round(plan.get("distance_km", 0), 1)
+    cov = round(plan.get("coverage_pct", 0), 1)
+    greedy_cov = round(greedy.get("coverage_pct", 0), 1)
+
+    template_deep_en = (
+        f"Deep Allocation Audit for {target['name']} ({zone_id}):\n"
+        f"1. Priority Evaluation: Ranked #{target['rank']} of {len(alloc_result['zones'])} with priority score {target['priority_score']:.2f} "
+        f"(Severity: {target['damage_severity']}/3, Population: {target['population']:,}, Vulnerability: {target['vulnerability_index']:.2f}).\n"
+        f"2. Logistics & Access: Dispatched from {plan.get('depot_id')} via real OSM road graph ({dist} km, ~{travel} min travel). "
+        f"Road accessibility index is {target['accessibility']:.2f}.\n"
+        f"3. Fairness Trade-Off: Allocation Engine achieved {cov}% need coverage versus {greedy_cov}% in an unconstrained greedy baseline. "
+        f"Work-conserving repair ensured scarce resources were balanced across priority tiers."
+    )
+
+    template_deep_hi = (
+        f"{target['name']} ({zone_id}) के लिए विस्तृत आवंटन विश्लेषण:\n"
+        f"1. प्राथमिकता मूल्यांकन: {target['priority_score']:.2f} स्कोर के साथ कुल {len(alloc_result['zones'])} क्षेत्रों में रैंक #{target['rank']} "
+        f"(गंभीरता: {target['damage_severity']}/3, जनसंख्या: {target['population']:,}, भेद्यता: {target['vulnerability_index']:.2f})।\n"
+        f"2. लॉजिस्टिक्स एवं पहुंच: {plan.get('depot_id')} से वास्तविक ओएसएम सड़क मार्ग द्वारा आपूर्ति ({dist} किमी, ~{travel} मिनट यात्रा)। "
+        f"सड़क सुगमता सूचकांक {target['accessibility']:.2f} है।\n"
+        f"3. निष्पक्षता संतुलन: आवंटन इंजन ने {cov}% आवश्यकता कवरेज प्रदान की, जबकि अनियंत्रित ग्रिडी बेसलाइन में यह {greedy_cov}% थी।"
+    )
+
+    deep_text = template_deep_hi if lang == "hi" else template_deep_en
+    source = "template"
+
+    if gemini_client.is_configured():
+        prompt = (
+            f"Explain in 3 concise bullet points why {target['name']} ({zone_id}) received {cov}% coverage "
+            f"from depot {plan.get('depot_id')} ({dist} km, {travel} min travel). Priority score: {target['priority_score']:.2f}, "
+            f"Greedy baseline coverage: {greedy_cov}%. Reply in {'Hindi' if lang == 'hi' else 'English'}."
+        )
+        try:
+            gemini_res = gemini_client.generate_text(prompt)
+            if gemini_res.strip():
+                deep_text = gemini_res.strip()
+                source = "gemini"
+        except Exception:
+            pass
+
+    return {
+        "zone_id": zone_id,
+        "scenario_id": scenario_id,
+        "language": lang,
+        "explanation": deep_text,
+        "source": source,
+        "metrics": {
+            "rank": target["rank"],
+            "priority_score": target["priority_score"],
+            "coverage_pct": cov,
+            "greedy_coverage_pct": greedy_cov,
+            "travel_time_min": travel,
+            "distance_km": dist,
+            "depot": plan.get("depot_id"),
+        },
+    }

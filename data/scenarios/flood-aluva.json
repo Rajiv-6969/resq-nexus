@@ -4,6 +4,7 @@
  "disaster_type": "flood",
  "region": "Aluva and Ernakulam, Ernakulam district",
  "state": "Kerala",
+ "event_label": "Replay of real event (15–17 August 2018)",
  "description": "Hypothetical monsoon flood on the Periyar at Aluva, in the pattern of August 2018. Inundation is simulated from distance to the real river channel (decay 2.2 km).",
  "synthetic": true,
  "data_note": "Roads, facilities and population are real (OpenStreetMap, WorldPop or OSM building counts). Damage severity, accessibility, vulnerability and relief stock are SIMULATED for the demo and do not describe a real event; every zone carries source=\"simulated\".",

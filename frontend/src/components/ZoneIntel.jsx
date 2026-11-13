@@ -125,7 +125,7 @@ function AllocationBlock({ zone, plan, depot, stale, hasRun, onRun, canRun, dema
   );
 }
 
-function ExplanationBlock({ zone, run }) {
+function ExplanationBlock({ zone, run, onExplainDeep }) {
   const explanation = run?.explanations?.explanations.find((e) => e.zone_id === zone.id);
   if (!run) return null;
   return (
@@ -138,16 +138,27 @@ function ExplanationBlock({ zone, run }) {
       </header>
       <AnimatePresence mode="wait">
         {explanation ? (
-          <motion.p
-            key={zone.id}
-            className="explain-text"
-            initial={{ clipPath: "inset(0% 100% 0% 0%)" }}
-            animate={{ clipPath: "inset(0% 0% 0% 0%)" }}
-            exit={{ opacity: 0, transition: { duration: 0.08 } }}
-            transition={{ duration: 0.5, ease: HARD }}
-          >
-            {explanation.text}
-          </motion.p>
+          <div>
+            <motion.p
+              key={zone.id}
+              className="explain-text"
+              initial={{ clipPath: "inset(0% 100% 0% 0%)" }}
+              animate={{ clipPath: "inset(0% 0% 0% 0%)" }}
+              exit={{ opacity: 0, transition: { duration: 0.08 } }}
+              transition={{ duration: 0.5, ease: HARD }}
+            >
+              {explanation.text}
+            </motion.p>
+            {onExplainDeep && (
+              <button
+                type="button"
+                className="brutalist-btn btn--sm mono mt-2"
+                onClick={() => onExplainDeep(zone.id)}
+              >
+                Explain in detail &rarr;
+              </button>
+            )}
+          </div>
         ) : run.explainError ? (
           <p className="explain-text muted">Explanations could not be loaded: {run.explainError}</p>
         ) : (
@@ -162,7 +173,7 @@ function ExplanationBlock({ zone, run }) {
   );
 }
 
-export default function ZoneIntel({ zone, zones, total, settings, scenario, run, stale, onClose, onSelectZone, onRun, canRun }) {
+export default function ZoneIntel({ zone, zones, total, settings, scenario, run, stale, onClose, onSelectZone, onRun, canRun, onExplainDeep }) {
   if (!zone) {
     return <ScenarioBrief scenario={scenario} zones={zones} onSelectZone={onSelectZone} hasRun={Boolean(run)} onRun={onRun} canRun={canRun} />;
   }
@@ -252,7 +263,7 @@ export default function ZoneIntel({ zone, zones, total, settings, scenario, run,
         </p>
       )}
 
-      <ExplanationBlock zone={zone} run={run} />
+      <ExplanationBlock zone={zone} run={run} onExplainDeep={onExplainDeep} />
 
       <section className="intel-breakdown">
         <h3 className="subhead">Score breakdown</h3>

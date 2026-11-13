@@ -10,6 +10,8 @@ import ScenarioPicker from "../components/ScenarioPicker";
 import StockSummary from "../components/StockSummary";
 import WeightControls from "../components/WeightControls";
 import ZoneIntel from "../components/ZoneIntel";
+import SituationReportModal from "../components/SituationReportModal";
+import ExplainDetailModal from "../components/ExplainDetailModal";
 import { AsteriskMark } from "../components/icons";
 import { stepperStates } from "../lib/pipeline";
 import { useAppData } from "../state/contexts";
@@ -61,6 +63,8 @@ export default function CommandCentre() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [tab, setTab] = useState("zone");
   const [layers, setLayers] = useState({ hexes: true, routes: true, clusters: true, roads: true, hazard: true });
+  const [showReport, setShowReport] = useState(false);
+  const [explainZoneId, setExplainZoneId] = useState(null);
   const sideBodyRef = useRef(null);
 
   const zones = ranking?.zones ?? NO_ZONES;
@@ -137,6 +141,22 @@ export default function CommandCentre() {
             </p>
           )}
         </div>
+        <button
+          type="button"
+          className="brutalist-btn mono report-bar-btn"
+          onClick={() => setShowReport(true)}
+          style={{
+            alignSelf: "center",
+            padding: "8px 12px",
+            border: "1px solid #0A0A0A",
+            background: "#EDEBE6",
+            fontSize: "12px",
+            fontWeight: 700,
+            cursor: "pointer",
+          }}
+        >
+          SITUATION REPORT &rarr;
+        </button>
         <RunButton running={running} hasRun={Boolean(run)} stale={runStale} disabled={!canRun} onRun={runPipeline} />
       </section>
 
@@ -203,6 +223,7 @@ export default function CommandCentre() {
                     onSelectZone={selectZone}
                     onRun={runPipeline}
                     canRun={canRun}
+                    onExplainDeep={(id) => setExplainZoneId(id)}
                   />
                 ) : tab === "ranking" ? (
                   <RankingList zones={zones} result={allocation} selectedZoneId={selectedZoneId} onSelectZone={selectZone} />
@@ -217,6 +238,21 @@ export default function CommandCentre() {
           </div>
         </aside>
       </section>
+
+      {showReport && (
+        <SituationReportModal
+          scenarioId={scenarioId || "flood-bengaluru"}
+          onClose={() => setShowReport(false)}
+        />
+      )}
+
+      {explainZoneId && (
+        <ExplainDetailModal
+          scenarioId={scenarioId || "flood-bengaluru"}
+          zoneId={explainZoneId}
+          onClose={() => setExplainZoneId(null)}
+        />
+      )}
     </div>
   );
 }

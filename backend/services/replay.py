@@ -24,6 +24,7 @@ def get_replayable_scenarios() -> list[dict[str, Any]]:
             "disaster_type": s.disaster_type,
             "region": s.region,
             "state": s.state,
+            "event_label": getattr(s, "event_label", None),
             "zone_count": getattr(s, "zone_count", 0),
             "total_population": getattr(s, "total_population", 0),
         })
@@ -245,6 +246,7 @@ def generate_event_timeline(scenario_id: str) -> dict[str, Any]:
     return {
         "scenario_id": scenario.id,
         "scenario_name": scenario.name,
+        "event_label": getattr(scenario, "event_label", None),
         "disaster_type": scenario.disaster_type,
         "center": {"latitude": round(center_lat, 4), "longitude": round(center_lon, 4)},
         "bbox": scenario.bbox,

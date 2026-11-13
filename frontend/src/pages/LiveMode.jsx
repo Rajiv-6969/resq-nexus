@@ -14,6 +14,8 @@ import {
 import BaseMap, { FitPoints } from "../components/maps/BaseMap";
 import PrototypeNotice from "../components/sos/PrototypeNotice";
 import ScenarioPicker from "../components/ScenarioPicker";
+import SituationReportModal from "../components/SituationReportModal";
+import ExplainDetailModal from "../components/ExplainDetailModal";
 import { useAppData, useToast } from "../state/contexts";
 
 // Brutalist color palette strictly conforming to docs/PROJECT_CONTEXT.md
@@ -67,6 +69,8 @@ export default function LiveMode() {
   const [sarAssessment, setSarAssessment] = useState(null);
   const [activeTab, setActiveTab] = useState("alerts"); // "alerts" | "sentinel" | "fused"
   const [ackBusyId, setAckBusyId] = useState(null);
+  const [showReport, setShowReport] = useState(false);
+  const [explainZoneId, setExplainZoneId] = useState(null);
 
   // Replay state
   const [timeline, setTimeline] = useState(null);
@@ -227,6 +231,14 @@ export default function LiveMode() {
           <ScenarioPicker />
           <button
             type="button"
+            className="brutalist-btn btn--report mono text-xs"
+            onClick={() => setShowReport(true)}
+            title="Generate verified grounded situation report"
+          >
+            📑 Situation Report
+          </button>
+          <button
+            type="button"
             className="brutalist-btn btn--simulate mono text-xs"
             onClick={handleSimulateAlert}
             title="Inject simulated official warning"
@@ -315,6 +327,13 @@ export default function LiveMode() {
                         <div>SAR Backscatter: {zone.mean_backscatter_vv_db} dB</div>
                         <div>Flooded Share: {(zone.flooded_pct * 100).toFixed(0)}%</div>
                         <div>Severity: {zone.severity}</div>
+                        <button
+                          type="button"
+                          className="brutalist-btn btn--sm mono mt-2 block"
+                          onClick={() => setExplainZoneId(zone.zone_id)}
+                        >
+                          Explain in detail &rarr;
+                        </button>
                       </div>
                     </Popup>
                   </Circle>
@@ -652,6 +671,21 @@ export default function LiveMode() {
           <p>{currentFrame?.description}</p>
         </div>
       </footer>
+
+      {showReport && (
+        <SituationReportModal
+          scenarioId={scenarioId || "flood-bengaluru"}
+          onClose={() => setShowReport(false)}
+        />
+      )}
+
+      {explainZoneId && (
+        <ExplainDetailModal
+          scenarioId={scenarioId || "flood-bengaluru"}
+          zoneId={explainZoneId}
+          onClose={() => setExplainZoneId(null)}
+        />
+      )}
     </div>
   );
 }
