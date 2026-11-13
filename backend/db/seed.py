@@ -8,7 +8,7 @@ from pathlib import Path
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from db.models import Provider, Resource, SosRequest, User, utcnow
+from db.models import OfficialAlert, Provider, Resource, SosRequest, User, utcnow
 from services.security import hash_password
 from services.sos import NEEDS, VULNERABLE_GROUPS
 
@@ -86,8 +86,95 @@ def seed_demo_data(session: Session, path: Path = DEMO_SEED, now: datetime | Non
 
     session.add_all([*citizens.values(), *providers.values(), *resources, *requests])
     session.add_all(osm_facility_resources(scenario_dir, created_at=ago(30 * 1440)))
+    session.add_all(demo_official_alerts(now=now))
     session.commit()
     return True
+
+
+def demo_official_alerts(now: datetime | None = None) -> list[OfficialAlert]:
+    """Default official disaster alerts for demonstration."""
+    now = now or utcnow()
+
+    def ago(minutes: float) -> datetime:
+        return now - timedelta(minutes=minutes)
+
+    return [
+        OfficialAlert(
+            alert_code="ALT-IMD-BLR-01",
+            sender="IMD (India Meteorological Department)",
+            headline="FLASH FLOOD RED ALERT: Bellandur & Varthur Catchments",
+            description="Extremely heavy precipitation (>140mm in 3h) recorded. Severe waterlogging, lake overflow risk across Bellandur, Marathahalli and Outer Ring Road corridors.",
+            severity="Extreme",
+            urgency="Immediate",
+            certainty="Observed",
+            disaster_type="flood",
+            area_desc="Bellandur, Bengaluru",
+            latitude=12.9352,
+            longitude=77.6748,
+            source="official-imd",
+            status="ACTIVE",
+            escalation_timeout_mins=20,
+            created_at=ago(10),
+            updated_at=ago(10),
+        ),
+        OfficialAlert(
+            alert_code="ALT-CWC-ALU-02",
+            sender="CWC (Central Water Commission)",
+            headline="SEVERE FLOOD BULLETIN: Periyar River Level Warning",
+            description="Periyar river gauge at Aluva exceeds danger mark (4.2m above normal). Downstream low-lying zones advised immediate evacuation.",
+            severity="Extreme",
+            urgency="Immediate",
+            certainty="Observed",
+            disaster_type="flood",
+            area_desc="Aluva Riverfront, Ernakulam",
+            latitude=10.1076,
+            longitude=76.3516,
+            source="official-cwc",
+            status="ACKNOWLEDGED",
+            acknowledged_at=ago(25),
+            acknowledged_by="Control Room Admin",
+            escalation_timeout_mins=30,
+            created_at=ago(60),
+            updated_at=ago(25),
+        ),
+        OfficialAlert(
+            alert_code="ALT-IMD-VSKP-03",
+            sender="IMD (Cyclone Warning Centre)",
+            headline="SEVERE CYCLONIC STORM WARNING: North Andhra Coast",
+            description="Wind speeds 95-115 km/h with heavy surge inundation. Coastal Fishermen and beach front settlements instructed to evacuate to relief shelters.",
+            severity="Severe",
+            urgency="Immediate",
+            certainty="Likely",
+            disaster_type="cyclone",
+            area_desc="Visakhapatnam Coast",
+            latitude=17.6868,
+            longitude=83.2185,
+            source="official-imd",
+            status="ESCALATED",
+            escalated_at=ago(15),
+            escalation_timeout_mins=15,
+            created_at=ago(90),
+            updated_at=ago(15),
+        ),
+        OfficialAlert(
+            alert_code="ALT-NDMA-CBE-04",
+            sender="NDMA (National Disaster Management Authority)",
+            headline="EARTHQUAKE ADVISORY: M5.2 Tremor Reported",
+            description="Magnitude 5.2 seismic event with epicenter near Western Ghats boundary. Structural inspection teams mobilized for old masonry buildings.",
+            severity="Moderate",
+            urgency="Expected",
+            certainty="Observed",
+            disaster_type="earthquake",
+            area_desc="Coimbatore Central & Foothills",
+            latitude=11.0168,
+            longitude=76.9558,
+            source="official-ndma",
+            status="ACTIVE",
+            escalation_timeout_mins=45,
+            created_at=ago(15),
+            updated_at=ago(15),
+        ),
+    ]
 
 
 def osm_facility_resources(directory: Path = SCENARIO_DIR, created_at: datetime | None = None) -> list[Resource]:

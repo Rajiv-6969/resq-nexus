@@ -47,6 +47,26 @@
     "cloud_cover": "Cloud Cover",
     "capture_date": "Capture Date"
   },
+  "live": {
+    "title": "Live Operations & Event Replay",
+    "subtitle": "Real-time official alerts, Sentinel-1 SAR flood mapping and multi-phase disaster replay",
+    "status": "LIVE OPERATIONS",
+    "active_alerts": "Active Alerts",
+    "ack_rate": "Alert Ack Rate",
+    "flooded_area": "SAR Flood Area",
+    "ground_sos": "Citizen SOS Calls",
+    "acknowledge": "Acknowledge Alert",
+    "acknowledged": "Acknowledged",
+    "escalated": "Escalated",
+    "sentinel_sar": "Sentinel-1 SAR Radar",
+    "deferred_fallback": "Deferred Weights Fallback Active",
+    "sar_desc": "Sen1Floods11 VV backscatter thresholding (< -16 dB) via Planetary Computer STAC",
+    "replay_title": "Event Replay Controller",
+    "play": "Play",
+    "pause": "Pause",
+    "step_forward": "Step Forward",
+    "step_back": "Step Back"
+  },
   "common": {
     "loading": "Loading...",
     "error": "An error occurred",

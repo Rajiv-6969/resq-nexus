@@ -1,12 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
-import { useTranslation } from "react-i18next";
-import AnimatedNumber from "../../components/AnimatedNumber";
 import { fetchDamageSamples, fetchVantorEvents, postAllocateDamage, postAssessDamage, postSearchVantor } from "../../api";
 import { useToast } from "../../state/contexts";
 
 export default function NewIncident() {
-  const { t } = useTranslation();
   const { showToast } = useToast();
   const navigate = useNavigate();
 

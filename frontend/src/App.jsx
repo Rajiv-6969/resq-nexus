@@ -31,7 +31,9 @@ const loaders = {
   SosMonitor: () => import("./pages/admin/SosMonitor"),
   AdminTables: () => import("./pages/admin/AdminTables"),
   NewIncident: () => import("./pages/admin/NewIncident"),
+  LiveMode: () => import("./pages/LiveMode"),
 };
+const LiveMode = lazy(loaders.LiveMode);
 const CommandCentre = lazy(loaders.CommandCentre);
 const Analytics = SHOW_ANALYTICS ? lazy(loaders.Analytics) : null;
 const DamageAssessment = lazy(loaders.DamageAssessment);
@@ -100,6 +102,7 @@ export default function App() {
                     <Route path="/provider/resources" element={guarded(PROVIDER, <ProviderResources />)} />
 
                     <Route path="/admin" element={guarded(ADMIN, <SosMonitor />)} />
+                    <Route path="/live" element={guarded(ADMIN, <LiveMode />)} />
                     <Route path="/admin/incidents/new" element={guarded(ADMIN, <NewIncident />)} />
                     <Route path="/admin/providers" element={guarded(ADMIN, <AdminProviders />)} />
                     <Route path="/admin/resources" element={guarded(ADMIN, <AdminResources />)} />

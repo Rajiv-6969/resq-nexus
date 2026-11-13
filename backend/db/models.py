@@ -139,4 +139,32 @@ class SosRequest(Base):
     assigned_provider: Mapped[Provider | None] = relationship()
 
 
-register_location_sync(Provider, Resource, SosRequest)
+class OfficialAlert(Base):
+    """An official disaster warning/bulletin from IMD, NDMA, CWC or state authorities."""
+
+    __tablename__ = "official_alerts"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    alert_code: Mapped[str] = mapped_column(String(32), unique=True, index=True)
+    sender: Mapped[str] = mapped_column(String(100))  # e.g. IMD, NDMA, CWC
+    headline: Mapped[str] = mapped_column(String(200))
+    description: Mapped[str] = mapped_column(String(1000))
+    severity: Mapped[str] = mapped_column(String(20))  # Extreme | Severe | Moderate | Minor
+    urgency: Mapped[str] = mapped_column(String(20), default="Immediate")
+    certainty: Mapped[str] = mapped_column(String(20), default="Observed")
+    disaster_type: Mapped[str] = mapped_column(String(30), index=True)  # flood | cyclone | earthquake
+    area_desc: Mapped[str] = mapped_column(String(120))
+    latitude: Mapped[float] = mapped_column(Float)
+    longitude: Mapped[float] = mapped_column(Float)
+    location: Mapped[str | None] = mapped_column(LOCATION)
+    source: Mapped[str] = mapped_column(String(40), default="official-imd")
+    status: Mapped[str] = mapped_column(String(20), default="ACTIVE", index=True)  # ACTIVE | ACKNOWLEDGED | ESCALATED | EXPIRED
+    acknowledged_at: Mapped[datetime | None] = mapped_column(UTCDateTime)
+    acknowledged_by: Mapped[str | None] = mapped_column(String(80))
+    escalated_at: Mapped[datetime | None] = mapped_column(UTCDateTime)
+    escalation_timeout_mins: Mapped[int] = mapped_column(Integer, default=30)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
+
+
+register_location_sync(Provider, Resource, SosRequest, OfficialAlert)

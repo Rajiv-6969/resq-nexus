@@ -22,6 +22,7 @@ export const NAV_LINKS = {
     { to: "/provider/resources", label: "My Resources" },
   ],
   ADMIN: [
+    { to: "/live", label: "Live Mode" },
     { to: "/admin", label: "SOS Monitor", end: true },
     { to: "/command", label: "Command Centre" },
     { to: "/damage", label: "Damage" },

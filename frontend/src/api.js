@@ -168,3 +168,15 @@ export const fetchAdminResources = (filters = {}, options) =>
 export const createResource = (body) => send("POST", "/admin/resources", body);
 export const updateResource = (id, changes) => send("PATCH", `/admin/resources/${id}`, changes);
 export const deleteResource = (id) => send("DELETE", `/admin/resources/${id}`);
+
+// ------------------------------------------------------------------ Phase 4: Live Alerts, Sentinel-1 & Replay
+export const fetchAlerts = (filters = {}, options) =>
+  get(`/alerts${query({ status: filters.status, disaster_type: filters.disasterType, limit: filters.limit })}`, options);
+export const fetchAlertMetrics = (options) => get("/alerts/metrics", options);
+export const acknowledgeAlert = (id) => send("POST", `/alerts/${id}/acknowledge`);
+export const simulateAlert = (body) => send("POST", "/alerts/simulate", body);
+export const fetchSentinelStatus = (options) => get("/sentinel/status", options);
+export const searchSentinelImagery = (body, options) => send("POST", "/sentinel/search", body, options);
+export const assessSentinelFlood = (body, options) => send("POST", "/sentinel/assess", body, options);
+export const fetchReplayScenarios = (options) => get("/replay/scenarios", options);
+export const fetchScenarioTimeline = (id, options) => get(`/replay/${encodeURIComponent(id)}`, options);
