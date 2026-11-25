@@ -128,4 +128,4 @@ export function vulnerabilityLabel(index) {
 export const levelClass = (level) => level.toLowerCase();
 
 // Pages whose URL carries ?scenario=<id>.
-export const SCENARIO_PAGES = ["/command", "/damage", "/analytics"];
+export const SCENARIO_PAGES = ["/command", "/damage", "/analytics", "/live"];

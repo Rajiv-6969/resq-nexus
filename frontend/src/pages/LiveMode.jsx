@@ -54,7 +54,7 @@ function createIcon(color, label, symbol = "●") {
 
 export default function LiveMode() {
   const { t } = useTranslation();
-  const { scenarioId, scenario } = useAppData();
+  const { scenarios, scenarioId, selectScenario, listState, scenario } = useAppData();
   const toast = useToast();
 
   // Live state
@@ -86,8 +86,15 @@ export default function LiveMode() {
         fetchAlerts({ limit: 20 }),
         fetchAlertMetrics(),
       ]);
-      setAlerts(alertsData);
-      setAlertMetrics(metricsData);
+      const safeAlerts = Array.isArray(alertsData) ? alertsData : (alertsData?.alerts ?? []);
+      setAlerts(safeAlerts);
+      setAlertMetrics(metricsData ?? {
+        total_alerts: 0,
+        active: 0,
+        acknowledged: 0,
+        escalated: 0,
+        acknowledgment_rate: 0,
+      });
     } catch (err) {
       toast.error("Data fetch error", err.message);
     }
@@ -132,7 +139,8 @@ export default function LiveMode() {
     const intervalMs = 3000 / playbackSpeed;
     playTimerRef.current = setInterval(() => {
       setCurrentStep((prev) => {
-        if (prev >= timeline.total_steps - 1) {
+        const total = timeline?.total_steps ?? timeline?.frames?.length ?? 1;
+        if (prev >= total - 1) {
           setIsPlaying(false);
           return prev;
         }
@@ -183,27 +191,43 @@ export default function LiveMode() {
 
   // Replay frame currently active
   const currentFrame = useMemo(() => {
-    if (!timeline || !timeline.frames || !timeline.frames[currentStep]) return null;
+    if (!timeline || !Array.isArray(timeline.frames) || !timeline.frames[currentStep]) return null;
     return timeline.frames[currentStep];
   }, [timeline, currentStep]);
 
   // Map center and points
   const mapCenter = useMemo(() => {
-    if (timeline?.center) return [timeline.center.latitude, timeline.center.longitude];
-    if (scenario?.zones?.length) return [scenario.zones[0].latitude, scenario.zones[0].longitude];
+    if (timeline?.center?.latitude != null && timeline?.center?.longitude != null) {
+      return [timeline.center.latitude, timeline.center.longitude];
+    }
+    if (scenario?.zones?.[0]?.latitude != null && scenario?.zones?.[0]?.longitude != null) {
+      return [scenario.zones[0].latitude, scenario.zones[0].longitude];
+    }
     return [12.9716, 77.5946];
   }, [timeline, scenario]);
 
   const fitPoints = useMemo(() => {
     const pts = [];
     if (alerts?.length) {
-      alerts.forEach((a) => pts.push([a.latitude, a.longitude]));
+      alerts.forEach((a) => {
+        if (a?.latitude != null && a?.longitude != null) {
+          pts.push([a.latitude, a.longitude]);
+        }
+      });
     }
     if (currentFrame?.active_sos?.length) {
-      currentFrame.active_sos.forEach((s) => pts.push([s.latitude, s.longitude]));
+      currentFrame.active_sos.forEach((s) => {
+        if (s?.latitude != null && s?.longitude != null) {
+          pts.push([s.latitude, s.longitude]);
+        }
+      });
     }
     if (currentFrame?.dispatches?.length) {
-      currentFrame.dispatches.forEach((d) => pts.push([d.latitude, d.longitude]));
+      currentFrame.dispatches.forEach((d) => {
+        if (d?.latitude != null && d?.longitude != null) {
+          pts.push([d.latitude, d.longitude]);
+        }
+      });
     }
     return pts;
   }, [alerts, currentFrame]);
@@ -228,7 +252,12 @@ export default function LiveMode() {
         </div>
 
         <div className="live-header-actions">
-          <ScenarioPicker />
+          <ScenarioPicker
+            scenarios={scenarios}
+            scenarioId={scenarioId}
+            onSelect={selectScenario}
+            failed={listState?.status === "error"}
+          />
           <button
             type="button"
             className="brutalist-btn btn--report mono text-xs"
@@ -304,11 +333,11 @@ export default function LiveMode() {
 
           <div className="live-map-container">
             <BaseMap center={mapCenter} zoom={12} label="Live Operations Tactical Map">
-              <FitPoints points={fitPoints} fitKey={`${currentStep}-${alerts.length}`} />
+              <FitPoints points={fitPoints} fitKey={`${currentStep}-${alerts?.length ?? 0}`} />
 
               {/* Sentinel-1 Inundation Zones */}
-              {sarAssessment?.zones?.map((zone) => {
-                if (!zone.flooded_pct || zone.flooded_pct <= 0.05) return null;
+              {(sarAssessment?.zones ?? []).map((zone) => {
+                if (!zone?.flooded_pct || zone.flooded_pct <= 0.05) return null;
                 return (
                   <Circle
                     key={zone.zone_id}
@@ -341,7 +370,7 @@ export default function LiveMode() {
               })}
 
               {/* Official Alert Pins */}
-              {alerts.map((alt) => (
+              {(alerts ?? []).map((alt) => (
                 <Marker
                   key={alt.id}
                   position={[alt.latitude, alt.longitude]}
@@ -367,7 +396,7 @@ export default function LiveMode() {
               ))}
 
               {/* Replay Frame SOS pins */}
-              {currentFrame?.active_sos?.map((sos) => (
+              {(currentFrame?.active_sos ?? []).map((sos) => (
                 <Marker
                   key={sos.id}
                   position={[sos.latitude, sos.longitude]}
@@ -384,7 +413,7 @@ export default function LiveMode() {
               ))}
 
               {/* Replay Dispatches */}
-              {currentFrame?.dispatches?.map((dsp) => (
+              {(currentFrame?.dispatches ?? []).map((dsp) => (
                 <Marker
                   key={dsp.dispatch_id}
                   position={[dsp.latitude + 0.003, dsp.longitude + 0.003]}
@@ -412,7 +441,7 @@ export default function LiveMode() {
               className={`panel-tab ${activeTab === "alerts" ? "active" : ""}`}
               onClick={() => setActiveTab("alerts")}
             >
-              Alerts ({alerts.length})
+              Alerts ({alerts?.length ?? 0})
             </button>
             <button
               type="button"
@@ -440,27 +469,27 @@ export default function LiveMode() {
                 </div>
 
                 <div className="alerts-list">
-                  {alerts.map((alt) => (
-                    <article key={alt.id} className={`alert-card alert-card--${alt.status.toLowerCase()}`}>
+                  {(alerts ?? []).map((alt) => (
+                    <article key={alt.id} className={`alert-card alert-card--${(alt?.status ?? "active").toLowerCase()}`}>
                       <div className="alert-card-top mono text-xs">
-                        <span className={`status-badge status-badge--${alt.status.toLowerCase()}`}>
-                          {alt.status}
+                        <span className={`status-badge status-badge--${(alt?.status ?? "active").toLowerCase()}`}>
+                          {alt?.status}
                         </span>
-                        <span className="alert-code">{alt.alert_code}</span>
-                        <span className="alert-severity">{alt.severity}</span>
+                        <span className="alert-code">{alt?.alert_code}</span>
+                        <span className="alert-severity">{alt?.severity}</span>
                       </div>
 
-                      <h3 className="alert-headline font-bold text-sm">{alt.headline}</h3>
-                      <p className="alert-desc text-xs">{alt.description}</p>
+                      <h3 className="alert-headline font-bold text-sm">{alt?.headline}</h3>
+                      <p className="alert-desc text-xs">{alt?.description}</p>
 
                       <div className="alert-meta mono text-xs text-concrete">
-                        <span>{alt.sender}</span>
+                        <span>{alt?.sender}</span>
                         <span>•</span>
-                        <span>{alt.area_desc}</span>
+                        <span>{alt?.area_desc}</span>
                       </div>
 
                       <div className="alert-card-actions mt-2">
-                        {alt.status !== "ACKNOWLEDGED" ? (
+                        {alt?.status !== "ACKNOWLEDGED" ? (
                           <button
                             type="button"
                             className="brutalist-btn btn--primary btn--sm mono"
@@ -471,7 +500,7 @@ export default function LiveMode() {
                           </button>
                         ) : (
                           <span className="mono text-xs text-concrete">
-                            ✓ Ack by {alt.acknowledged_by || "Admin"}
+                            ✓ Ack by {alt?.acknowledged_by || "Admin"}
                           </span>
                         )}
                       </div>
@@ -626,8 +655,8 @@ export default function LiveMode() {
             <button
               type="button"
               className="brutalist-btn btn--sm mono"
-              onClick={() => setCurrentStep((prev) => Math.min((timeline?.total_steps ?? 5) - 1, prev + 1))}
-              disabled={!timeline || currentStep >= timeline.total_steps - 1}
+              onClick={() => setCurrentStep((prev) => Math.min((timeline?.total_steps ?? timeline?.frames?.length ?? 5) - 1, prev + 1))}
+              disabled={!timeline || currentStep >= (timeline?.total_steps ?? timeline?.frames?.length ?? 1) - 1}
               title="Step Forward"
             >
               ►
@@ -639,7 +668,7 @@ export default function LiveMode() {
             <input
               type="range"
               min="0"
-              max={(timeline?.total_steps ?? 5) - 1}
+              max={Math.max(0, (timeline?.total_steps ?? timeline?.frames?.length ?? 5) - 1)}
               step="1"
               value={currentStep}
               onChange={(e) => {
@@ -650,7 +679,7 @@ export default function LiveMode() {
               aria-label="Disaster Event Replay Timeline Slider"
             />
             <div className="slider-ticks mono text-xs">
-              {timeline?.frames?.map((f, idx) => (
+              {(timeline?.frames ?? []).map((f, idx) => (
                 <span
                   key={f.step}
                   className={`tick ${idx === currentStep ? "tick--active font-bold" : ""}`}

@@ -99,15 +99,15 @@ export default function SituationReportModal({ scenarioId, onClose }) {
                 <h3 className="section-title mono text-xs uppercase font-bold">3. Ground Reports & Silent Areas</h3>
                 <p className="section-text">{report.verified_incidents?.silent_areas_summary}</p>
 
-                {report.verified_incidents?.silent_areas?.length > 0 && (
+                {(report.verified_incidents?.silent_areas?.length ?? 0) > 0 && (
                   <div className="silent-areas-box mt-2">
                     <div className="silent-header mono text-xs font-bold text-red">
                       ⚠ HIGH-RISK SILENT SECTORS (SUSPECTED COMMUNICATIONS BLACKOUT)
                     </div>
                     <ul className="silent-list mono text-xs mt-1">
-                      {report.verified_incidents.silent_areas.map((sa) => (
-                        <li key={sa.zone_id} className="silent-item">
-                          <strong>{sa.name} ({sa.zone_id})</strong>: Damage Severity {sa.severity}/3, {sa.population.toLocaleString()} population. {sa.reason}
+                      {(report.verified_incidents?.silent_areas ?? []).map((sa) => (
+                        <li key={sa?.zone_id} className="silent-item">
+                          <strong>{sa?.name} ({sa?.zone_id})</strong>: Damage Severity {sa?.severity}/3, {sa?.population?.toLocaleString?.() ?? sa?.population} population. {sa?.reason}
                         </li>
                       ))}
                     </ul>
@@ -119,7 +119,7 @@ export default function SituationReportModal({ scenarioId, onClose }) {
               <section className="report-section">
                 <h3 className="section-title mono text-xs uppercase font-bold">4. Allocation & Dispatch Strategy</h3>
                 <p className="section-text text-xs">
-                  Fairness-aware Allocation Engine dispatched <strong>{report.allocation_and_dispatch?.total_allocated?.toLocaleString()}</strong> relief units across real road networks, maintaining regional unmet demand at <strong>{report.allocation_and_dispatch?.unmet_demand_pct}%</strong>.
+                  Fairness-aware Allocation Engine dispatched <strong>{report.allocation_and_dispatch?.total_allocated?.toLocaleString?.() ?? report.allocation_and_dispatch?.total_allocated}</strong> relief units across real road networks, maintaining regional unmet demand at <strong>{report.allocation_and_dispatch?.unmet_demand_pct}%</strong>.
                 </p>
 
                 <div className="decisions-mini-table mono text-xs mt-2">
@@ -129,12 +129,12 @@ export default function SituationReportModal({ scenarioId, onClose }) {
                     <span>Coverage</span>
                     <span>Travel Time</span>
                   </div>
-                  {report.allocation_and_dispatch?.sample_decisions?.map((d) => (
-                    <div key={d.zone_id} className="table-row">
-                      <span>{d.name}</span>
-                      <span>{d.allocated} units</span>
-                      <span>{d.coverage_pct}%</span>
-                      <span>~{d.travel_time_min}m</span>
+                  {(report.allocation_and_dispatch?.sample_decisions ?? []).map((d) => (
+                    <div key={d?.zone_id} className="table-row">
+                      <span>{d?.name}</span>
+                      <span>{d?.allocated} units</span>
+                      <span>{d?.coverage_pct}%</span>
+                      <span>~{d?.travel_time_min}m</span>
                     </div>
                   ))}
                 </div>
@@ -144,7 +144,7 @@ export default function SituationReportModal({ scenarioId, onClose }) {
               <section className="report-section">
                 <h3 className="section-title mono text-xs uppercase font-bold">5. Prioritised Operational Recommendations</h3>
                 <ol className="recommendations-list text-xs">
-                  {report.operational_recommendations?.map((rec, idx) => (
+                  {(report.operational_recommendations ?? []).map((rec, idx) => (
                     <li key={idx} className="rec-item">
                       <span className="rec-num mono">[{idx + 1}]</span> {rec}
                     </li>

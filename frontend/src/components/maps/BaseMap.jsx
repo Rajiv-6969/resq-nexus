@@ -40,7 +40,7 @@ export function FlyTo({ point, zoom }) {
 }
 
 // Fits every point in view whenever `fitKey` changes (not on every data refresh).
-export function FitPoints({ points, fitKey, maxZoom = 13 }) {
+export function FitPoints({ points = [], fitKey, maxZoom = 13 }) {
   const map = useMap();
   const latest = useRef(points);
   useLayoutEffect(() => {
@@ -48,7 +48,7 @@ export function FitPoints({ points, fitKey, maxZoom = 13 }) {
   });
   useEffect(() => {
     const current = latest.current;
-    if (!current.length) return;
+    if (!current?.length) return;
     if (current.length === 1) map.setView(current[0], Math.min(maxZoom, 14), { animate: false });
     else map.fitBounds(L.latLngBounds(current), { padding: [48, 48], maxZoom, animate: false });
   }, [map, fitKey, maxZoom]);
@@ -57,10 +57,14 @@ export function FitPoints({ points, fitKey, maxZoom = 13 }) {
 
 // OpenStreetMap base map in the site's flat, square chrome.
 export default function BaseMap({ center, zoom = 12, label, mapRef, children }) {
+  const centerPos = Array.isArray(center)
+    ? center
+    : [center?.latitude ?? center?.lat ?? 12.9716, center?.longitude ?? center?.lng ?? center?.lon ?? 77.5946];
+
   return (
     <MapContainer
       className="map"
-      center={[center.latitude, center.longitude]}
+      center={centerPos}
       zoom={zoom}
       scrollWheelZoom
       zoomControl={false}

@@ -62,7 +62,7 @@ export default function AppDataProvider({ children }) {
   // Which scenario is on screen: the URL wins, then the last choice, then the first scenario.
   const urlId = searchParams.get("scenario");
   const scenarioId = useMemo(() => {
-    const ids = scenarios.map((s) => s.id);
+    const ids = (scenarios ?? []).map((s) => s?.id).filter(Boolean);
     return [urlId, storedId, ids[0]].find((id) => id && ids.includes(id)) ?? null;
   }, [scenarios, urlId, storedId]);
   const onScenarioPage = SCENARIO_PAGES.includes(pathname);
@@ -82,8 +82,9 @@ export default function AppDataProvider({ children }) {
     setListState({ status: "loading", error: null });
     fetchScenarios({ signal: controller.signal })
       .then((list) => {
-        setScenarios(list);
-        setListState(list.length ? { status: "ready", error: null } : { status: "error", error: "No scenarios found in backend/data/scenarios." });
+        const safeList = Array.isArray(list) ? list : (list?.scenarios ?? []);
+        setScenarios(safeList);
+        setListState(safeList?.length ? { status: "ready", error: null } : { status: "error", error: "No scenarios found in backend/data/scenarios." });
       })
       .catch((err) => err.name !== "AbortError" && setListState({ status: "error", error: err.message }));
     return () => controller.abort();
@@ -218,7 +219,7 @@ export default function AppDataProvider({ children }) {
       scenarios,
       listState,
       scenarioId,
-      scenarioSummary: scenarios.find((s) => s.id === scenarioId) ?? null,
+      scenarioSummary: (scenarios ?? []).find((s) => s?.id === scenarioId) ?? null,
       scenario: scenarioId ? (details[scenarioId] ?? null) : null,
       detailError,
       selectScenario,

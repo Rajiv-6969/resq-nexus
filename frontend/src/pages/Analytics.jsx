@@ -621,7 +621,7 @@ export default function Analytics() {
         <>
           <div className="toolbar">
             <p className="toolbar-label mono">01 / Scenario</p>
-            <ScenarioPicker scenarios={scenarios} scenarioId={scenarioId} onSelect={selectScenario} failed={listState.status === "error"} />
+            <ScenarioPicker scenarios={scenarios} scenarioId={scenarioId} onSelect={selectScenario} failed={listState?.status === "error"} />
             {result && (
               <button type="button" className={`btn btn--sm${runStale ? " btn--red" : ""} toolbar-action`} onClick={runPipeline} disabled={!canRun}>
                 {running ? "Running" : runStale ? "Re-run (weights changed)" : "Re-run"}

@@ -123,7 +123,7 @@ export default function CommandCentre() {
               Damage assessment &rarr;
             </Link>
           )}
-          <ScenarioPicker scenarios={scenarios} scenarioId={scenarioId} onSelect={selectScenario} failed={listState.status === "error"} />
+          <ScenarioPicker scenarios={scenarios} scenarioId={scenarioId} onSelect={selectScenario} failed={listState?.status === "error"} />
         </div>
         <div className="cc-cell cc-cell--stepper">
           <p className="cell-label">02 / Pipeline</p>

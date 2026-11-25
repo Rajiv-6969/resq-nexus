@@ -137,7 +137,7 @@ export default function DamageAssessment() {
         <div className="scenario-damage-pane">
           <div className="toolbar">
             <p className="toolbar-label mono">01 / Scenario</p>
-            <ScenarioPicker scenarios={scenarios} scenarioId={scenarioId} onSelect={selectScenario} failed={listState.status === "error"} />
+            <ScenarioPicker scenarios={scenarios} scenarioId={scenarioId} onSelect={selectScenario} failed={listState?.status === "error"} />
             <p className="toolbar-note mono">
               {scenario ? `${zones.length} zones / ${formatNumber(people)} people / ${scenarioBuildings.length} buildings` : "Loading..."}
             </p>
