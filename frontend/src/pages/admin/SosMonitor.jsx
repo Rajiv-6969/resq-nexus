@@ -6,6 +6,7 @@ import BaseMap, { FitPoints } from "../../components/maps/BaseMap";
 import RequestCard from "../../components/provider/RequestCard";
 import { EMERGENCY_TYPES, SOS_STATUSES, SOS_STEPS } from "../../constants";
 import { useNow, usePolling } from "../../lib/hooks";
+import { toValidLatLng } from "../../lib/map";
 import { sosIcon } from "../../lib/markers";
 import { formatTime } from "../../lib/time";
 import { useToast } from "../../state/contexts";
@@ -108,7 +109,7 @@ export default function SosMonitor() {
   };
 
   const items = useMemo(() => list.data ?? [], [list.data]);
-  const points = items.map((s) => [s.latitude, s.longitude]);
+  const points = useMemo(() => items.map((s) => toValidLatLng(s)).filter(Boolean), [items]);
   const s = summary.data;
 
   const select = (id) => {
@@ -162,16 +163,20 @@ export default function SosMonitor() {
         <div className="map-pane board-map">
           <BaseMap center={{ latitude: 20.5, longitude: 79 }} zoom={5} label="Map of SOS requests coloured by severity">
             <FitPoints points={points} fitKey={`${statuses.join()}|${types.join()}|${items.length > 0}`} maxZoom={12} />
-            {items.map((x) => (
-              <Marker
-                key={x.id}
-                position={[x.latitude, x.longitude]}
-                icon={sosIcon(x.severity?.level, x.status, x.id === selectedId)}
-                zIndexOffset={x.id === selectedId ? 1000 : 0}
-                title={`#${x.id} ${x.severity?.level ?? "No details"} / ${x.status}`}
-                eventHandlers={{ click: () => select(x.id) }}
-              />
-            ))}
+            {items.map((x) => {
+              const pos = toValidLatLng(x);
+              if (!pos) return null;
+              return (
+                <Marker
+                  key={x.id}
+                  position={pos}
+                  icon={sosIcon(x.severity?.level, x.status, x.id === selectedId)}
+                  zIndexOffset={x.id === selectedId ? 1000 : 0}
+                  title={`#${x.id} ${x.severity?.level ?? "No details"} / ${x.status}`}
+                  eventHandlers={{ click: () => select(x.id) }}
+                />
+              );
+            })}
           </BaseMap>
           <div className="map-legend mono" aria-label="Severity colours">
             <span className="lg lg--critical">Critical</span>

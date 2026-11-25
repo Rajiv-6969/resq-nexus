@@ -12,6 +12,7 @@ import {
   simulateAlert,
 } from "../api";
 import BaseMap, { FitPoints } from "../components/maps/BaseMap";
+import { toValidLatLng } from "../lib/map";
 import PrototypeNotice from "../components/sos/PrototypeNotice";
 import ScenarioPicker from "../components/ScenarioPicker";
 import SituationReportModal from "../components/SituationReportModal";
@@ -197,38 +198,31 @@ export default function LiveMode() {
 
   // Map center and points
   const mapCenter = useMemo(() => {
-    if (timeline?.center?.latitude != null && timeline?.center?.longitude != null) {
-      return [timeline.center.latitude, timeline.center.longitude];
+    if (timeline?.center) {
+      const pos = toValidLatLng(timeline.center);
+      if (pos) return pos;
     }
-    if (scenario?.zones?.[0]?.latitude != null && scenario?.zones?.[0]?.longitude != null) {
-      return [scenario.zones[0].latitude, scenario.zones[0].longitude];
+    if (scenario?.zones?.[0]) {
+      const pos = toValidLatLng(scenario.zones[0]);
+      if (pos) return pos;
     }
     return [12.9716, 77.5946];
   }, [timeline, scenario]);
 
   const fitPoints = useMemo(() => {
     const pts = [];
-    if (alerts?.length) {
-      alerts.forEach((a) => {
-        if (a?.latitude != null && a?.longitude != null) {
-          pts.push([a.latitude, a.longitude]);
-        }
-      });
-    }
-    if (currentFrame?.active_sos?.length) {
-      currentFrame.active_sos.forEach((s) => {
-        if (s?.latitude != null && s?.longitude != null) {
-          pts.push([s.latitude, s.longitude]);
-        }
-      });
-    }
-    if (currentFrame?.dispatches?.length) {
-      currentFrame.dispatches.forEach((d) => {
-        if (d?.latitude != null && d?.longitude != null) {
-          pts.push([d.latitude, d.longitude]);
-        }
-      });
-    }
+    (alerts ?? []).forEach((a) => {
+      const pos = toValidLatLng(a);
+      if (pos) pts.push(pos);
+    });
+    (currentFrame?.active_sos ?? []).forEach((s) => {
+      const pos = toValidLatLng(s);
+      if (pos) pts.push(pos);
+    });
+    (currentFrame?.dispatches ?? []).forEach((d) => {
+      const pos = toValidLatLng(d);
+      if (pos) pts.push(pos);
+    });
     return pts;
   }, [alerts, currentFrame]);
 
@@ -338,10 +332,12 @@ export default function LiveMode() {
               {/* Sentinel-1 Inundation Zones */}
               {(sarAssessment?.zones ?? []).map((zone) => {
                 if (!zone?.flooded_pct || zone.flooded_pct <= 0.05) return null;
+                const pos = toValidLatLng(zone);
+                if (!pos) return null;
                 return (
                   <Circle
                     key={zone.zone_id}
-                    center={[zone.latitude, zone.longitude]}
+                    center={pos}
                     radius={Math.max(zone.flooded_pct * 1200, 400)}
                     pathOptions={{
                       color: PALETTE.sarWater,
@@ -370,65 +366,77 @@ export default function LiveMode() {
               })}
 
               {/* Official Alert Pins */}
-              {(alerts ?? []).map((alt) => (
-                <Marker
-                  key={alt.id}
-                  position={[alt.latitude, alt.longitude]}
-                  icon={createIcon(
-                    alt.status === "ACTIVE"
-                      ? PALETTE.signalRed
-                      : alt.status === "ESCALATED"
-                      ? PALETTE.warningOrange
-                      : PALETTE.concreteGrey,
-                    alt.alert_code,
-                    "⚠"
-                  )}
-                >
-                  <Popup>
-                    <div className="mono text-xs">
-                      <strong>{alt.headline}</strong>
-                      <p>{alt.description}</p>
-                      <div>Status: <strong>{alt.status}</strong></div>
-                      <div>Sender: {alt.sender}</div>
-                    </div>
-                  </Popup>
-                </Marker>
-              ))}
+              {(alerts ?? []).map((alt) => {
+                const pos = toValidLatLng(alt);
+                if (!pos) return null;
+                return (
+                  <Marker
+                    key={alt.id}
+                    position={pos}
+                    icon={createIcon(
+                      alt.status === "ACTIVE"
+                        ? PALETTE.signalRed
+                        : alt.status === "ESCALATED"
+                        ? PALETTE.warningOrange
+                        : PALETTE.concreteGrey,
+                      alt.alert_code,
+                      "⚠"
+                    )}
+                  >
+                    <Popup>
+                      <div className="mono text-xs">
+                        <strong>{alt.headline}</strong>
+                        <p>{alt.description}</p>
+                        <div>Status: <strong>{alt.status}</strong></div>
+                        <div>Sender: {alt.sender}</div>
+                      </div>
+                    </Popup>
+                  </Marker>
+                );
+              })}
 
               {/* Replay Frame SOS pins */}
-              {(currentFrame?.active_sos ?? []).map((sos) => (
-                <Marker
-                  key={sos.id}
-                  position={[sos.latitude, sos.longitude]}
-                  icon={createIcon(PALETTE.warningOrange, sos.id, "SOS")}
-                >
-                  <Popup>
-                    <div className="mono text-xs">
-                      <strong>Citizen SOS: {sos.id}</strong>
-                      <div>People Affected: {sos.people_affected}</div>
-                      <div>Status: {sos.status}</div>
-                    </div>
-                  </Popup>
-                </Marker>
-              ))}
+              {(currentFrame?.active_sos ?? []).map((sos) => {
+                const pos = toValidLatLng(sos);
+                if (!pos) return null;
+                return (
+                  <Marker
+                    key={sos.id}
+                    position={pos}
+                    icon={createIcon(PALETTE.warningOrange, sos.id, "SOS")}
+                  >
+                    <Popup>
+                      <div className="mono text-xs">
+                        <strong>Citizen SOS: {sos.id}</strong>
+                        <div>People Affected: {sos.people_affected}</div>
+                        <div>Status: {sos.status}</div>
+                      </div>
+                    </Popup>
+                  </Marker>
+                );
+              })}
 
               {/* Replay Dispatches */}
-              {(currentFrame?.dispatches ?? []).map((dsp) => (
-                <Marker
-                  key={dsp.dispatch_id}
-                  position={[dsp.latitude + 0.003, dsp.longitude + 0.003]}
-                  icon={createIcon(PALETTE.black, dsp.dispatch_id, "➔")}
-                >
-                  <Popup>
-                    <div className="mono text-xs">
-                      <strong>Unit: {dsp.dispatch_id}</strong>
-                      <div>Type: {dsp.resource_type}</div>
-                      <div>Target: {dsp.target_zone}</div>
-                      <div>Status: {dsp.status}</div>
-                    </div>
-                  </Popup>
-                </Marker>
-              ))}
+              {(currentFrame?.dispatches ?? []).map((dsp) => {
+                const pos = toValidLatLng([dsp.latitude + 0.003, dsp.longitude + 0.003]);
+                if (!pos) return null;
+                return (
+                  <Marker
+                    key={dsp.dispatch_id}
+                    position={pos}
+                    icon={createIcon(PALETTE.black, dsp.dispatch_id, "➔")}
+                  >
+                    <Popup>
+                      <div className="mono text-xs">
+                        <strong>Unit: {dsp.dispatch_id}</strong>
+                        <div>Type: {dsp.resource_type}</div>
+                        <div>Target: {dsp.target_zone}</div>
+                        <div>Status: {dsp.status}</div>
+                      </div>
+                    </Popup>
+                  </Marker>
+                );
+              })}
             </BaseMap>
           </div>
         </section>

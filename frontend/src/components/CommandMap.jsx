@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { LEVEL_COLORS, PIPELINE_STEPS, PRIORITY_LEVELS, SEVERITY_LABELS, formatNumber, formatScore } from "../constants";
 import { convexHull, padHull } from "../lib/geo";
 import { prefersReducedMotion } from "../lib/hooks";
-import { TILE_ATTRIBUTION, TILE_URL } from "../lib/map";
+import { TILE_ATTRIBUTION, TILE_URL, toValidLatLng } from "../lib/map";
 import { AsteriskMark } from "./icons";
 
 const INDIA_VIEW = { center: [22.5, 80.5], zoom: 5 };
@@ -14,7 +14,11 @@ const MAX_EXTRA_RADIUS = 17;
 const LAYER_LABELS = { hexes: "Zone hexagons", routes: "Routes", clusters: "Depot areas", roads: "Road network", hazard: "Hazard" };
 
 // GeoJSON Polygon (lon, lat) -> Leaflet positions (lat, lon).
-const ringPositions = (geometry) => (geometry?.type === "Polygon" ? geometry.coordinates[0].map(([lon, lat]) => [lat, lon]) : null);
+const ringPositions = (geometry) => {
+  if (geometry?.type !== "Polygon" || !Array.isArray(geometry?.coordinates?.[0])) return null;
+  const positions = geometry.coordinates[0].map(([lon, lat]) => toValidLatLng([lat, lon])).filter(Boolean);
+  return positions.length >= 3 ? positions : null;
+};
 const BLACK = "#0A0A0A";
 const RED = "#E10600";
 const GRAPHITE = "#5A5A57";
@@ -54,10 +58,18 @@ const beaconIcon = (radius) =>
 function hazardMarkers(hazard) {
   if (!hazard) return [];
   if (hazard.epicentre) {
-    return [{ key: "epicentre", position: hazard.epicentre, svg: EPICENTRE_SVG, label: `Epicentre (M${hazard.magnitude})` }];
+    const pos = toValidLatLng(hazard.epicentre);
+    if (pos) {
+      return [{ key: "epicentre", position: pos, svg: EPICENTRE_SVG, label: `Epicentre (M${hazard.magnitude})` }];
+    }
   }
-  if (hazard.hotspots) {
-    return hazard.hotspots.map((h, i) => ({ key: `hotspot-${i}`, position: h, svg: HOTSPOT_SVG, label: "Fire ignition area" }));
+  if (hazard.hotspots && Array.isArray(hazard.hotspots)) {
+    return hazard.hotspots
+      .map((h, i) => {
+        const pos = toValidLatLng(h);
+        return pos ? { key: `hotspot-${i}`, position: pos, svg: HOTSPOT_SVG, label: "Fire ignition area" } : null;
+      })
+      .filter(Boolean);
   }
   return [];
 }
@@ -66,9 +78,15 @@ function FitToZones({ zones, scenarioId }) {
   const map = useMap();
   const fitted = useRef(null);
   useEffect(() => {
-    if (!zones.length || fitted.current === scenarioId) return;
+    if (!zones?.length || fitted.current === scenarioId) return;
+    const validCoords = zones.map((z) => toValidLatLng([z.latitude, z.longitude])).filter(Boolean);
+    if (!validCoords.length) return;
     fitted.current = scenarioId;
-    map.fitBounds(L.latLngBounds(zones.map((z) => [z.latitude, z.longitude])), { padding: [56, 56], maxZoom: 11 });
+    if (validCoords.length === 1) {
+      map.setView(validCoords[0], 11, { animate: false });
+    } else {
+      map.fitBounds(L.latLngBounds(validCoords), { padding: [56, 56], maxZoom: 11 });
+    }
   }, [map, zones, scenarioId]);
   return null;
 }
@@ -77,7 +95,9 @@ function PanToSelected({ zone }) {
   const map = useMap();
   useEffect(() => {
     if (!zone) return;
-    const target = L.latLng(zone.latitude, zone.longitude);
+    const pos = toValidLatLng([zone.latitude, zone.longitude]);
+    if (!pos) return;
+    const target = L.latLng(pos[0], pos[1]);
     if (!map.getBounds().pad(-0.18).contains(target)) map.panTo(target, { animate: true });
   }, [map, zone]);
   return null;
@@ -97,6 +117,7 @@ function KeepSized() {
 // A solid route from depot to zone that draws itself in once.
 function AnimatedRoute({ positions, delay, dim, highlight }) {
   const lineRef = useRef(null);
+  const validPositions = (positions ?? []).map(toValidLatLng).filter(Boolean);
 
   useEffect(() => {
     const line = lineRef.current?.getElement();
@@ -124,11 +145,13 @@ function AnimatedRoute({ positions, delay, dim, highlight }) {
     };
   }, [delay]);
 
+  if (validPositions.length < 2) return null;
+
   return (
     <Polyline
       ref={lineRef}
       pane="routes"
-      positions={positions}
+      positions={validPositions}
       interactive={false}
       pathOptions={{
         color: highlight ? RED : BLACK,
@@ -241,26 +264,39 @@ export default function CommandMap({ scenarioId, zones, hazard, allocation, stal
   const plans = useMemo(() => Object.fromEntries((allocation?.zones ?? []).map((z) => [z.id, z.engine])), [allocation]);
   const nodes = useMemo(() => {
     const out = {};
-    (allocation?.zones ?? []).forEach((z) => (out[z.id] = [z.latitude, z.longitude]));
-    (allocation?.depots ?? []).forEach((d) => (out[d.id] = [d.latitude, d.longitude]));
+    (allocation?.zones ?? []).forEach((z) => {
+      const pos = toValidLatLng([z.latitude, z.longitude]);
+      if (pos) out[z.id] = pos;
+    });
+    (allocation?.depots ?? []).forEach((d) => {
+      const pos = toValidLatLng([d.latitude, d.longitude]);
+      if (pos) out[d.id] = pos;
+    });
     return out;
   }, [allocation]);
 
   const hulls = useMemo(() => {
     if (!allocation) return [];
-    return allocation.depots.map((d) => {
-      const points = d.zone_ids.map((id) => nodes[id]).filter(Boolean).concat([[d.latitude, d.longitude]]);
-      return { id: d.id, points: padHull(convexHull(points)) };
+    return (allocation.depots ?? []).map((d) => {
+      const dPos = toValidLatLng([d.latitude, d.longitude]);
+      const zonePoints = (d.zone_ids ?? []).map((id) => nodes[id]).filter(Boolean);
+      const points = dPos ? zonePoints.concat([dPos]) : zonePoints;
+      const validPoints = points.map(toValidLatLng).filter(Boolean);
+      return { id: d.id, points: validPoints.length >= 3 ? padHull(convexHull(validPoints)) : [] };
     });
   }, [allocation, nodes]);
 
   // Routes to zones that receive relief, drawn outward from the depots (shortest trips first).
   const routes = useMemo(() => {
     if (!allocation) return [];
-    return allocation.zones
-      .filter((z) => Object.values(z.engine.allocated).some((v) => v > 0))
-      .sort((a, b) => a.engine.travel_time_min - b.engine.travel_time_min)
-      .map((z, i) => ({ id: z.id, positions: z.engine.route_coords, delay: 100 + i * 60 }));
+    return (allocation.zones ?? [])
+      .filter((z) => z.engine && Object.values(z.engine.allocated ?? {}).some((v) => v > 0))
+      .sort((a, b) => (a.engine.travel_time_min ?? 0) - (b.engine.travel_time_min ?? 0))
+      .map((z, i) => {
+        const positions = (z.engine.route_coords ?? []).map(toValidLatLng).filter(Boolean);
+        return { id: z.id, positions, delay: 100 + i * 60 };
+      })
+      .filter((r) => r.positions.length >= 2);
   }, [allocation]);
 
   const depotIcons = useMemo(
@@ -280,9 +316,11 @@ export default function CommandMap({ scenarioId, zones, hazard, allocation, stal
   const drawOrder = useMemo(() => [...zones].sort((a, b) => b.population - a.population), [zones]);
   const runKey = allocation ? `${allocation.scenario_id}-${allocation.weights ? Object.values(allocation.weights).join("-") : ""}` : "none";
 
+  const mapCenter = useMemo(() => toValidLatLng(INDIA_VIEW.center) ?? [22.5, 80.5], []);
+
   return (
     <div className={`map-pane${stale ? " is-stale" : ""}`}>
-      <MapContainer className="map" center={INDIA_VIEW.center} zoom={INDIA_VIEW.zoom} scrollWheelZoom zoomControl={false} aria-label="Map of affected zones">
+      <MapContainer className="map" center={mapCenter} zoom={INDIA_VIEW.zoom} scrollWheelZoom zoomControl={false} aria-label="Map of affected zones">
         <TileLayer attribution={TILE_ATTRIBUTION} url={TILE_URL} maxZoom={19} />
         <ZoomControl position="bottomright" />
         <FitToZones zones={zones} scenarioId={scenarioId} />
@@ -309,7 +347,7 @@ export default function CommandMap({ scenarioId, zones, hazard, allocation, stal
                   color: selected ? RED : BLACK,
                   weight: selected ? 2 : 0.6,
                   opacity: selected ? 1 : 0.5,
-                  fillColor: LEVEL_COLORS[zone.priority_level].fill,
+                  fillColor: (LEVEL_COLORS[zone.priority_level] ?? LEVEL_COLORS.Low).fill,
                   fillOpacity: stale ? 0.15 : 0.35,
                   lineJoin: "miter",
                   className: "zone-hex",
@@ -321,31 +359,33 @@ export default function CommandMap({ scenarioId, zones, hazard, allocation, stal
 
         {allocation &&
           layers.clusters &&
-          hulls.map((h) =>
-            h.points.length >= 3 ? (
+          hulls.map((h) => {
+            const validPoints = (h.points ?? []).map(toValidLatLng).filter(Boolean);
+            return validPoints.length >= 3 ? (
               <Polygon
                 key={`hull-${runKey}-${h.id}`}
                 pane="hulls"
-                positions={h.points}
+                positions={validPoints}
                 interactive={false}
                 pathOptions={{ color: BLACK, weight: 1.2, opacity: 0.75, dashArray: "4 6", lineJoin: "miter", fillColor: BLACK, fillOpacity: 0.05, className: "hull" }}
               />
-            ) : null,
-          )}
+            ) : null;
+          })}
 
         {allocation &&
           layers.roads &&
-          allocation.roads.map((r) =>
-            r.coords || (nodes[r.from] && nodes[r.to]) ? (
+          (allocation.roads ?? []).map((r) => {
+            const positions = r.coords ? r.coords.map(toValidLatLng).filter(Boolean) : [nodes[r.from], nodes[r.to]].filter(Boolean);
+            return positions.length >= 2 ? (
               <Polyline
                 key={`road-${runKey}-${r.from}-${r.to}`}
                 pane="roads"
-                positions={r.coords ?? [nodes[r.from], nodes[r.to]]}
+                positions={positions}
                 interactive={false}
                 pathOptions={{ color: GRAPHITE, weight: 1, opacity: 0.5, lineCap: "butt", className: "road" }}
               />
-            ) : null,
-          )}
+            ) : null;
+          })}
 
         {allocation &&
           layers.routes &&
@@ -361,27 +401,33 @@ export default function CommandMap({ scenarioId, zones, hazard, allocation, stal
 
         {zones
           .filter((z) => z.priority_level === "Critical")
-          .map((z) => (
-            <Marker
-              key={`beacon-${z.id}`}
-              pane="beacons"
-              position={[z.latitude, z.longitude]}
-              interactive={false}
-              keyboard={false}
-              icon={beaconIcon(Math.round(radiusFor(z.population, maxPopulation)))}
-            />
-          ))}
+          .map((z) => {
+            const pos = toValidLatLng([z.latitude, z.longitude]);
+            if (!pos) return null;
+            return (
+              <Marker
+                key={`beacon-${z.id}`}
+                pane="beacons"
+                position={pos}
+                interactive={false}
+                keyboard={false}
+                icon={beaconIcon(Math.round(radiusFor(z.population, maxPopulation)))}
+              />
+            );
+          })}
 
         {drawOrder.map((zone) => {
-          const colors = LEVEL_COLORS[zone.priority_level];
+          const pos = toValidLatLng([zone.latitude, zone.longitude]);
+          if (!pos) return null;
+          const colors = LEVEL_COLORS[zone.priority_level] ?? LEVEL_COLORS.Low;
           const radius = radiusFor(zone.population, maxPopulation);
           const plan = plans[zone.id];
           return (
             <CircleMarker
               key={zone.id}
-              center={[zone.latitude, zone.longitude]}
+              center={pos}
               radius={radius}
-              pathOptions={{ color: BLACK, weight: 1.2, fillColor: colors.fill, fillOpacity: 0.95, className: `zone-dot zone-dot--${zone.priority_level.toLowerCase()}` }}
+              pathOptions={{ color: BLACK, weight: 1.2, fillColor: colors.fill, fillOpacity: 0.95, className: `zone-dot zone-dot--${(zone.priority_level || "low").toLowerCase()}` }}
               eventHandlers={{
                 click: () => onSelectZone(zone.id),
                 keypress: (e) => {
@@ -395,11 +441,11 @@ export default function CommandMap({ scenarioId, zones, hazard, allocation, stal
             >
               <Tooltip direction="top" offset={[0, -radius]} className="zone-tooltip">
                 <strong>{zone.name}</strong>
-                <span className={`tt-level tt-level--${zone.priority_level.toLowerCase()}`}>
+                <span className={`tt-level tt-level--${(zone.priority_level || "low").toLowerCase()}`}>
                   {zone.priority_level} / {formatScore(zone.priority_score)}
                 </span>
                 <span>
-                  {SEVERITY_LABELS[zone.damage_severity]} damage / {formatNumber(zone.population)} people
+                  {SEVERITY_LABELS[zone.damage_severity] ?? zone.damage_severity} damage / {formatNumber(zone.population)} people
                 </span>
                 {plan && plan.coverage_pct != null && (
                   <span>
@@ -411,36 +457,48 @@ export default function CommandMap({ scenarioId, zones, hazard, allocation, stal
           );
         })}
 
-        {selectedZone && (
-          <CircleMarker
-            key={`selected-${selectedZone.id}`}
-            center={[selectedZone.latitude, selectedZone.longitude]}
-            radius={radiusFor(selectedZone.population, maxPopulation) + 5}
-            interactive={false}
-            pathOptions={{ color: BLACK, weight: 2.5, fill: false, className: "selected-ring" }}
-          />
-        )}
+        {selectedZone && (() => {
+          const pos = toValidLatLng([selectedZone.latitude, selectedZone.longitude]);
+          if (!pos) return null;
+          return (
+            <CircleMarker
+              key={`selected-${selectedZone.id}`}
+              center={pos}
+              radius={radiusFor(selectedZone.population, maxPopulation) + 5}
+              interactive={false}
+              pathOptions={{ color: BLACK, weight: 2.5, fill: false, className: "selected-ring" }}
+            />
+          );
+        })()}
 
         {allocation &&
-          allocation.depots.map((d, i) => (
-            <Marker key={`depot-${runKey}-${d.id}`} position={[d.latitude, d.longitude]} icon={depotIcons[i]} keyboard={false}>
-              <Tooltip direction="top" offset={[0, -14]} className="zone-tooltip">
-                <strong>{d.name}</strong>
-                <span>
-                  Serves {d.zone_ids.length} zone{d.zone_ids.length === 1 ? "" : "s"} / near {d.nearest_zone}
-                </span>
-              </Tooltip>
-            </Marker>
-          ))}
+          (allocation.depots ?? []).map((d, i) => {
+            const pos = toValidLatLng([d.latitude, d.longitude]);
+            if (!pos) return null;
+            return (
+              <Marker key={`depot-${runKey}-${d.id}`} position={pos} icon={depotIcons[i]} keyboard={false}>
+                <Tooltip direction="top" offset={[0, -14]} className="zone-tooltip">
+                  <strong>{d.name}</strong>
+                  <span>
+                    Serves {d.zone_ids.length} zone{d.zone_ids.length === 1 ? "" : "s"} / near {d.nearest_zone}
+                  </span>
+                </Tooltip>
+              </Marker>
+            );
+          })}
 
         {layers.hazard &&
-          hazardList.map((m) => (
-            <Marker key={m.key} position={[m.position.latitude, m.position.longitude]} icon={hazardIcon(m.svg)} keyboard={false}>
-              <Tooltip direction="top" offset={[0, -12]} className="zone-tooltip">
-                {m.label}
-              </Tooltip>
-            </Marker>
-          ))}
+          hazardList.map((m) => {
+            const pos = toValidLatLng(m.position);
+            if (!pos) return null;
+            return (
+              <Marker key={m.key} position={pos} icon={hazardIcon(m.svg)} keyboard={false}>
+                <Tooltip direction="top" offset={[0, -12]} className="zone-tooltip">
+                  {m.label}
+                </Tooltip>
+              </Marker>
+            );
+          })}
       </MapContainer>
 
       <p className="map-corner map-corner--tl mono" aria-hidden="true">

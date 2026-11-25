@@ -1,7 +1,7 @@
 import { useMemo, useRef } from "react";
 import { Marker, useMapEvents } from "react-leaflet";
 import { roundCoord } from "../../lib/geolocation";
-import { DEFAULT_LOCATION } from "../../lib/map";
+import { DEFAULT_CENTER, DEFAULT_LOCATION, toValidLatLng } from "../../lib/map";
 import { pinIcon } from "../../lib/markers";
 import BaseMap, { FlyTo } from "./BaseMap";
 
@@ -29,13 +29,16 @@ export default function PinPicker({ value, onChange, focus, start = DEFAULT_LOCA
     if (centre) onChange({ latitude: roundCoord(centre.lat), longitude: roundCoord(centre.lng) });
   };
 
+  const centerPos = toValidLatLng(value ?? start) ?? DEFAULT_CENTER;
+  const pinPos = toValidLatLng(value);
+
   return (
     <div className={`pin-picker${invalid ? " is-invalid" : ""}`}>
       <div className="map-pane pin-map">
-        <BaseMap center={value ?? start} zoom={value ? 15 : 12} label={label} mapRef={mapRef}>
+        <BaseMap center={centerPos} zoom={value ? 15 : 12} label={label} mapRef={mapRef}>
           <ClickToPlace onPlace={onChange} />
           <FlyTo point={focus} zoom={15} />
-          {value && <Marker position={[value.latitude, value.longitude]} icon={pinIcon()} draggable eventHandlers={handlers} keyboard={false} />}
+          {pinPos && <Marker position={pinPos} icon={pinIcon()} draggable eventHandlers={handlers} keyboard={false} />}
         </BaseMap>
         <p className="map-corner map-corner--tl mono" aria-hidden="true">
           {value ? "Pin dropped / drag to adjust" : "Tap the map to drop a pin"}
@@ -43,7 +46,7 @@ export default function PinPicker({ value, onChange, focus, start = DEFAULT_LOCA
       </div>
       <div className="pin-bar">
         <p className="pin-readout mono" aria-live="polite">
-          {value ? `${value.latitude.toFixed(5)}, ${value.longitude.toFixed(5)}` : "No location chosen"}
+          {pinPos ? `${pinPos[0].toFixed(5)}, ${pinPos[1].toFixed(5)}` : "No location chosen"}
         </p>
         <button type="button" className="btn btn--sm" onClick={pinCentre}>
           Pin the map centre

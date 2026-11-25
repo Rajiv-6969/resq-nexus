@@ -10,7 +10,7 @@ import { ResourceStatusTag } from "../../components/Tags";
 import { RESOURCE_META, RESOURCE_TYPES } from "../../constants";
 import { getCurrentPosition, roundCoord } from "../../lib/geolocation";
 import { useNow } from "../../lib/hooks";
-import { DEFAULT_LOCATION, DEMO_LOCATIONS } from "../../lib/map";
+import { DEFAULT_LOCATION, DEMO_LOCATIONS, toValidLatLng } from "../../lib/map";
 import { resourceIcon, userIcon } from "../../lib/markers";
 import { availabilityText } from "../../lib/resources";
 import { timeAgo } from "../../lib/time";
@@ -21,17 +21,20 @@ const BLACK = "#0A0A0A";
 // Fit the search circle whenever the origin or radius changes.
 function FitRadius({ origin, radiusKm }) {
   const map = useMap();
+  const pos = toValidLatLng(origin);
   useEffect(() => {
-    map.fitBounds(L.latLng(origin.latitude, origin.longitude).toBounds(radiusKm * 2000), { padding: [16, 16], animate: false });
-  }, [map, origin.latitude, origin.longitude, radiusKm]);
+    if (!pos) return;
+    map.fitBounds(L.latLng(pos[0], pos[1]).toBounds(radiusKm * 2000), { padding: [16, 16], animate: false });
+  }, [map, pos ? pos[0] : null, pos ? pos[1] : null, radiusKm]);
   return null;
 }
 
 function PanTo({ point }) {
   const map = useMap();
+  const pos = toValidLatLng(point);
   useEffect(() => {
-    if (point) map.panTo(point, { animate: true, duration: 0.35 });
-  }, [map, point]);
+    if (pos) map.panTo(pos, { animate: true, duration: 0.35 });
+  }, [map, pos ? pos[0] : null, pos ? pos[1] : null]);
   return null;
 }
 
@@ -112,7 +115,7 @@ export default function NearbyResources() {
       <p className="sec-bar mono">
         <span>(04) Nearby resources</span>
         <span>
-          {origin
+          {origin && Number.isFinite(origin.latitude) && Number.isFinite(origin.longitude)
             ? `${origin.label ?? SOURCE_TEXT[origin.source]}${origin.accuracy ? ` ±${origin.accuracy} m` : ""} / ${origin.latitude.toFixed(4)}, ${origin.longitude.toFixed(4)}`
             : "Finding your location…"}
         </span>
@@ -177,29 +180,36 @@ export default function NearbyResources() {
 
       <div className="res-body">
         <div className={`map-pane res-map${picking ? " is-picking" : ""}`}>
-          {origin ? (
-            <BaseMap center={origin} zoom={13} label="Map of nearby resources">
-              <FitRadius origin={origin} radiusKm={radiusKm} />
-              <PanTo point={selectedPoint} />
-              <PickOnClick enabled={picking} onPick={pick} />
-              <Circle
-                center={[origin.latitude, origin.longitude]}
-                radius={radiusKm * 1000}
-                pathOptions={{ color: BLACK, weight: 1.5, dashArray: "6 6", fill: false, interactive: false }}
-              />
-              <Marker position={[origin.latitude, origin.longitude]} icon={userIcon()} keyboard={false} interactive={false} zIndexOffset={2000} />
-              {resources.map((r) => (
-                <Marker
-                  key={r.id}
-                  position={[r.latitude, r.longitude]}
-                  icon={resourceIcon(r.resource_type, r.status, r.id === selectedId)}
-                  zIndexOffset={r.id === selectedId ? 1000 : 0}
-                  title={`${r.name} (${r.type_label}, ${r.distance_km} km)`}
-                  eventHandlers={{ click: () => selectFromMap(r.id) }}
+          {toValidLatLng(origin) ? (() => {
+            const originPos = toValidLatLng(origin);
+            return (
+              <BaseMap center={originPos} zoom={13} label="Map of nearby resources">
+                <FitRadius origin={originPos} radiusKm={radiusKm} />
+                <PanTo point={selectedPoint} />
+                <PickOnClick enabled={picking} onPick={pick} />
+                <Circle
+                  center={originPos}
+                  radius={radiusKm * 1000}
+                  pathOptions={{ color: BLACK, weight: 1.5, dashArray: "6 6", fill: false, interactive: false }}
                 />
-              ))}
-            </BaseMap>
-          ) : (
+                <Marker position={originPos} icon={userIcon()} keyboard={false} interactive={false} zIndexOffset={2000} />
+                {resources.map((r) => {
+                  const pos = toValidLatLng(r);
+                  if (!pos) return null;
+                  return (
+                    <Marker
+                      key={r.id}
+                      position={pos}
+                      icon={resourceIcon(r.resource_type, r.status, r.id === selectedId)}
+                      zIndexOffset={r.id === selectedId ? 1000 : 0}
+                      title={`${r.name} (${r.type_label}, ${r.distance_km} km)`}
+                      eventHandlers={{ click: () => selectFromMap(r.id) }}
+                    />
+                  );
+                })}
+              </BaseMap>
+            );
+          })() : (
             <div className="map-wait mono">
               <AsteriskMark size={18} className="asterisk loader" /> Finding your location
             </div>

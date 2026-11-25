@@ -195,7 +195,11 @@ export default function ZoneIntel({ zone, zones, total, settings, scenario, run,
           </p>
           <h2 className="intel-name">{zone.name}</h2>
           <p className="intel-coords">
-            {zone.latitude.toFixed(3)}&deg; N &nbsp;{zone.longitude.toFixed(3)}&deg; E
+            {Number.isFinite(zone.latitude) && Number.isFinite(zone.longitude) ? (
+              <>{zone.latitude.toFixed(3)}&deg; N &nbsp;{zone.longitude.toFixed(3)}&deg; E</>
+            ) : (
+              <>Coordinates unavailable</>
+            )}
           </p>
         </div>
         <button type="button" className="icon-button" onClick={onClose} aria-label="Close zone details">

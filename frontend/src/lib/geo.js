@@ -2,8 +2,12 @@
 
 // Convex hull (Andrew's monotone chain) of [lat, lon] points; returns the hull in order.
 export function convexHull(points) {
-  const pts = [...points].sort((a, b) => a[1] - b[1] || a[0] - b[0]);
-  if (pts.length < 3) return pts;
+  if (!Array.isArray(points)) return [];
+  const valid = points.filter(
+    (p) => Array.isArray(p) && p.length >= 2 && Number.isFinite(p[0]) && Number.isFinite(p[1]),
+  );
+  if (valid.length < 3) return valid;
+  const pts = [...valid].sort((a, b) => a[1] - b[1] || a[0] - b[0]);
   const cross = (o, a, b) => (a[1] - o[1]) * (b[0] - o[0]) - (a[0] - o[0]) * (b[1] - o[1]);
   const lower = [];
   for (const p of pts) {
@@ -21,10 +25,15 @@ export function convexHull(points) {
 
 // Push hull vertices outwards from their centroid so the outline does not cut through markers.
 export function padHull(hull, factor = 0.12, minDegrees = 0.012) {
-  if (hull.length < 3) return hull;
-  const lat = hull.reduce((s, p) => s + p[0], 0) / hull.length;
-  const lon = hull.reduce((s, p) => s + p[1], 0) / hull.length;
-  return hull.map(([a, b]) => {
+  if (!Array.isArray(hull)) return [];
+  const valid = hull.filter(
+    (p) => Array.isArray(p) && p.length >= 2 && Number.isFinite(p[0]) && Number.isFinite(p[1]),
+  );
+  if (valid.length < 3) return valid;
+  const lat = valid.reduce((s, p) => s + p[0], 0) / valid.length;
+  const lon = valid.reduce((s, p) => s + p[1], 0) / valid.length;
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return valid;
+  return valid.map(([a, b]) => {
     const dLat = a - lat;
     const dLon = b - lon;
     const length = Math.hypot(dLat, dLon) || 1;

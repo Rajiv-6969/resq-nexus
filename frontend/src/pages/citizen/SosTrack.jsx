@@ -10,6 +10,7 @@ import { AssignedProvider, StatusTracker } from "../../components/sos/StatusTrac
 import { SeverityTag, SosStatusTag } from "../../components/Tags";
 import { EMERGENCY_TYPES, INJURY_LEVELS, NEEDS, SOS_STEPS, VULNERABLE_GROUPS, labelFor } from "../../constants";
 import { usePolling } from "../../lib/hooks";
+import { toValidLatLng } from "../../lib/map";
 import { baseIcon, sosIcon } from "../../lib/markers";
 import { formatTime } from "../../lib/time";
 import { useToast } from "../../state/contexts";
@@ -103,8 +104,9 @@ export default function SosTrack() {
     toast.success("Details sent", "Responders can now see what you need.");
   };
 
-  const points = [[sos.latitude, sos.longitude]];
-  if (sos.assigned_provider) points.push([sos.assigned_provider.latitude, sos.assigned_provider.longitude]);
+  const sosPos = toValidLatLng(sos);
+  const providerPos = sos.assigned_provider ? toValidLatLng(sos.assigned_provider) : null;
+  const points = [sosPos, providerPos].filter(Boolean);
 
   return (
     <div className="sos-page">
@@ -156,12 +158,12 @@ export default function SosTrack() {
             <StatusTracker sos={sos} />
             <AssignedProvider sos={sos} />
             <div className="map-pane track-map">
-              <BaseMap center={sos} zoom={14} label="Map: your request and the responder">
+              <BaseMap center={sosPos ?? [12.9716, 77.5946]} zoom={14} label="Map: your request and the responder">
                 <FitPoints points={points} fitKey={points.length} maxZoom={15} />
-                <Marker position={[sos.latitude, sos.longitude]} icon={sosIcon(sos.severity?.level, sos.status, true)} keyboard={false} />
-                {sos.assigned_provider && (
+                {sosPos && <Marker position={sosPos} icon={sosIcon(sos.severity?.level, sos.status, true)} keyboard={false} />}
+                {providerPos && (
                   <Marker
-                    position={[sos.assigned_provider.latitude, sos.assigned_provider.longitude]}
+                    position={providerPos}
                     icon={baseIcon(sos.assigned_provider.organisation_type)}
                     keyboard={false}
                   />
@@ -170,7 +172,7 @@ export default function SosTrack() {
             </div>
             <p className="mono track-loc">
               {sos.location_source === "gps" ? `GPS${sos.accuracy_m ? ` ±${Math.round(sos.accuracy_m)} m` : ""}` : "Pin on map"} /{" "}
-              {sos.latitude.toFixed(5)}, {sos.longitude.toFixed(5)}
+              {Number.isFinite(sos.latitude) && Number.isFinite(sos.longitude) ? `${sos.latitude.toFixed(5)}, ${sos.longitude.toFixed(5)}` : "Unknown location"}
             </p>
           </aside>
         </div>
