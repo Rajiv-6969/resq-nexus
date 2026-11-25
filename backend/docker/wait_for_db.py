@@ -5,7 +5,10 @@ import time
 
 from sqlalchemy import create_engine, text
 
-url = os.environ["DATABASE_URL"]
+url = os.environ.get("DATABASE_URL")
+if not url:
+    print("DATABASE_URL not configured; skipping database readiness check.", file=sys.stderr)
+    sys.exit(0)
 for attempt in range(60):
     try:
         with create_engine(url).connect() as connection:
