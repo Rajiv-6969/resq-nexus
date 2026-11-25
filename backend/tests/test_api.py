@@ -12,6 +12,12 @@ client = TestClient(main.app, headers=demo_headers(TestClient(main.app), "ADMIN"
 DEMO_SCENARIOS = {"flood-aluva": "flood", "flood-bengaluru": "flood", "earthquake-coimbatore": "earthquake", "cyclone-visakhapatnam": "cyclone"}
 
 
+def test_healthz_reports_ok():
+    response = client.get("/healthz")
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok"}
+
+
 def test_health_reports_ok():
     body = client.get("/health").json()
     assert body["status"] == "ok"

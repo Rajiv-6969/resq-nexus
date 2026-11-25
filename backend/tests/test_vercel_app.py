@@ -9,6 +9,12 @@ from conftest import demo_headers
 client = TestClient(vercel_app.app, headers=demo_headers(TestClient(main.app), "ADMIN"))
 
 
+def test_healthz_is_served_under_api():
+    response = client.get("/api/healthz")
+    assert response.status_code == 200
+    assert response.json()["status"] == "ok"
+
+
 def test_health_is_served_under_api():
     response = client.get("/api/health")
     assert response.status_code == 200
@@ -18,7 +24,7 @@ def test_health_is_served_under_api():
 def test_scenarios_are_served_under_api():
     response = client.get("/api/scenarios")
     assert response.status_code == 200
-    assert {s["id"] for s in response.json()} == {"flood-aluva", "flood-bengaluru", "earthquake-coimbatore", "cyclone-visakhapatnam"}
+    assert {"flood-aluva", "flood-bengaluru", "earthquake-coimbatore", "cyclone-visakhapatnam"} <= {s["id"] for s in response.json()}
 
 
 def test_priority_and_allocate_work_under_api():

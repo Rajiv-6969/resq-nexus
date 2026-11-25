@@ -84,13 +84,13 @@ class Resource(Base):
     __tablename__ = "resources"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(120))
+    name: Mapped[str] = mapped_column(String(255))
     resource_type: Mapped[str] = mapped_column(String(20), index=True)
     latitude: Mapped[float] = mapped_column(Float)
     longitude: Mapped[float] = mapped_column(Float)
     location: Mapped[str | None] = mapped_column(LOCATION)  # PostGIS POINT (lon lat), kept in sync with lat/lon
-    area: Mapped[str | None] = mapped_column(String(80))
-    region: Mapped[str | None] = mapped_column(String(60), index=True)
+    area: Mapped[str | None] = mapped_column(String(255))
+    region: Mapped[str | None] = mapped_column(String(255), index=True)
     contact_phone: Mapped[str | None] = mapped_column(String(20))
     capacity_total: Mapped[int] = mapped_column(Integer, default=0)
     capacity_available: Mapped[int] = mapped_column(Integer, default=0)

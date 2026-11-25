@@ -42,6 +42,10 @@ ASSETS = (
     "flood_results.json",
     "flood_sample.zip",
 )
+REQUIRED_ASSETS = (
+    "resq_damage.onnx",
+    "resq_flood.onnx",
+)
 
 
 def _gh() -> str | None:
@@ -106,6 +110,23 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--force", action="store_true")
     parser.add_argument("names", nargs="*", default=list(ASSETS))
     args = parser.parse_args(argv)
+
+    # Fast-exit check: if required ONNX/asset files already exist, exit 0 immediately
+    # without making redundant GitHub release HTTP calls during container boot.
+    is_default_run = set(args.names) == set(ASSETS)
+    if not args.force:
+        if is_default_run and all((ASSET_DIR / name).is_file() for name in REQUIRED_ASSETS):
+            flood_path = ASSET_DIR / "resq_flood.onnx"
+            if flood_path.is_file():
+                ml_target = Path(__file__).resolve().parent.parent.parent / "ml" / "resq_flood.onnx"
+                if ml_target.parent.is_dir() and not ml_target.is_file():
+                    shutil.copy2(flood_path, ml_target)
+            print(f"fast-exit: required ONNX assets ({', '.join(REQUIRED_ASSETS)}) already present in {ASSET_DIR}")
+            return 0
+        if not is_default_run and all((ASSET_DIR / name).is_file() for name in args.names):
+            print(f"fast-exit: all requested assets already present in {ASSET_DIR}")
+            return 0
+
     missing = []
     for name in args.names:
         path = download(name, args.force)

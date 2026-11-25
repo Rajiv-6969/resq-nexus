@@ -19,7 +19,6 @@ from typing import Any, Sequence
 
 import numpy as np
 from PIL import Image
-from scipy import ndimage
 
 from schemas.contracts import BuildingAssessment, Source, ZoneAssessment
 from services.damage.aggregate import aggregate_buildings, class_counts
@@ -170,6 +169,8 @@ def majority_vote_connected_components(
     4. Return list of objects with centroid (px_x, px_y), polygon, damage_class, confidence.
     """
     bin_mask = loc_prob >= threshold
+    from scipy import ndimage
+
     structure = np.ones((3, 3), dtype=int)
     labeled, num_features = ndimage.label(bin_mask, structure=structure)
 

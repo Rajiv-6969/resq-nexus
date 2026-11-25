@@ -23,7 +23,6 @@ from typing import Any
 import networkx as nx
 import numpy as np
 from deap import base, creator, tools
-from sklearn.cluster import KMeans
 
 from services import priority as priority_service
 from services.priority import LEVEL_ORDER
@@ -86,6 +85,8 @@ def cluster_depots(coords: np.ndarray, weights: np.ndarray, k: int, seed: int) -
     isotropic. Returns ``(centres as lat/lon, label per zone)`` with clusters
     numbered west to east.
     """
+    from sklearn.cluster import KMeans
+
     lat0, lon0 = coords[:, 0].mean(), coords[:, 1].mean()
     kx, ky = 111.320 * math.cos(math.radians(lat0)), 110.574
     xy = np.column_stack(((coords[:, 1] - lon0) * kx, (coords[:, 0] - lat0) * ky))

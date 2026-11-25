@@ -68,13 +68,13 @@ def parse_facilities(payload: dict[str, Any]) -> list[dict[str, Any]]:
         capacity, capacity_source = _capacity(tags, kind)
         out.append({
             "osm_id": f"{element['type'][0]}{element['id']}",
-            "name": name[:120],
+            "name": name[:255],
             "resource_type": kind,
             "amenity": tags.get("amenity"),
             "latitude": round(point[0], 6),
             "longitude": round(point[1], 6),
-            "area": (tags.get("addr:suburb") or tags.get("addr:city") or tags.get("addr:village") or tags.get("addr:town") or "")[:80],
-            "operator": (tags.get("operator") or "")[:120],
+            "area": (tags.get("addr:suburb") or tags.get("addr:city") or tags.get("addr:village") or tags.get("addr:town") or "")[:255],
+            "operator": (tags.get("operator") or "")[:255],
             "capacity": capacity,
             "capacity_source": capacity_source,
         })
@@ -96,12 +96,12 @@ def facilities_to_resources(facilities: list[dict[str, Any]], region: str, area_
     """Rows for the ``resources`` table (no provider yet; providers claim and edit them)."""
     return [
         {
-            "name": f["name"],
+            "name": f["name"][:255],
             "resource_type": RESOURCE_TYPE_OF.get(f["resource_type"], f["resource_type"]),
             "latitude": f["latitude"],
             "longitude": f["longitude"],
-            "area": f["area"] or area_fallback,
-            "region": region,
+            "area": (f["area"] or area_fallback)[:255],
+            "region": region[:255],
             "contact_phone": None,
             "capacity_total": f["capacity"],
             "capacity_available": f["capacity"],

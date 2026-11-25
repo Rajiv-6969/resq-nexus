@@ -58,7 +58,7 @@ def find_flood_model_path() -> Path | None:
 
 
 def is_flood_model_available() -> bool:
-    return fm.get_model() is not None
+    return fm.is_available()
 
 
 def offline() -> bool:

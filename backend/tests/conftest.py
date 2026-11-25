@@ -14,7 +14,12 @@ os.environ["JWT_SECRET"] = "test-only-jwt-secret-" + "0123456789abcdef" * 3
 os.environ["BCRYPT_ROUNDS"] = "4"  # the minimum bcrypt cost, so hashing stays fast in tests
 os.environ["SEED_DEMO_DATA"] = "1"
 os.environ["WARM_ROAD_GRAPHS"] = "0"
+os.environ["TESTING"] = "1"
+os.environ["RATE_LIMIT_ENABLED"] = "0"
 os.environ.pop("VERCEL", None)
+
+from db.database import init_db
+init_db()
 
 ZONE = {
     "id": "Z01",

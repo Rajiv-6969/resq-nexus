@@ -81,6 +81,11 @@ def find_model() -> Path | None:
     return next((p for p in MODEL_CANDIDATES if p.is_file()), None)
 
 
+def is_available() -> bool:
+    """Check if model file is present without instantiating ONNX session."""
+    return find_model() is not None
+
+
 def _starts(size: int) -> list[int]:
     if size <= TILE:
         return [0]
@@ -160,8 +165,9 @@ def _release() -> None:
 
 
 def model_status() -> dict[str, Any]:
-    model = get_model()
-    return {"installed": model is not None, "path": str(model.path) if model else None, "reason": _REASON}
+    path = find_model()
+    installed = path is not None
+    return {"installed": installed, "path": str(path) if path else None, "reason": _REASON}
 
 
 def reset_model() -> None:

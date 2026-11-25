@@ -3,8 +3,11 @@
 Pipeline: Assess -> Prioritise -> Allocate -> Explain, plus accounts (citizens,
 service providers, admins), SOS requests and nearby resources.
 """
+import asyncio
+from contextlib import asynccontextmanager
 import hashlib
 import json
+import logging
 import os
 import threading
 from collections import OrderedDict
@@ -32,12 +35,42 @@ from services.rate_limiter import RateLimitMiddleware  # noqa: E402
 from services.sos import ACTIVE_STATUSES  # noqa: E402
 from services.scenarios import Scenario, ScenarioNotFoundError, ScenarioSummary, Zone  # noqa: E402
 
+logger = logging.getLogger(__name__)
+
 API_VERSION = "0.3.0"
+
+
+async def _startup_background_tasks() -> None:
+    """Non-blocking background tasks: DB migrations, seeding, OSM ingestion, and road graph warming."""
+    try:
+        logger.info("Starting background DB initialization & seeding...")
+        await asyncio.to_thread(init_db)
+        logger.info("Background DB initialization & seeding completed successfully.")
+    except Exception:
+        logger.exception("Error during background DB initialization & seeding")
+
+    if os.getenv("WARM_ROAD_GRAPHS", "1") != "0":
+        try:
+            logger.info("Starting background OSM road graph warming...")
+            await asyncio.to_thread(allocation_engine.warm_road_networks)
+            logger.info("Background OSM road graph warming completed successfully.")
+        except Exception:
+            logger.exception("Error during background OSM road graph warming")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Non-blocking: move DB seeding, OSM ingestion, and warm-ups out of the blocking pre-yield path
+    # into a background asyncio.create_task so Uvicorn binds 0.0.0.0:$PORT immediately.
+    asyncio.create_task(_startup_background_tasks())
+    yield
+
 
 app = FastAPI(
     title="ResQ Nexus API",
     version=API_VERSION,
     description="Decision support for disaster response: Assess -> Prioritise -> Allocate -> Explain.",
+    lifespan=lifespan,
 )
 
 DEFAULT_CORS_ORIGINS = "http://localhost:5173,http://127.0.0.1:5173"
@@ -52,10 +85,6 @@ app.add_middleware(
 )
 app.add_middleware(RateLimitMiddleware)
 
-# Tables are created (and the demo data loaded into an empty database) on start-up.
-init_db()
-if os.getenv("WARM_ROAD_GRAPHS", "1") != "0":  # parse the cached OpenStreetMap graphs in the background
-    threading.Thread(target=allocation_engine.warm_road_networks, name="warm-road-graphs", daemon=True).start()
 app.include_router(auth.router)
 app.include_router(sos.router)
 app.include_router(resources.router)
@@ -87,6 +116,7 @@ def root():
         "version": API_VERSION,
         "docs": "/docs",
         "endpoints": [
+            "GET /healthz",
             "GET /health",
             "POST /auth/register",
             "POST /auth/register/provider",
@@ -121,6 +151,12 @@ def root():
             "POST /scenarios/{id}/explain",
         ],
     }
+
+
+@app.get("/healthz")
+def healthz():
+    """Instant health check for Render / orchestrator readiness (no DB or ONNX queries)."""
+    return {"status": "ok"}
 
 
 @app.get("/health")
